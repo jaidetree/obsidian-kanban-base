@@ -195,7 +195,7 @@ Bases API `options` system, using the following keys:
       labelled with the folder name
 - [x] Render each note as a plain `<div>` text element (title only) inside its
       column
-- [ ] Verify the view appears in the base view-type dropdown and displays notes
+- [x] Verify the view appears in the base view-type dropdown and displays notes
       correctly
 
 ### Phase IV: Enhance Kanban UI

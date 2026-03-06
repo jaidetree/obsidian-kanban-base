@@ -12,9 +12,9 @@
 
 <div class="kanban-base-board">
 	{#each columns as column (column.folder.path)}
-		<div class="kanban-base-column">
+		<div class="kanban-base-column" style="margin-bottom: 2rem;">
 			<div class="kanban-base-column-header">
-				{column.folder.name}
+				<h2>{column.folder.name}</h2>
 			</div>
 			<div class="kanban-base-column-body">
 				{#each column.entries as entry (entry.file.path)}
