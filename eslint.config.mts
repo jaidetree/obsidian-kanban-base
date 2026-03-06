@@ -27,7 +27,7 @@ export default tseslint.config({
     },
 }, ...obsidianmd.configs.recommended, {
     // Relax strict rules for mocks and tests — casts and any are necessary
-    files: ['src/__mocks__/**', 'src/**/*.test.ts'],
+    files: ['src/__mocks__/**', 'src/**/*.test.ts', 'src/**/*.stories.tsx'],
     rules: {
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',

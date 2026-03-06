@@ -1,7 +1,7 @@
 import { BasesView, TFolder, type QueryController } from 'obsidian';
-import { mount, unmount } from 'svelte';
+import { render, h } from 'preact';
 import type { BasesEntry } from 'obsidian';
-import KanbanBoard from './KanbanBoard.svelte';
+import { KanbanBoard } from './KanbanBoard';
 import { KANBAN_ID } from '.';
 
 export interface KanbanColumn {
@@ -57,7 +57,6 @@ export function deriveColumns(entries: BasesEntry[]): KanbanColumn[] {
 
 export class KanbanView extends BasesView {
 	readonly type = KANBAN_ID;
-	private component: ReturnType<typeof mount> | null = null;
 	private readonly containerEl: HTMLElement;
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
@@ -67,22 +66,13 @@ export class KanbanView extends BasesView {
 	}
 
 	onDataUpdated(): void {
-		if (this.component) {
-			void unmount(this.component);
-		}
-		this.component = mount(KanbanBoard, {
-			target: this.containerEl,
-			props: {
-				columns: deriveColumns(this.data.data),
-				app: this.app,
-			},
-		});
+		render(
+			h(KanbanBoard, { columns: deriveColumns(this.data.data), app: this.app }),
+			this.containerEl,
+		);
 	}
 
 	onunload(): void {
-		if (this.component) {
-			void unmount(this.component);
-			this.component = null;
-		}
+		render(null, this.containerEl);
 	}
 }

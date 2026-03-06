@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { coverageConfigDefaults, defineConfig } from 'vitest/config';
 
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import preact from '@preact/preset-vite';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
 import { playwright } from '@vitest/browser-playwright';
@@ -17,7 +17,7 @@ export default defineConfig({
     projects: [
       // Unit tests (XState machines, utilities) — run in jsdom
       {
-        plugins: [svelte()],
+        plugins: [preact()],
         resolve: {
           alias: {
             'obsidian': path.resolve(dirname, 'src/__mocks__/obsidian.ts'),
@@ -33,7 +33,7 @@ export default defineConfig({
       {
         extends: true,
         plugins: [
-          svelte(),
+          preact(),
           storybookTest({ configDir: path.join(dirname, '.storybook') }),
         ],
         test: {
@@ -50,7 +50,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.{ts,svelte}'],
+      include: ['src/**/*.{ts,tsx}'],
       exclude: [
         ...coverageConfigDefaults.exclude,
         '**/node_modules/**',

@@ -1,7 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
 import { builtinModules } from 'node:module';
-import sveltePlugin from "esbuild-svelte";
 
 const banner =
 `/*
@@ -40,7 +39,8 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	minify: prod,
-	plugins: [sveltePlugin()],
+	jsx: "automatic",
+	jsxImportSource: "preact",
 });
 
 if (prod) {

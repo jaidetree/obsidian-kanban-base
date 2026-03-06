@@ -17,6 +17,8 @@
 		"strictBindCallApply": true,
 		"allowSyntheticDefaultImports": true,
 		"useUnknownInCatchVariables": true,
+		"jsx": "react-jsx",
+		"jsxImportSource": "preact",
 		"lib": [
 			"DOM",
 			"ES5",
@@ -26,6 +28,6 @@
 	},
 	"include": [
 		"src/**/*.ts",
-		"src/**/*.svelte"
+		"src/**/*.tsx"
 	]
 }
