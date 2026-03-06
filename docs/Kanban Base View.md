@@ -174,9 +174,9 @@ Bases API `options` system, using the following keys:
 ### Phase II: Project Setup
 
 - [x] Setup plugin template
-- [ ] Install packages
-- [ ] Add XState
-- [ ] Setup storybook + maybe vitest for testing
+- [x] Install packages
+- [x] Add XState
+- [x] Setup storybook + maybe vitest for testing
 
 ### Phase III: Register Base View
 
