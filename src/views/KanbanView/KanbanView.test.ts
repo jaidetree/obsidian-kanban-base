@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deriveColumns } from './KanbanView';
+import { deriveColumns, applyColumnOrder } from './KanbanView';
 import { aFile } from '../../__mocks__/aFile';
 import { aBasesEntry } from '../../__mocks__/aBasesEntry';
 import type { TFolder } from 'obsidian';
@@ -81,5 +81,37 @@ describe('deriveColumns', () => {
 			entryInFolder(mockFolder('Mmm', root)),
 		]);
 		expect(columns.map(c => c.folder.name)).toEqual(['Aaa', 'Mmm', 'Zzz']);
+	});
+});
+
+describe('applyColumnOrder', () => {
+	const root = mockFolder('Project');
+	const aaa = mockFolder('Aaa', root);
+	const bbb = mockFolder('Bbb', root);
+	const ccc = mockFolder('Ccc', root);
+
+	const columns = [
+		{ folder: aaa, entries: [] },
+		{ folder: bbb, entries: [] },
+		{ folder: ccc, entries: [] },
+	];
+
+	it('returns columns unchanged when order is empty', () => {
+		expect(applyColumnOrder(columns, []).map(c => c.folder.name)).toEqual(['Aaa', 'Bbb', 'Ccc']);
+	});
+
+	it('reorders columns according to the saved order', () => {
+		expect(applyColumnOrder(columns, ['Ccc', 'Aaa', 'Bbb']).map(c => c.folder.name))
+			.toEqual(['Ccc', 'Aaa', 'Bbb']);
+	});
+
+	it('silently skips names not present in derived columns', () => {
+		expect(applyColumnOrder(columns, ['Missing', 'Bbb', 'Aaa']).map(c => c.folder.name))
+			.toEqual(['Bbb', 'Aaa', 'Ccc']);
+	});
+
+	it('appends columns absent from the order at the end', () => {
+		expect(applyColumnOrder(columns, ['Ccc']).map(c => c.folder.name))
+			.toEqual(['Ccc', 'Aaa', 'Bbb']);
 	});
 });

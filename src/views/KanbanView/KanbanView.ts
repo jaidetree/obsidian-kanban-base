@@ -55,9 +55,27 @@ export function deriveColumns(entries: BasesEntry[]): KanbanColumn[] {
 	return columns;
 }
 
+/**
+ * Re-order columns according to a saved order array (folder names).
+ * Columns not present in the order are appended at the end in their
+ * original (alphabetical) order.
+ */
+export function applyColumnOrder(
+	columns: KanbanColumn[],
+	order: string[],
+): KanbanColumn[] {
+	if (order.length === 0) return columns;
+	const ordered = order
+		.map(name => columns.find(c => c.folder.name === name))
+		.filter((c): c is KanbanColumn => c !== undefined);
+	const unordered = columns.filter(c => !order.includes(c.folder.name));
+	return [...ordered, ...unordered];
+}
+
 export class KanbanView extends BasesView {
 	readonly type = KANBAN_ID;
 	private readonly containerEl: HTMLElement;
+	private firstColumnFolder: TFolder | null = null;
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
 		super(controller);
@@ -66,13 +84,65 @@ export class KanbanView extends BasesView {
 	}
 
 	onDataUpdated(): void {
+		const cardProperties = (this.config.get('cardProperties') as string[] | null) ?? [];
+		const columns = applyColumnOrder(deriveColumns(this.data.data), this.parseColumnOrder());
+		this.firstColumnFolder = columns[0]?.folder ?? null;
+
 		render(
-			h(KanbanBoard, { columns: deriveColumns(this.data.data), app: this.app }),
+			h(KanbanBoard, {
+				columns,
+				app: this.app,
+				cardProperties,
+				onAddColumn: (name: string) => this.handleAddColumn(name),
+			}),
 			this.containerEl,
 		);
 	}
 
+	async createFileForView(): Promise<void> {
+		if (!this.firstColumnFolder) return;
+		const folder = this.firstColumnFolder;
+		const base = `${folder.path}/Untitled`;
+		let path = `${base}.md`;
+		let i = 1;
+		while (this.app.vault.getAbstractFileByPath(path)) {
+			path = `${base} ${i}.md`;
+			i++;
+		}
+		await this.app.vault.create(path, '');
+	}
+
 	onunload(): void {
 		render(null, this.containerEl);
+	}
+
+	private parseColumnOrder(): string[] {
+		try {
+			const raw = this.config.get('columnOrder');
+			if (!raw || typeof raw !== 'string') return [];
+			const parsed = JSON.parse(raw) as unknown;
+			if (!Array.isArray(parsed)) return [];
+			return parsed.filter((item): item is string => typeof item === 'string');
+		} catch {
+			return [];
+		}
+	}
+
+	private async handleAddColumn(name: string): Promise<void> {
+		const trimmed = name.trim();
+		if (!trimmed || !this.firstColumnFolder) return;
+
+		const parent = this.firstColumnFolder.parent;
+		const rootPath = (parent && !parent.isRoot()) ? parent.path : '';
+		const folderPath = rootPath ? `${rootPath}/${trimmed}` : trimmed;
+
+		// Seed the column order from existing columns, then append the new name
+		const existingOrder = this.parseColumnOrder();
+		const existingNames = deriveColumns(this.data.data).map(c => c.folder.name);
+		const base = existingOrder.length > 0 ? existingOrder : existingNames;
+		const newOrder = [...base.filter(n => n !== trimmed), trimmed];
+		this.config.set('columnOrder', JSON.stringify(newOrder));
+
+		await this.app.vault.createFolder(folderPath);
 	}
 }

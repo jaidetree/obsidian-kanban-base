@@ -200,21 +200,21 @@ Bases API `options` system, using the following keys:
 
 ### Phase IV: Enhance Kanban UI
 
-- [ ] Style columns to match Obsidian's base UI design language (width, spacing,
+- [x] Style columns to match Obsidian's base UI design language (width, spacing,
       header, scrollable body)
-- [ ] Style note cards (border, padding, hover state, cursor) using Obsidian CSS
+- [x] Style note cards (border, padding, hover state, cursor) using Obsidian CSS
       variables
-- [ ] Show selected base properties below the title on each card
-- [ ] Declare `cardProperties` in view `options` as a `multitext`
+- [x] Show selected base properties below the title on each card
+- [x] Declare `cardProperties` in view `options` as a `multitext`
       property-picker; wire it to card rendering
-- [ ] Declare `columnOrder` in view `options` as a serialized JSON array; apply
+- [x] Declare `columnOrder` in view `options` as a serialized JSON array; apply
       it when rendering columns
-- [ ] Add a **+ column** button that prompts for a name, calls
+- [x] Add a **+ column** button that prompts for a name, calls
       `app.vault.createFolder()`, and appends the column
-- [ ] Customize the base UI's **+ button** to create a new note in the first
+- [x] Customize the base UI's **+ button** to create a new note in the first
       column's folder via `app.vault.create()`
-- [ ] Ensure light/dark mode works correctly (no hardcoded colors)
-- [ ] Write Storybook stories for: column layout, card (title only), card (with
+- [x] Ensure light/dark mode works correctly (no hardcoded colors)
+- [x] Write Storybook stories for: column layout, card (title only), card (with
       properties)
 
 ### Phase V: Drag 'n' Drop

@@ -19,4 +19,11 @@ export const KANBAN_OPTIONS = (): ViewOption[] => [
 			},
 		],
 	},
+	{
+		type: 'text',
+		displayName: 'Column order',
+		key: 'columnOrder',
+		default: '',
+		shouldHide: () => true, // managed programmatically via drag-and-drop
+	},
 ];

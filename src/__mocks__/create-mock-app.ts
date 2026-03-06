@@ -6,6 +6,7 @@ export const createMockApp = (overrides?: Partial<App>): App => {
       processFrontMatter: (_file: TFile, _processor: (fm: Record<string, unknown>) => void) => {
         // no-op stub
       },
+      createNewMarkdownFile: async (_folder: unknown, _name: string): Promise<TFile> => ({} as TFile),
     },
     metadataCache: {
       getFirstLinkpathDest: (_linkpath: string, _sourcePath: string) => null,

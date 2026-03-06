@@ -30,10 +30,10 @@ export default defineConfig({
         },
       },
       // Storybook component tests — run in a real browser via Playwright
+      // Note: @storybook/preact-vite already provides the Preact plugin; don't add it again
       {
         extends: true,
         plugins: [
-          preact(),
           storybookTest({ configDir: path.join(dirname, '.storybook') }),
         ],
         test: {
