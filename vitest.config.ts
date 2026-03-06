@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 import { coverageConfigDefaults, defineConfig } from 'vitest/config';
 
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
 import { playwright } from '@vitest/browser-playwright';
@@ -16,6 +17,12 @@ export default defineConfig({
     projects: [
       // Unit tests (XState machines, utilities) — run in jsdom
       {
+        plugins: [svelte()],
+        resolve: {
+          alias: {
+            'obsidian': path.resolve(dirname, 'src/__mocks__/obsidian.ts'),
+          },
+        },
         test: {
           name: 'unit',
           include: ['src/**/*.test.ts'],

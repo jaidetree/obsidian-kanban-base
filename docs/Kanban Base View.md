@@ -180,20 +180,20 @@ Bases API `options` system, using the following keys:
 
 ### Phase III: Register Base View
 
-- [ ] Research the Bases public API — find `registerBasesView()` signature,
+- [x] Research the Bases public API — find `registerBasesView()` signature,
       `options` type definitions, and how the view receives its data/context
-- [ ] Define TypeScript types for the view context (notes list, folder
+- [x] Define TypeScript types for the view context (notes list, folder
       structure, base options)
-- [ ] Strip boilerplate from `main.ts` (remove sample modal, ribbon icon, status
+- [x] Strip boilerplate from `main.ts` (remove sample modal, ribbon icon, status
       bar, sample commands)
-- [ ] Register `kanbanBase` view type via `registerBasesView()` gated behind
+- [x] Register `kanbanBase` view type via `registerBasesView()` gated behind
       `requireApiVersion("1.10.1")`
-- [ ] Implement folder-derivation logic: given the base's root, return immediate
+- [x] Implement folder-derivation logic: given the base's root, return immediate
       child folders only (no subfolders)
-- [ ] Group the base's notes by their immediate parent folder
-- [ ] Render a minimal column layout: a horizontal row of `<div>` columns, each
+- [x] Group the base's notes by their immediate parent folder
+- [x] Render a minimal column layout: a horizontal row of `<div>` columns, each
       labelled with the folder name
-- [ ] Render each note as a plain `<div>` text element (title only) inside its
+- [x] Render each note as a plain `<div>` text element (title only) inside its
       column
 - [ ] Verify the view appears in the base view-type dropdown and displays notes
       correctly
