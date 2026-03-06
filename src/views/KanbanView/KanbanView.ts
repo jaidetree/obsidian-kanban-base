@@ -17,10 +17,14 @@ export interface KanbanColumn {
 export function deriveColumns(entries: BasesEntry[]): KanbanColumn[] {
 	if (entries.length === 0) return [];
 
+	// Only consider markdown files — ignore .base and other non-note files
+	const mdEntries = entries.filter(e => e.file.extension === 'md');
+	if (mdEntries.length === 0) return [];
+
 	// Collect all immediate parent folders
 	const folderMap = new Map<string, { folder: TFolder; entries: BasesEntry[] }>();
 
-	for (const entry of entries) {
+	for (const entry of mdEntries) {
 		const folder = entry.file.parent;
 		if (!folder || folder.isRoot()) continue;
 		if (!folderMap.has(folder.path)) {
@@ -29,9 +33,13 @@ export function deriveColumns(entries: BasesEntry[]): KanbanColumn[] {
 		folderMap.get(folder.path)!.entries.push(entry);
 	}
 
-	// Determine root: the common parent of all entry folders
+	// Determine root: parent of the shallowest folder (fewest path segments).
+	// This avoids insertion-order sensitivity when entries live at mixed depths.
 	const folders = [...folderMap.values()].map(v => v.folder);
-	const root = folders[0]?.parent ?? null;
+	const shallowest = folders.reduce((a, b) =>
+		a.path.split('/').length <= b.path.split('/').length ? a : b
+	);
+	const root = shallowest.parent ?? null;
 
 	// Only keep folders whose parent is the shared root (immediate children)
 	const columns: KanbanColumn[] = [];

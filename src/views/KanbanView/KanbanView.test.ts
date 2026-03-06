@@ -55,6 +55,24 @@ describe('deriveColumns', () => {
 		expect(columns[0]!.entries).toHaveLength(1);
 	});
 
+	it('ignores non-markdown files (e.g. .base files)', () => {
+		const root = mockFolder('Kanban Test');
+		const todo = mockFolder('To Do', root);
+
+		// .base file lives in the root folder — should not create a "Kanban Test" column
+		const baseFile = aFile({ basename: 'Kanban Test', extension: 'base', path: 'Kanban Test/Kanban Test.base', parent: root as never });
+		const baseEntry = aBasesEntry({ file: baseFile });
+
+		const columns = deriveColumns([
+			entryInFolder(todo, 'Test Note'),
+			baseEntry,
+		]);
+
+		expect(columns).toHaveLength(1);
+		expect(columns[0]!.folder.name).toBe('To Do');
+		expect(columns[0]!.entries).toHaveLength(1);
+	});
+
 	it('sorts columns alphabetically', () => {
 		const root = mockFolder('Project');
 		const columns = deriveColumns([

@@ -33,6 +33,7 @@ export default defineConfig({
       {
         extends: true,
         plugins: [
+          svelte(),
           storybookTest({ configDir: path.join(dirname, '.storybook') }),
         ],
         test: {
