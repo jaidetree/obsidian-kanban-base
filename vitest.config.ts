@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { defineConfig } from 'vitest/config';
+import { coverageConfigDefaults, defineConfig } from 'vitest/config';
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 
@@ -40,5 +40,19 @@ export default defineConfig({
         },
       },
     ],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,svelte}'],
+      exclude: [
+        ...coverageConfigDefaults.exclude,
+        '**/node_modules/**',
+        '**/.storybook/**',
+        '**/*.stories.*',
+        '**/*.d.ts',
+        '**/*.{test,spec}.*',
+        '**/*.config.*',
+        'src/__mocks__/**',
+      ],
+    },
   },
 });
