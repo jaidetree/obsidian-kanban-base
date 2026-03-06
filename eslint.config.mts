@@ -15,14 +15,35 @@ export default tseslint.config({
             projectService: {
                 allowDefaultProject: [
                     'eslint.config.js',
-                    'manifest.json'
+                    'manifest.json',
+                    '.storybook/*.ts',
+                    'vitest.config.ts',
+                    'vitest.shims.d.ts',
                 ]
             },
             tsconfigRootDir: import.meta.dirname,
             extraFileExtensions: ['.json']
         },
     },
-}, ...obsidianmd.configs.recommended, globalIgnores([
+}, ...obsidianmd.configs.recommended, {
+    // Relax strict rules for mocks and tests — casts and any are necessary
+    files: ['src/__mocks__/**', 'src/**/*.test.ts'],
+    rules: {
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-base-to-string': 'off',
+        'obsidianmd/no-tfile-tfolder-cast': 'off',
+    },
+}, {
+    // Config files live outside src/ and legitimately use node builtins and dev deps
+    files: ['.storybook/**', 'vitest.config.ts'],
+    rules: {
+        'import/no-nodejs-modules': 'off',
+        'import/no-extraneous-dependencies': 'off',
+        'no-undef': 'off',
+    },
+}, globalIgnores([
     "node_modules",
     "dist",
     "esbuild.config.mjs",

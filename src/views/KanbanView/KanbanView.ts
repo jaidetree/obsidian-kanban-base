@@ -55,18 +55,12 @@ export class KanbanView extends BasesView {
 	constructor(controller: QueryController, containerEl: HTMLElement) {
 		super(controller);
 		this.containerEl = containerEl;
-		this.component = mount(KanbanBoard, {
-			target: containerEl,
-			props: {
-				columns: deriveColumns(this.data.data),
-				app: this.app,
-			},
-		});
+		// data is not yet available in the constructor — wait for onDataUpdated()
 	}
 
 	onDataUpdated(): void {
 		if (this.component) {
-			unmount(this.component);
+			void unmount(this.component);
 		}
 		this.component = mount(KanbanBoard, {
 			target: this.containerEl,
@@ -79,7 +73,7 @@ export class KanbanView extends BasesView {
 
 	onunload(): void {
 		if (this.component) {
-			unmount(this.component);
+			void unmount(this.component);
 			this.component = null;
 		}
 	}

@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-kanban-base",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "A Kanban base view based on folders",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
