@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import type { CSSProperties } from 'preact';
 import type { App, BasesEntry, BasesPropertyId } from 'obsidian';
 import type { KanbanColumn } from './KanbanView';
 
@@ -6,6 +7,7 @@ interface Props {
 	columns: KanbanColumn[];
 	app: App;
 	cardProperties: string[];
+	cardSize: number;
 	onAddColumn: (name: string) => Promise<void>;
 }
 
@@ -25,7 +27,7 @@ function KanbanCard({ entry, cardProperties }: {
 	);
 }
 
-export function KanbanBoard({ columns, cardProperties, onAddColumn }: Props) {
+export function KanbanBoard({ columns, cardProperties, cardSize, onAddColumn }: Props) {
 	const [adding, setAdding] = useState(false);
 	const [newName, setNewName] = useState('');
 
@@ -50,7 +52,7 @@ export function KanbanBoard({ columns, cardProperties, onAddColumn }: Props) {
 	const propIds = cardProperties as BasesPropertyId[];
 
 	return (
-		<div class="kanban-base-board">
+		<div class="kanban-base-board" style={{ '--kanban-column-width': `${cardSize}px` } as CSSProperties}>
 			{columns.map(column => (
 				<div key={column.folder.path} class="kanban-base-column">
 					<div class="kanban-base-column-header">

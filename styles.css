@@ -12,8 +12,8 @@
 .kanban-base-column {
 	display: flex;
 	flex-direction: column;
-	min-width: 220px;
-	width: 220px;
+	min-width: var(--kanban-column-width, 220px);
+	width: var(--kanban-column-width, 220px);
 	max-height: 100%;
 	background: var(--background-secondary);
 	border-radius: var(--radius-m);
@@ -32,6 +32,7 @@
 	font-weight: var(--font-semibold);
 	color: var(--text-normal);
 	line-height: 1.4;
+	font-family: var(--font-interface);
 }
 
 .kanban-base-column-body {

@@ -85,6 +85,7 @@ export class KanbanView extends BasesView {
 
 	onDataUpdated(): void {
 		const cardProperties = (this.config.get('cardProperties') as string[] | null) ?? [];
+		const cardSize = (this.config.get('cardSize') as number | null) ?? 220;
 		const columns = applyColumnOrder(deriveColumns(this.data.data), this.parseColumnOrder());
 		this.firstColumnFolder = columns[0]?.folder ?? null;
 
@@ -93,6 +94,7 @@ export class KanbanView extends BasesView {
 				columns,
 				app: this.app,
 				cardProperties,
+				cardSize,
 				onAddColumn: (name: string) => this.handleAddColumn(name),
 			}),
 			this.containerEl,

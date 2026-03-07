@@ -216,6 +216,8 @@ Bases API `options` system, using the following keys:
 - [x] Ensure light/dark mode works correctly (no hardcoded colors)
 - [x] Write Storybook stories for: column layout, card (title only), card (with
       properties)
+- [x] Add `cardSize` slider option to view settings; apply as
+      `--kanban-column-width` CSS custom property to resize columns live
 
 ### Phase V: Drag 'n' Drop
 

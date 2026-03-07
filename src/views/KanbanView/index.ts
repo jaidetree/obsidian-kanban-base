@@ -17,6 +17,15 @@ export const KANBAN_OPTIONS = (): ViewOption[] => [
 				key: 'cardProperties',
 				default: [],
 			},
+			{
+				type: 'slider',
+				key: 'cardSize',
+				displayName: 'Card size',
+				default: 220,
+				min: 50,
+				max: 800,
+				step: 10,
+			},
 		],
 	},
 	{

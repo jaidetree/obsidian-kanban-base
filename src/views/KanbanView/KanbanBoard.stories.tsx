@@ -36,6 +36,7 @@ const meta: Meta<typeof KanbanBoard> = {
 	args: {
 		app: createMockApp(),
 		cardProperties: [],
+		cardSize: 220,
 		onAddColumn: noop,
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },
