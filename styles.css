@@ -34,6 +34,8 @@
 	background: none;
 	border: none;
 	padding: 2px;
+	width: 1.5rem;
+	height: 1.5rem;
 	cursor: pointer;
 	border-radius: var(--radius-s);
 	color: var(--text-normal);
@@ -52,8 +54,8 @@
 .kanban-base-icon {
 	display: flex;
 	align-items: center;
-	width: 16px;
-	height: 16px;
+	width: 1.25rem;
+	height: 1.25rem;
 }
 
 .kanban-base-column-header h2 {
@@ -178,4 +180,20 @@
 
 .kanban-base-column-add-cancel:hover {
 	background: var(--background-modifier-hover);
+}
+
+.kanban-base-icons {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.kanban-base-icon-suggestion {
+	display: flex;
+	flex-flow: column;
+	justify-items: center;
+	align-items: center;
+	padding: 1rem 0.5rem;
+}
+.kanban-base-icon-suggestion-name {
+	font-size: 0.8rem;
 }
