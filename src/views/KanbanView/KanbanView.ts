@@ -89,13 +89,25 @@ export class KanbanView extends BasesView {
 		const columns = applyColumnOrder(deriveColumns(this.data.data), this.parseColumnOrder());
 		this.firstColumnFolder = columns[0]?.folder ?? null;
 
+		const columnIconsRaw = (this.config.get('columnIcons') as string | null) ?? '{}';
+		let columnIcons: Record<string, string>;
+		try {
+			columnIcons = JSON.parse(columnIconsRaw) as Record<string, string>;
+		} catch {
+			columnIcons = {};
+		}
+
 		render(
 			h(KanbanBoard, {
 				columns,
 				app: this.app,
 				cardProperties,
 				cardSize,
+				columnIcons,
 				onAddColumn: (name: string) => this.handleAddColumn(name),
+				onUpdateIcons: (icons: Record<string, string>) => {
+					this.config.set('columnIcons', JSON.stringify(icons));
+				},
 			}),
 			this.containerEl,
 		);

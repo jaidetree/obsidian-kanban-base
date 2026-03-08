@@ -219,10 +219,54 @@ Bases API `options` system, using the following keys:
 - [x] Add `cardSize` slider option to view settings; apply as
       `--kanban-column-width` CSS custom property to resize columns live
 
-### Phase V: Drag 'n' Drop
+### Phase V: Icons and Column Settings
 
-- [ ] Install and configure `@xstate/react` (or standalone XState) alongside any
-      needed pointer-event utilities
+#### Icons
+
+Enhance the columns UI by adding an optional icon on the top left of each column
+header. By default the top left of each column header is a button with a
+randomly selected icon that is lower opacity to appear greyed out. Clicking it
+displays an icon suggest dialog UI that includes the obsidian icon set plus
+emojis. An example can be found in ~/projects/iconic/src/dialogs/IconPicker.tsx.
+
+Icon selections should be persisted to the base view stored similarly to base
+view settings.
+
+When a new column is created, select a random icon that persists until user
+changes it.
+
+Ues XState to model stateful logic in finite state machines.
+
+- [x] Install and configure `@xstate/react` (or standalone XState) for Preact — used custom `useXState` Preact hook wrapping XState actors
+- [x] Design an fsm using xstate for displaying and using the icon selector — `iconMachine` in `src/views/KanbanView/iconMachine.ts`
+- [x] Add icon button UI to left side of column headers — `IconButton` + `IconRenderer` components in `KanbanBoard.tsx`
+- [x] Select default icon for column if not previously set — deterministic hash of folder name via `getDefaultIcon()`; shown at 0.35 opacity
+- [x] Create an IconSuggest dialog to search and select an icon — `IconSuggestModal` in `src/views/KanbanView/IconSuggestModal.ts`
+- [x] Persist icon selection for base view — `columnIcons` hidden text option (JSON map) in view config
+
+#### Column Context Menu
+
+On the right side of the column header should be an ellipsis button that opens a
+context dialog. For now options include collapsing/expanding, and renaming the
+column/folder.
+
+In edit mode, the title is replaced with an inline text input with the current
+column name. Bewlow the input should be buttons to accept changes or cancel
+changes.
+
+Use XState to model logic as FSMs
+
+- [ ] Design an fsm using xstate to model editing, collapsed, and expanded
+      states
+- [ ] Add ellipsis button to the right of column header
+- [ ] Add context menu to ellipsis button with options to collapse/expand and
+      rename
+- [ ] Implement renaming feature with save button and cancel buttons
+- [ ] Implement expanding and collapsing
+- [ ] Persist expanding and collapsing column states for the base view
+
+### Phase VI: Drag 'n' Drop
+
 - [ ] Implement `cardDragMachine`: states `idle → dragging → dropped/canceled`;
       on `dropped` call `app.vault.rename()` to move file to target folder, then
       trigger base re-render

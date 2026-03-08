@@ -37,7 +37,9 @@ const meta: Meta<typeof KanbanBoard> = {
 		app: createMockApp(),
 		cardProperties: [],
 		cardSize: 220,
+		columnIcons: {},
 		onAddColumn: noop,
+		onUpdateIcons: (_icons: Record<string, string>) => {},
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },
 			{ folder: inProgress, entries: [entryInFolder(inProgress, 'Task 3')] },

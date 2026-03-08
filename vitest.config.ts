@@ -36,6 +36,9 @@ export default defineConfig({
         plugins: [
           storybookTest({ configDir: path.join(dirname, '.storybook') }),
         ],
+        optimizeDeps: {
+          include: ['xstate'],
+        },
         test: {
           name: 'storybook',
           browser: {

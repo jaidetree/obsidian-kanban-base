@@ -35,4 +35,11 @@ export const KANBAN_OPTIONS = (): ViewOption[] => [
 		default: '',
 		shouldHide: () => true, // managed programmatically via drag-and-drop
 	},
+	{
+		type: 'text',
+		displayName: 'Column icons',
+		key: 'columnIcons',
+		default: '{}',
+		shouldHide: () => true,
+	},
 ];

@@ -21,9 +21,39 @@
 }
 
 .kanban-base-column-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	flex-shrink: 0;
+}
+
+.kanban-base-icon-btn {
+	flex-shrink: 0;
+	background: none;
+	border: none;
+	padding: 2px;
+	cursor: pointer;
+	border-radius: var(--radius-s);
+	color: var(--text-normal);
+	opacity: 1;
+}
+
+.kanban-base-icon-btn--default {
+	opacity: 0.35;
+}
+
+.kanban-base-icon-btn:hover {
+	background: var(--background-modifier-hover);
+	opacity: 1;
+}
+
+.kanban-base-icon {
+	display: flex;
+	align-items: center;
+	width: 16px;
+	height: 16px;
 }
 
 .kanban-base-column-header h2 {

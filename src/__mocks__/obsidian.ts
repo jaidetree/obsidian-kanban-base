@@ -84,6 +84,17 @@ export const setIcon = (el: HTMLElement, name: string): void => {
   el.textContent = name;
 };
 
+export const getIconIds = (): string[] => [
+  'folder', 'check', 'circle', 'star', 'heart', 'home', 'list', 'tag',
+];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export class FuzzySuggestModal<T> {
+  setPlaceholder(_s: string) {}
+  open() {}
+  onClose: () => void = () => {};
+}
+
 export const openExternal = (url: string): void => {
   window.open(url, '_blank');
 };
