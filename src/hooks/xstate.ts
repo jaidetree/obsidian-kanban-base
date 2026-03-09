@@ -1,10 +1,10 @@
-import { MutableRef, useEffect, useRef, useState } from "preact/hooks";
+import { type MutableRef, useEffect, useRef, useState } from "preact/hooks";
 import {
 	createActor,
 	type AnyStateMachine,
 	type SnapshotFrom,
-	Actor,
-	AnyActorLogic,
+	type Actor,
+	type AnyActorLogic,
 } from "xstate";
 
 export type SendFrom<TMachine extends AnyActorLogic> = Actor<TMachine>["send"];
@@ -31,15 +31,18 @@ export function useActorState<T extends AnyStateMachine>(
 	actorRef: ActorRef<T>,
 ): [SnapshotFrom<T>, SendFrom<T>] {
 	const [snapshot, setSnapshot] = useState(() =>
-		actorRef.current!.getSnapshot(),
+		actorRef.current.getSnapshot(),
 	);
 
 	useEffect(() => {
-		const sub = actorRef.current!.subscribe((s) => setSnapshot(s));
+		const sub = actorRef.current.subscribe((s) =>
+			setSnapshot(s as SnapshotFrom<T>),
+		);
 		return () => sub.unsubscribe();
 	}, []);
 
-	return [snapshot, actorRef.current!.send];
+	// eslint-disable-next-line @typescript-eslint/unbound-method
+	return [snapshot, actorRef.current.send];
 }
 
 export function useXState<M extends AnyStateMachine>(

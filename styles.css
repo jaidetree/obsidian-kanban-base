@@ -59,12 +59,99 @@
 }
 
 .kanban-base-column-header h2 {
+	flex: 1;
 	margin: 0;
 	font-size: var(--font-ui-small);
 	font-weight: var(--font-semibold);
 	color: var(--text-normal);
 	line-height: 1.4;
 	font-family: var(--font-interface);
+}
+
+.kanban-base-column-menu-btn {
+	flex-shrink: 0;
+	background: none;
+	border: none;
+	padding: 2px;
+	width: 1.5rem;
+	height: 1.5rem;
+	cursor: pointer;
+	border-radius: var(--radius-s);
+	color: var(--text-muted);
+	opacity: 0;
+}
+
+.kanban-base-column-header:hover .kanban-base-column-menu-btn {
+	opacity: 1;
+}
+
+.kanban-base-column-menu-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+	opacity: 1;
+}
+
+.kanban-base-column--collapsed {
+	width: auto;
+	min-width: unset;
+}
+
+.kanban-base-column-rename {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.kanban-base-column-rename-input {
+	width: 100%;
+	padding: 2px 6px;
+	background: var(--background-primary);
+	border: 1px solid var(--interactive-accent);
+	border-radius: var(--radius-s);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	font-family: var(--font-interface);
+	box-sizing: border-box;
+}
+
+.kanban-base-column-rename-input:focus {
+	outline: none;
+}
+
+.kanban-base-column-rename-actions {
+	display: flex;
+	gap: 4px;
+}
+
+.kanban-base-column-rename-confirm,
+.kanban-base-column-rename-cancel {
+	flex: 1;
+	padding: 2px 6px;
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.kanban-base-column-rename-confirm {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.kanban-base-column-rename-confirm:hover {
+	filter: brightness(1.1);
+}
+
+.kanban-base-column-rename-cancel {
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.kanban-base-column-rename-cancel:hover {
+	background: var(--background-modifier-hover);
 }
 
 .kanban-base-column-body {

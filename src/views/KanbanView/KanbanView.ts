@@ -3,7 +3,8 @@ import { render, h } from "preact";
 import type { BasesEntry } from "obsidian";
 import { KanbanBoard } from "./KanbanBoard";
 import { KANBAN_ID } from ".";
-import { BoardIcons } from "types/icons";
+import type { BoardIcons } from "types/icons";
+import type { BoardColumnStates } from "types/columns";
 
 export interface KanbanColumn {
 	folder: TFolder;
@@ -106,6 +107,15 @@ export class KanbanView extends BasesView {
 			columnIcons = {};
 		}
 
+		const columnStatesRaw =
+			(this.config.get("columnStates") as string | null) ?? "{}";
+		let columnStates: BoardColumnStates;
+		try {
+			columnStates = JSON.parse(columnStatesRaw) as BoardColumnStates;
+		} catch {
+			columnStates = {};
+		}
+
 		render(
 			h(KanbanBoard, {
 				columns,
@@ -113,10 +123,16 @@ export class KanbanView extends BasesView {
 				cardProperties,
 				cardSize,
 				columnIcons,
+				columnStates,
 				onAddColumn: (name: string) => this.handleAddColumn(name),
 				onUpdateIcons: (icons: BoardIcons) => {
 					this.config.set("columnIcons", JSON.stringify(icons));
 				},
+				onUpdateColumnStates: (states: BoardColumnStates) => {
+					this.config.set("columnStates", JSON.stringify(states));
+				},
+				onRenameColumn: (oldName: string, newName: string) =>
+					this.handleRenameColumn(oldName, newName),
 			}),
 			this.containerEl,
 		);
@@ -150,6 +166,59 @@ export class KanbanView extends BasesView {
 			);
 		} catch {
 			return [];
+		}
+	}
+
+	private async handleRenameColumn(
+		oldName: string,
+		newName: string,
+	): Promise<void> {
+		const trimmed = newName.trim();
+		if (!trimmed || trimmed === oldName) return;
+
+		const column = deriveColumns(this.data.data).find(
+			(c) => c.folder.name === oldName,
+		);
+		if (!column) return;
+
+		const parent = column.folder.parent;
+		const parentPath =
+			parent && !parent.isRoot() ? parent.path + "/" : "";
+		await this.app.vault.rename(
+			column.folder,
+			`${parentPath}${trimmed}`,
+		);
+
+		// Migrate column order
+		const currentOrder = this.parseColumnOrder();
+		if (currentOrder.length > 0) {
+			const newOrder = currentOrder.map((n) =>
+				n === oldName ? trimmed : n,
+			);
+			this.config.set("columnOrder", JSON.stringify(newOrder));
+		}
+
+		// Migrate column icons and states to new key
+		this.migrateColumnKey("columnIcons", oldName, trimmed);
+		this.migrateColumnKey("columnStates", oldName, trimmed);
+	}
+
+	private migrateColumnKey(
+		configKey: string,
+		oldName: string,
+		newName: string,
+	): void {
+		try {
+			const raw =
+				(this.config.get(configKey) as string | null) ?? "{}";
+			const data = JSON.parse(raw) as Record<string, unknown>;
+			if (oldName in data) {
+				data[newName] = data[oldName];
+				delete data[oldName];
+				this.config.set(configKey, JSON.stringify(data));
+			}
+		} catch {
+			// ignore malformed config
 		}
 	}
 

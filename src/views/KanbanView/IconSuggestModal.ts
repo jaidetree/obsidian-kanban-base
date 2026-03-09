@@ -12,8 +12,8 @@ export class IconSuggestModal extends FuzzySuggestModal<Icon> {
 		this.setPlaceholder("Search icons…");
 	}
 
-	onOpen() {
-		super.onOpen();
+	onOpen(): void {
+		void super.onOpen();
 		this.modalEl.addClass("kanban-base-icon-modal");
 		this.resultContainerEl.addClass("kanban-base-icons");
 	}

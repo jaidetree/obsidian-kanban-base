@@ -42,4 +42,11 @@ export const KANBAN_OPTIONS = (): ViewOption[] => [
 		default: '{}',
 		shouldHide: () => true,
 	},
+	{
+		type: 'text',
+		displayName: 'Column states',
+		key: 'columnStates',
+		default: '{}',
+		shouldHide: () => true,
+	},
 ];

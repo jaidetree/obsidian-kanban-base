@@ -4,6 +4,8 @@ import { aBasesEntry } from '../../__mocks__/aBasesEntry';
 import { createMockApp } from '../../__mocks__/create-mock-app';
 import { KanbanBoard } from './KanbanBoard';
 import type { TFolder } from 'obsidian';
+import type { BoardIcons } from '../../types/icons';
+import type { BoardColumnStates } from '../../types/columns';
 
 function mockFolder(name: string, parent: TFolder | null = null): TFolder {
 	return {
@@ -38,8 +40,11 @@ const meta: Meta<typeof KanbanBoard> = {
 		cardProperties: [],
 		cardSize: 220,
 		columnIcons: {},
+		columnStates: {},
 		onAddColumn: noop,
-		onUpdateIcons: (_icons: Record<string, string>) => {},
+		onUpdateIcons: (_icons: BoardIcons) => {},
+		onUpdateColumnStates: (_states: BoardColumnStates) => {},
+		onRenameColumn: async (_oldName: string, _newName: string) => {},
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },
 			{ folder: inProgress, entries: [entryInFolder(inProgress, 'Task 3')] },

@@ -95,6 +95,18 @@ export class FuzzySuggestModal<T> {
   onClose: () => void = () => {};
 }
 
+class MockMenuItem {
+  setTitle(_s: string) { return this; }
+  setIcon(_s: string) { return this; }
+  onClick(cb: () => void) { void cb; return this; }
+}
+
+export class Menu {
+  addItem(cb: (item: MockMenuItem) => void) { cb(new MockMenuItem()); return this; }
+  showAtMouseEvent(_evt: MouseEvent) { return this; }
+  showAtPosition(_pos: { x: number; y: number }) { return this; }
+}
+
 export const openExternal = (url: string): void => {
   window.open(url, '_blank');
 };

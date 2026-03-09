@@ -237,12 +237,18 @@ changes it.
 
 Ues XState to model stateful logic in finite state machines.
 
-- [x] Install and configure `@xstate/react` (or standalone XState) for Preact — used custom `useXState` Preact hook wrapping XState actors
-- [x] Design an fsm using xstate for displaying and using the icon selector — `iconMachine` in `src/views/KanbanView/iconMachine.ts`
-- [x] Add icon button UI to left side of column headers — `IconButton` + `IconRenderer` components in `KanbanBoard.tsx`
-- [x] Select default icon for column if not previously set — deterministic hash of folder name via `getDefaultIcon()`; shown at 0.35 opacity
-- [x] Create an IconSuggest dialog to search and select an icon — `IconSuggestModal` in `src/views/KanbanView/IconSuggestModal.ts`
-- [x] Persist icon selection for base view — `columnIcons` hidden text option (JSON map) in view config
+- [x] Install and configure `@xstate/react` (or standalone XState) for Preact —
+      used custom `useXState` Preact hook wrapping XState actors
+- [x] Design an fsm using xstate for displaying and using the icon selector —
+      `iconMachine` in `src/views/KanbanView/iconMachine.ts`
+- [x] Add icon button UI to left side of column headers — `IconButton` +
+      `IconRenderer` components in `KanbanBoard.tsx`
+- [x] Select default icon for column if not previously set — deterministic hash
+      of folder name via `getDefaultIcon()`; shown at 0.35 opacity
+- [x] Create an IconSuggest dialog to search and select an icon —
+      `IconSuggestModal` in `src/views/KanbanView/IconSuggestModal.ts`
+- [x] Persist icon selection for base view — `columnIcons` hidden text option
+      (JSON map) in view config
 
 #### Column Context Menu
 
@@ -251,19 +257,26 @@ context dialog. For now options include collapsing/expanding, and renaming the
 column/folder.
 
 In edit mode, the title is replaced with an inline text input with the current
-column name. Bewlow the input should be buttons to accept changes or cancel
+column name. Below the input should be buttons to accept changes or cancel
 changes.
 
 Use XState to model logic as FSMs
 
-- [ ] Design an fsm using xstate to model editing, collapsed, and expanded
-      states
-- [ ] Add ellipsis button to the right of column header
-- [ ] Add context menu to ellipsis button with options to collapse/expand and
-      rename
-- [ ] Implement renaming feature with save button and cancel buttons
-- [ ] Implement expanding and collapsing
-- [ ] Persist expanding and collapsing column states for the base view
+- [x] Design an fsm using xstate to model editing, collapsed, and expanded
+      states for columns — `columnMachine` in `src/views/KanbanView/columnMachine.ts`;
+      states: `idle` (supports RENAME, TOGGLE_COLLAPSE) and `editing` (supports SET_DRAFT, CONFIRM, CANCEL)
+- [x] Add ellipsis button to the right of column header — `lucide-more-horizontal` icon, hidden until hover
+- [x] Add context menu to ellipsis button with options to collapse/expand and
+      rename — Obsidian `Menu` with Rename, Collapse/Expand, and Remove icon items
+- [x] Implement renaming feature with save button and cancel buttons — inline input
+      replaces h2 in editing state; Save/Cancel buttons below; Enter/Escape shortcuts;
+      renames folder on disk and migrates columnOrder/columnIcons/columnStates keys
+- [x] Add item to context dialog to remove icon — "Remove icon" menu item deletes
+      the column's entry from the icons signal
+- [x] Implement expanding and collapsing — column body conditionally rendered;
+      collapsed column shrinks to header width
+- [x] Persist expanding and collapsing column states for the base view — `columnStates`
+      hidden text option (JSON map) in view config; migrated on rename
 
 ### Phase VI: Drag 'n' Drop
 
