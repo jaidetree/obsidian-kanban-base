@@ -14,9 +14,10 @@
 	flex-direction: column;
 	min-width: var(--kanban-column-width, 220px);
 	width: var(--kanban-column-width, 220px);
+	height: 100%;
 	max-height: 100%;
 	overflow: hidden;
-	transition: 250ms all ease-in-out;
+	transition: 250ms all ease-in-out 250ms;
 }
 
 .kanban-base-column-header {
@@ -87,18 +88,19 @@
 	width: var(--kanban-column-width, 220px);
 	background: var(--background-secondary);
 	border-radius: var(--radius-m);
-	transition: 250ms all ease-in-out;
+	transform: rotate(0deg) translate(0px, 0px);
+	transition: 250ms all ease-in-out 250ms;
 	transform-origin: left bottom;
 	padding: 0.5rem;
 }
 
 .kanban-base-column--collapsed {
-	width: 3rem;
-	min-width: 0;
-	height: 100%;
+	/* width: 3rem; */
+	/* min-width: 0; */
 }
 .kanban-base-column--collapsed .kanban-base-column-container {
-	transform: rotate(90deg) translate(-40px, 0);
+	transition: 250ms all ease-in-out;
+	transform: rotate(90deg) translate(-48px, 0);
 }
 .kanban-base-column--collapsed .kanban-base-column-body {
 	max-height: 0;
@@ -170,6 +172,7 @@
 	flex: 1;
 	max-height: 100%;
 	transition: all 250ms ease-in-out 250ms;
+	overflow: hidden;
 }
 
 .kanban-base-card {

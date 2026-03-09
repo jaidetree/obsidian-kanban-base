@@ -216,14 +216,13 @@ function KanbanColumn({
 					</button>
 				</div>
 				<div class="kanban-base-column-body">
-					{!snapshot.context.isCollapsed &&
-						column.entries.map((entry) => (
-							<KanbanCard
-								key={entry.file.path}
-								entry={entry}
-								cardProperties={cardProperties}
-							/>
-						))}
+					{column.entries.map((entry) => (
+						<KanbanCard
+							key={entry.file.path}
+							entry={entry}
+							cardProperties={cardProperties}
+						/>
+					))}
 				</div>
 			</div>
 		</div>
