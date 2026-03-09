@@ -13,6 +13,7 @@ export class IconSuggestModal extends FuzzySuggestModal<Icon> {
 	}
 
 	onOpen() {
+		super.onOpen();
 		this.modalEl.addClass("kanban-base-icon-modal");
 		this.resultContainerEl.addClass("kanban-base-icons");
 	}

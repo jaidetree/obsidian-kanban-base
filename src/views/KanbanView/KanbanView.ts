@@ -1,8 +1,9 @@
-import { BasesView, TFolder, type QueryController } from 'obsidian';
-import { render, h } from 'preact';
-import type { BasesEntry } from 'obsidian';
-import { KanbanBoard } from './KanbanBoard';
-import { KANBAN_ID } from '.';
+import { BasesView, TFolder, type QueryController } from "obsidian";
+import { render, h } from "preact";
+import type { BasesEntry } from "obsidian";
+import { KanbanBoard } from "./KanbanBoard";
+import { KANBAN_ID } from ".";
+import { BoardIcons } from "types/icons";
 
 export interface KanbanColumn {
 	folder: TFolder;
@@ -18,11 +19,14 @@ export function deriveColumns(entries: BasesEntry[]): KanbanColumn[] {
 	if (entries.length === 0) return [];
 
 	// Only consider markdown files — ignore .base and other non-note files
-	const mdEntries = entries.filter(e => e.file.extension === 'md');
+	const mdEntries = entries.filter((e) => e.file.extension === "md");
 	if (mdEntries.length === 0) return [];
 
 	// Collect all immediate parent folders
-	const folderMap = new Map<string, { folder: TFolder; entries: BasesEntry[] }>();
+	const folderMap = new Map<
+		string,
+		{ folder: TFolder; entries: BasesEntry[] }
+	>();
 
 	for (const entry of mdEntries) {
 		const folder = entry.file.parent;
@@ -35,9 +39,9 @@ export function deriveColumns(entries: BasesEntry[]): KanbanColumn[] {
 
 	// Determine root: parent of the shallowest folder (fewest path segments).
 	// This avoids insertion-order sensitivity when entries live at mixed depths.
-	const folders = [...folderMap.values()].map(v => v.folder);
+	const folders = [...folderMap.values()].map((v) => v.folder);
 	const shallowest = folders.reduce((a, b) =>
-		a.path.split('/').length <= b.path.split('/').length ? a : b
+		a.path.split("/").length <= b.path.split("/").length ? a : b,
 	);
 	const root = shallowest.parent ?? null;
 
@@ -66,9 +70,9 @@ export function applyColumnOrder(
 ): KanbanColumn[] {
 	if (order.length === 0) return columns;
 	const ordered = order
-		.map(name => columns.find(c => c.folder.name === name))
+		.map((name) => columns.find((c) => c.folder.name === name))
 		.filter((c): c is KanbanColumn => c !== undefined);
-	const unordered = columns.filter(c => !order.includes(c.folder.name));
+	const unordered = columns.filter((c) => !order.includes(c.folder.name));
 	return [...ordered, ...unordered];
 }
 
@@ -84,15 +88,20 @@ export class KanbanView extends BasesView {
 	}
 
 	onDataUpdated(): void {
-		const cardProperties = (this.config.get('cardProperties') as string[] | null) ?? [];
-		const cardSize = (this.config.get('cardSize') as number | null) ?? 220;
-		const columns = applyColumnOrder(deriveColumns(this.data.data), this.parseColumnOrder());
+		const cardProperties =
+			(this.config.get("cardProperties") as string[] | null) ?? [];
+		const cardSize = (this.config.get("cardSize") as number | null) ?? 220;
+		const columns = applyColumnOrder(
+			deriveColumns(this.data.data),
+			this.parseColumnOrder(),
+		);
 		this.firstColumnFolder = columns[0]?.folder ?? null;
 
-		const columnIconsRaw = (this.config.get('columnIcons') as string | null) ?? '{}';
-		let columnIcons: Record<string, string>;
+		const columnIconsRaw =
+			(this.config.get("columnIcons") as string | null) ?? "{}";
+		let columnIcons: BoardIcons;
 		try {
-			columnIcons = JSON.parse(columnIconsRaw) as Record<string, string>;
+			columnIcons = JSON.parse(columnIconsRaw) as BoardIcons;
 		} catch {
 			columnIcons = {};
 		}
@@ -105,8 +114,8 @@ export class KanbanView extends BasesView {
 				cardSize,
 				columnIcons,
 				onAddColumn: (name: string) => this.handleAddColumn(name),
-				onUpdateIcons: (icons: Record<string, string>) => {
-					this.config.set('columnIcons', JSON.stringify(icons));
+				onUpdateIcons: (icons: BoardIcons) => {
+					this.config.set("columnIcons", JSON.stringify(icons));
 				},
 			}),
 			this.containerEl,
@@ -123,7 +132,7 @@ export class KanbanView extends BasesView {
 			path = `${base} ${i}.md`;
 			i++;
 		}
-		await this.app.vault.create(path, '');
+		await this.app.vault.create(path, "");
 	}
 
 	onunload(): void {
@@ -132,11 +141,13 @@ export class KanbanView extends BasesView {
 
 	private parseColumnOrder(): string[] {
 		try {
-			const raw = this.config.get('columnOrder');
-			if (!raw || typeof raw !== 'string') return [];
+			const raw = this.config.get("columnOrder");
+			if (!raw || typeof raw !== "string") return [];
 			const parsed = JSON.parse(raw) as unknown;
 			if (!Array.isArray(parsed)) return [];
-			return parsed.filter((item): item is string => typeof item === 'string');
+			return parsed.filter(
+				(item): item is string => typeof item === "string",
+			);
 		} catch {
 			return [];
 		}
@@ -147,15 +158,17 @@ export class KanbanView extends BasesView {
 		if (!trimmed || !this.firstColumnFolder) return;
 
 		const parent = this.firstColumnFolder.parent;
-		const rootPath = (parent && !parent.isRoot()) ? parent.path : '';
+		const rootPath = parent && !parent.isRoot() ? parent.path : "";
 		const folderPath = rootPath ? `${rootPath}/${trimmed}` : trimmed;
 
 		// Seed the column order from existing columns, then append the new name
 		const existingOrder = this.parseColumnOrder();
-		const existingNames = deriveColumns(this.data.data).map(c => c.folder.name);
+		const existingNames = deriveColumns(this.data.data).map(
+			(c) => c.folder.name,
+		);
 		const base = existingOrder.length > 0 ? existingOrder : existingNames;
-		const newOrder = [...base.filter(n => n !== trimmed), trimmed];
-		this.config.set('columnOrder', JSON.stringify(newOrder));
+		const newOrder = [...base.filter((n) => n !== trimmed), trimmed];
+		this.config.set("columnOrder", JSON.stringify(newOrder));
 
 		await this.app.vault.createFolder(folderPath);
 	}

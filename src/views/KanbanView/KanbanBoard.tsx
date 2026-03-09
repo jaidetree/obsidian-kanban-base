@@ -1,21 +1,16 @@
-import { useState, useRef, useEffect } from "preact/hooks";
+import { useState, useRef, useEffect, useMemo } from "preact/hooks";
 import type { CSSProperties } from "preact";
 import type { App, BasesEntry, BasesPropertyId } from "obsidian";
 import { getIconIds, setIcon } from "obsidian";
 import type { KanbanColumn } from "./KanbanView";
-import { useXState } from "../../hooks/useXState";
-import { iconMachine } from "./iconMachine";
 import { IconSuggestModal } from "./IconSuggestModal";
-
-interface Props {
-	columns: KanbanColumn[];
-	app: App;
-	cardProperties: string[];
-	cardSize: number;
-	columnIcons: Record<string, string>;
-	onAddColumn: (name: string) => Promise<void>;
-	onUpdateIcons: (icons: Record<string, string>) => void;
-}
+import { BoardIcons } from "types/icons";
+import {
+	Signal,
+	useComputed,
+	useSignal,
+	useSignalEffect,
+} from "@preact/signals";
 
 function getDefaultIcon(folderName: string): string {
 	const icons = getIconIds();
@@ -32,45 +27,38 @@ function IconRenderer({ iconId }: { iconId: string }) {
 	return <span ref={ref} class="kanban-base-icon" />;
 }
 
-function IconButton({
-	folderName,
-	chosenIcon,
-	app,
-	onSelect,
-}: {
+interface IconButtonProps {
 	folderName: string;
-	chosenIcon: string | null;
 	app: App;
-	onSelect: (icon: string) => void;
-}) {
-	const [snapshot, send] = useXState(iconMachine, {
-		input: { chosenIcon },
-	});
+	iconsSignal: Signal<BoardIcons>;
+}
 
-	console.log("icon snapshot", snapshot.context);
+function IconButton({ folderName, app, iconsSignal }: IconButtonProps) {
+	const chosenIcon = useComputed(() => iconsSignal.value[folderName]);
+	const displayIcon = useComputed(
+		() => chosenIcon.value?.value ?? getDefaultIcon(folderName),
+	);
 
-	const displayIcon =
-		snapshot.context.chosenIcon ?? getDefaultIcon(folderName);
-	const isDefault = snapshot.context.chosenIcon === null;
+	const isDefault = chosenIcon.value === undefined;
 
 	const handleClick = () => {
-		send({ type: "OPEN" });
 		const modal = new IconSuggestModal(app, (icon) => {
-			console.log("icon selected", icon);
-			send({ type: "SELECT", icon });
-			onSelect(icon);
+			iconsSignal.value = { ...iconsSignal.value, [folderName]: icon };
 		});
-		modal.onClose = () => send({ type: "CANCEL" });
 		modal.open();
 	};
 
 	return (
 		<button
-			class={`kanban-base-icon-btn${isDefault ? " kanban-base-icon-btn--default" : ""}`}
+			class={`kanban-base-icon-btn clickable-icon${isDefault ? " kanban-base-icon-btn--default" : ""}`}
 			onClick={handleClick}
 			aria-label="Change column icon"
 		>
-			<IconRenderer iconId={displayIcon} />
+			{chosenIcon.value?.prefix === "Emoji" ? (
+				displayIcon
+			) : chosenIcon ? (
+				<IconRenderer iconId={displayIcon.value} />
+			) : null}
 		</button>
 	);
 }
@@ -98,6 +86,52 @@ function KanbanCard({
 	);
 }
 
+interface KanbanColumnProps {
+	app: App;
+	column: KanbanColumn;
+	cardProperties: BasesPropertyId[];
+	iconsSignal: Signal<BoardIcons>;
+}
+
+function KanbanColumn({
+	app,
+	column,
+	cardProperties,
+	iconsSignal,
+}: KanbanColumnProps) {
+	return (
+		<div key={column.folder.path} class="kanban-base-column">
+			<div class="kanban-base-column-header">
+				<IconButton
+					folderName={column.folder.name}
+					app={app}
+					iconsSignal={iconsSignal}
+				/>
+				<h2>{column.folder.name}</h2>
+			</div>
+			<div class="kanban-base-column-body">
+				{column.entries.map((entry) => (
+					<KanbanCard
+						key={entry.file.path}
+						entry={entry}
+						cardProperties={cardProperties}
+					/>
+				))}
+			</div>
+		</div>
+	);
+}
+
+interface KanbanBoardProps {
+	columns: KanbanColumn[];
+	app: App;
+	cardProperties: string[];
+	cardSize: number;
+	columnIcons: BoardIcons;
+	onAddColumn: (name: string) => Promise<void>;
+	onUpdateIcons: (icons: BoardIcons) => void;
+}
+
 export function KanbanBoard({
 	columns,
 	cardProperties,
@@ -106,7 +140,8 @@ export function KanbanBoard({
 	onAddColumn,
 	onUpdateIcons,
 	app,
-}: Props) {
+}: KanbanBoardProps) {
+	const iconsSignal = useSignal(columnIcons);
 	const [adding, setAdding] = useState(false);
 	const [newName, setNewName] = useState("");
 
@@ -128,7 +163,9 @@ export function KanbanBoard({
 		if (e.key === "Escape") handleCancel();
 	};
 
-	const propIds = cardProperties as BasesPropertyId[];
+	useSignalEffect(() => {
+		onUpdateIcons(iconsSignal.value);
+	});
 
 	return (
 		<div
@@ -138,32 +175,13 @@ export function KanbanBoard({
 			}
 		>
 			{columns.map((column) => (
-				<div key={column.folder.path} class="kanban-base-column">
-					<div class="kanban-base-column-header">
-						<IconButton
-							folderName={column.folder.name}
-							chosenIcon={columnIcons[column.folder.name] ?? null}
-							app={app}
-							onSelect={(icon) => {
-								const updated = {
-									...columnIcons,
-									[column.folder.name]: icon,
-								};
-								onUpdateIcons(updated);
-							}}
-						/>
-						<h2>{column.folder.name}</h2>
-					</div>
-					<div class="kanban-base-column-body">
-						{column.entries.map((entry) => (
-							<KanbanCard
-								key={entry.file.path}
-								entry={entry}
-								cardProperties={propIds}
-							/>
-						))}
-					</div>
-				</div>
+				<KanbanColumn
+					app={app}
+					column={column}
+					cardProperties={cardProperties as BasesPropertyId[]}
+					iconsSignal={iconsSignal}
+					key={column.folder.path}
+				/>
 			))}
 			{adding ? (
 				<div class="kanban-base-column-add">

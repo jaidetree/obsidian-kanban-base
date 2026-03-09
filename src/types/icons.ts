@@ -3,3 +3,5 @@ export interface Icon {
 	value: string;
 	prefix: string;
 }
+
+export type BoardIcons = Record<string, Icon>;
