@@ -95,7 +95,10 @@ interface KanbanColumnProps {
 	cardProperties: BasesPropertyId[];
 	iconsSignal: Signal<BoardIcons>;
 	isCollapsed: boolean;
-	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void;
+	onStateChange: (
+		folderName: string,
+		state: { isCollapsed: boolean },
+	) => void;
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>;
 }
 
@@ -121,25 +124,28 @@ function KanbanColumn({
 	const handleMenuClick = (evt: MouseEvent) => {
 		const menu = new Menu();
 		menu.addItem((item) => {
-			item.setTitle("Rename").setIcon("pencil").onClick(() => {
-				send({ type: "RENAME" });
-			});
+			item.setTitle("Rename")
+				.setIcon("pencil")
+				.onClick(() => {
+					send({ type: "RENAME" });
+				});
 		});
 		menu.addItem((item) => {
 			const collapsed = snapshot.context.isCollapsed;
-			item
-				.setTitle(collapsed ? "Expand" : "Collapse")
+			item.setTitle(collapsed ? "Expand" : "Collapse")
 				.setIcon(collapsed ? "chevron-down" : "chevron-up")
 				.onClick(() => {
 					send({ type: "TOGGLE_COLLAPSE" });
 				});
 		});
 		menu.addItem((item) => {
-			item.setTitle("Remove icon").setIcon("x").onClick(() => {
-				const updated = { ...iconsSignal.value };
-				delete updated[column.folder.name];
-				iconsSignal.value = updated;
-			});
+			item.setTitle("Remove icon")
+				.setIcon("x")
+				.onClick(() => {
+					const updated = { ...iconsSignal.value };
+					delete updated[column.folder.name];
+					iconsSignal.value = updated;
+				});
 		});
 		menu.showAtMouseEvent(evt);
 	};
@@ -161,63 +167,65 @@ function KanbanColumn({
 		<div
 			class={`kanban-base-column${snapshot.context.isCollapsed ? " kanban-base-column--collapsed" : ""}`}
 		>
-			<div class="kanban-base-column-header">
-				<IconButton
-					folderName={column.folder.name}
-					app={app}
-					iconsSignal={iconsSignal}
-				/>
-				{snapshot.value === "editing" ? (
-					<div class="kanban-base-column-rename">
-						<input
-							class="kanban-base-column-rename-input"
-							value={snapshot.context.draft}
-							onInput={(e) =>
-								send({
-									type: "SET_DRAFT",
-									draft: (e.target as HTMLInputElement).value,
-								})
-							}
-							onKeyDown={handleRenameKeyDown}
-							autoFocus
-						/>
-						<div class="kanban-base-column-rename-actions">
-							<button
-								class="kanban-base-column-rename-confirm"
-								onClick={handleConfirm}
-							>
-								Save
-							</button>
-							<button
-								class="kanban-base-column-rename-cancel"
-								onClick={() => send({ type: "CANCEL" })}
-							>
-								Cancel
-							</button>
+			<div class="kanban-base-column-container">
+				<div class="kanban-base-column-header">
+					<IconButton
+						folderName={column.folder.name}
+						app={app}
+						iconsSignal={iconsSignal}
+					/>
+					{snapshot.value === "editing" ? (
+						<div class="kanban-base-column-rename">
+							<input
+								class="kanban-base-column-rename-input"
+								value={snapshot.context.draft}
+								onInput={(e) =>
+									send({
+										type: "SET_DRAFT",
+										draft: (e.target as HTMLInputElement)
+											.value,
+									})
+								}
+								onKeyDown={handleRenameKeyDown}
+								autoFocus
+							/>
+							<div class="kanban-base-column-rename-actions">
+								<button
+									class="kanban-base-column-rename-confirm"
+									onClick={handleConfirm}
+								>
+									Save
+								</button>
+								<button
+									class="kanban-base-column-rename-cancel"
+									onClick={() => send({ type: "CANCEL" })}
+								>
+									Cancel
+								</button>
+							</div>
 						</div>
-					</div>
-				) : (
-					<h2>{snapshot.context.name}</h2>
-				)}
-				<button
-					class="kanban-base-column-menu-btn clickable-icon"
-					aria-label="Column options"
-					onClick={handleMenuClick}
-				>
-					<IconRenderer iconId="lucide-more-horizontal" />
-				</button>
-			</div>
-			{!snapshot.context.isCollapsed && (
-				<div class="kanban-base-column-body">
-					{column.entries.map((entry) => (
-						<KanbanCard
-							key={entry.file.path}
-							entry={entry}
-							cardProperties={cardProperties}
-						/>
-					))}
+					) : (
+						<h2>{snapshot.context.name}</h2>
+					)}
+					<button
+						class="kanban-base-column-menu-btn clickable-icon"
+						aria-label="Column options"
+						onClick={handleMenuClick}
+					>
+						<IconRenderer iconId="lucide-more-horizontal" />
+					</button>
 				</div>
-			)}
+				<div class="kanban-base-column-body">
+					{!snapshot.context.isCollapsed &&
+						column.entries.map((entry) => (
+							<KanbanCard
+								key={entry.file.path}
+								entry={entry}
+								cardProperties={cardProperties}
+							/>
+						))}
+				</div>
+			</div>
 		</div>
 	);
 }
@@ -291,7 +299,9 @@ export function KanbanBoard({
 	return (
 		<div
 			class="kanban-base-board"
-			style={{ "--kanban-column-width": `${cardSize}px` } as CSSProperties}
+			style={
+				{ "--kanban-column-width": `${cardSize}px` } as CSSProperties
+			}
 		>
 			{columns.map((column) => (
 				<KanbanColumn
@@ -301,7 +311,8 @@ export function KanbanBoard({
 					cardProperties={cardProperties as BasesPropertyId[]}
 					iconsSignal={iconsSignal}
 					isCollapsed={
-						columnStatesSignal.value[column.folder.name]?.isCollapsed ?? false
+						columnStatesSignal.value[column.folder.name]
+							?.isCollapsed ?? false
 					}
 					onStateChange={handleStateChange}
 					onRenameColumn={onRenameColumn}
