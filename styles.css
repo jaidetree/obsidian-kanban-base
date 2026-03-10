@@ -91,6 +91,12 @@
 	padding: 0.5rem;
 }
 
+.kanban-base-column-drag-handle {
+	font-size: 1.5rem;
+	cursor: grab;
+	opacity: 0.5;
+}
+
 .kanban-base-column--collapsed {
 	width: 3rem;
 	min-width: 0;

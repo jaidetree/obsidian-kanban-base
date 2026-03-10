@@ -55,6 +55,12 @@ function IconButton({ folderName, app, iconsSignal }: IconButtonProps) {
 	)
 }
 
+interface KanbanColumnDragHandleProps {}
+
+function KanbanColumnDragHandle({}: KanbanColumnDragHandleProps) {
+	return <span class="kanban-base-column-drag-handle">⫼</span>
+}
+
 function KanbanCard({
 	entry,
 	cardProperties,
@@ -157,6 +163,7 @@ export function KanbanColumn({
 		>
 			<div class="kanban-base-column-container">
 				<div class="kanban-base-column-header">
+					<KanbanColumnDragHandle />
 					<IconButton
 						folderName={column.folder.name}
 						app={app}
