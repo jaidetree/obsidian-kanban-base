@@ -21,6 +21,9 @@ export default defineConfig({
         resolve: {
           alias: {
             'obsidian': path.resolve(dirname, 'src/__mocks__/obsidian.ts'),
+            'hooks': path.resolve(dirname, 'src/hooks'),
+            'types': path.resolve(dirname, 'src/types'),
+            'views': path.resolve(dirname, 'src/views'),
           },
         },
         test: {

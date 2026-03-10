@@ -1,4 +1,4 @@
-import { type MutableRef, useEffect, useRef, useState, useMemo, useCallback } from "preact/hooks";
+import { type MutableRef, useCallback, useEffect, useRef, useState } from "preact/hooks";
 import {
 	createActor,
 	type AnyStateMachine,

@@ -23,6 +23,9 @@ const config: StorybookConfig = {
         alias: {
           '@': path.resolve(__dirname, '../src'),
           'obsidian': path.resolve(__dirname, '../src/__mocks__/obsidian.ts'),
+          'hooks': path.resolve(__dirname, '../src/hooks'),
+          'types': path.resolve(__dirname, '../src/types'),
+          'views': path.resolve(__dirname, '../src/views'),
         },
       },
       build: {

@@ -67,29 +67,6 @@ export const EmptyColumns: Story = {
 	},
 };
 
-export const SingleColumn: Story = {
-	args: {
-		columns: [{ folder: todo, entries: [entryInFolder(todo, 'Only note')] }],
-	},
-};
-
-export const CardWithProperties: Story = {
-	args: {
-		cardProperties: ['note.priority', 'note.status'],
-		columns: [
-			{
-				folder: todo,
-				entries: [
-					entryInFolder(todo, 'High priority task', { priority: 'High', status: 'Blocked' }),
-					entryInFolder(todo, 'Normal task', { priority: 'Low' }),
-					entryInFolder(todo, 'No properties task'),
-				],
-			},
-			{ folder: done, entries: [entryInFolder(done, 'Finished task', { priority: 'Medium', status: 'Done' })] },
-		],
-	},
-};
-
 export const AddColumnForm: Story = {
 	args: {
 		columns: [],
