@@ -19,6 +19,7 @@ export default tseslint.config({
                     '.storybook/*.ts',
                     'vitest.config.ts',
                     'vitest.shims.d.ts',
+                    'prettier.config.ts',
                 ]
             },
             tsconfigRootDir: import.meta.dirname,

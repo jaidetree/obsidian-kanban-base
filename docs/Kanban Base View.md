@@ -249,6 +249,8 @@ Ues XState to model stateful logic in finite state machines.
       `IconSuggestModal` in `src/views/KanbanView/IconSuggestModal.ts`
 - [x] Persist icon selection for base view — `columnIcons` hidden text option
       (JSON map) in view config
+- [x] Set default icon to something static and generic
+- [ ] ~~Add animation to collapsing~~
 
 #### Column Context Menu
 
@@ -263,37 +265,58 @@ changes.
 Use XState to model logic as FSMs
 
 - [x] Design an fsm using xstate to model editing, collapsed, and expanded
-      states for columns — `columnMachine` in `src/views/KanbanView/columnMachine.ts`;
-      states: `idle` (supports RENAME, TOGGLE_COLLAPSE) and `editing` (supports SET_DRAFT, CONFIRM, CANCEL)
-- [x] Add ellipsis button to the right of column header — `lucide-more-horizontal` icon, hidden until hover
+      states for columns — `columnMachine` in
+      `src/views/KanbanView/columnMachine.ts`; states: `idle` (supports RENAME,
+      TOGGLE_COLLAPSE) and `editing` (supports SET_DRAFT, CONFIRM, CANCEL)
+- [x] Add ellipsis button to the right of column header —
+      `lucide-more-horizontal` icon, hidden until hover
 - [x] Add context menu to ellipsis button with options to collapse/expand and
-      rename — Obsidian `Menu` with Rename, Collapse/Expand, and Remove icon items
-- [x] Implement renaming feature with save button and cancel buttons — inline input
-      replaces h2 in editing state; Save/Cancel buttons below; Enter/Escape shortcuts;
-      renames folder on disk and migrates columnOrder/columnIcons/columnStates keys
-- [x] Add item to context dialog to remove icon — "Remove icon" menu item deletes
-      the column's entry from the icons signal
+      rename — Obsidian `Menu` with Rename, Collapse/Expand, and Remove icon
+      items
+- [x] Implement renaming feature with save button and cancel buttons — inline
+      input replaces h2 in editing state; Save/Cancel buttons below;
+      Enter/Escape shortcuts; renames folder on disk and migrates
+      columnOrder/columnIcons/columnStates keys
+- [x] Add item to context dialog to remove icon — "Remove icon" menu item
+      deletes the column's entry from the icons signal
 - [x] Implement expanding and collapsing — column body conditionally rendered;
       collapsed column shrinks to header width
-- [x] Persist expanding and collapsing column states for the base view — `columnStates`
-      hidden text option (JSON map) in view config; migrated on rename
+- [x] Persist expanding and collapsing column states for the base view —
+      `columnStates` hidden text option (JSON map) in view config; migrated on
+      rename
 
 ### Phase VI: Drag 'n' Drop
+
+#### Reorder Columns
+
+Implement drag and drop functionality for columns to reorder them and persist
+their order in the base. Dragging and dropping columns should be modeled with
+XState using the hooks in src/hooks/xstate.ts.
+
+Save any XState machine defs in the src/machines directory. Update lint config
+to cover those files.
+
+- [ ] Implement `columnOrderMachine`: states
+      `idle → dragging → reordered/canceled  `; on `reordered` persist new order
+      to `columnOrder` option
+- [ ] Render a column drag handle and highlight active position while a column
+      is being reordered
+- [ ] Wire pointer events (mousedown/mousemove/mouseup or HTML5 drag events) to
+      both machines
+- [ ] Write Storybook stories for drag states: column reordering
+- [ ] Manual end-to-end test: reorder columns, verify order persists
+
+#### Drag and Drop Cards Between Columns
 
 - [ ] Implement `cardDragMachine`: states `idle → dragging → dropped/canceled`;
       on `dropped` call `app.vault.rename()` to move file to target folder, then
       trigger base re-render
-- [ ] Implement `columnOrderMachine`: states
-      `idle → dragging → reordered/canceled  `; on `reordered` persist new order
-      to `columnOrder` option
 - [ ] Wire pointer events (mousedown/mousemove/mouseup or HTML5 drag events) to
       both machines
 - [ ] Render a drop-target highlight on the active column while a card is being
       dragged
-- [ ] Render a column drag handle and highlight active position while a column
-      is being reordered
 - [ ] Handle edge cases: dropping card onto its own column (no-op), dropping
       outside any column (cancel)
-- [ ] Write Storybook stories for drag states: card dragging, column reordering
+- [ ] Write Storybook stories for drag states: card dragging
 - [ ] Manual end-to-end test: drag card across columns, verify file moves on
-      disk; reorder columns, verify order persists
+      disk
