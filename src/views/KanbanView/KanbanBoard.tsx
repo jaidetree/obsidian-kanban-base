@@ -5,7 +5,10 @@ import type { CSSProperties } from 'preact'
 import { useEffect, useState } from 'preact/hooks'
 import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
-import { columnOrderMachine, reorderColumns } from '../../machines/columnOrderMachine'
+import {
+	columnOrderMachine,
+	reorderColumns,
+} from '../../machines/columnOrderMachine'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
 
@@ -125,12 +128,18 @@ export function KanbanBoard({
 					onStateChange={handleStateChange}
 					onRenameColumn={onRenameColumn}
 					dragIndex={idx}
-					onDragStart={index => dragSend({ type: 'DRAG_START', index })}
+					onDragStart={index =>
+						dragSend({ type: 'DRAG_START', index })
+					}
 					onDragOver={index => dragSend({ type: 'DRAG_OVER', index })}
 					onDrop={() => dragSend({ type: 'DROP' })}
 					onDragCancel={() => dragSend({ type: 'CANCEL' })}
-					isDragging={dragSnapshot.matches('dragging') && dragIndex === idx}
-					isDragTarget={dragSnapshot.matches('dragging') && dropIndex === idx}
+					isDragging={
+						dragSnapshot.matches('dragging') && dragIndex === idx
+					}
+					isDragTarget={
+						dragSnapshot.matches('dragging') && dropIndex === idx
+					}
 				/>
 			))}
 			{adding ? (
