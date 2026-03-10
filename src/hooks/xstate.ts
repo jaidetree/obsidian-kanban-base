@@ -1,4 +1,4 @@
-import { type MutableRef, useEffect, useRef, useState } from "preact/hooks";
+import { type MutableRef, useEffect, useRef, useState, useMemo, useCallback } from "preact/hooks";
 import {
 	createActor,
 	type AnyStateMachine,
@@ -41,8 +41,12 @@ export function useActorState<T extends AnyStateMachine>(
 		return () => sub.unsubscribe();
 	}, []);
 
-	// eslint-disable-next-line @typescript-eslint/unbound-method
-	return [snapshot, actorRef.current.send];
+	const send = useCallback(
+		(...args: Parameters<typeof actorRef.current.send>) => actorRef.current.send(...args), 
+		[actorRef.current]
+	)
+
+	return [snapshot, send] as const;
 }
 
 export function useXState<M extends AnyStateMachine>(

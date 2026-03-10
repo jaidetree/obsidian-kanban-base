@@ -1,15 +1,15 @@
-import { setup, assign } from 'xstate';
+import { assign, setup } from 'xstate'
 
 export const columnMachine = setup({
 	types: {} as {
-		context: { name: string; draft: string; isCollapsed: boolean };
+		context: { name: string; draft: string; isCollapsed: boolean }
 		events:
 			| { type: 'RENAME' }
 			| { type: 'SET_DRAFT'; draft: string }
 			| { type: 'CONFIRM' }
 			| { type: 'CANCEL' }
-			| { type: 'TOGGLE_COLLAPSE' };
-		input: { name: string; isCollapsed: boolean };
+			| { type: 'TOGGLE_COLLAPSE' }
+		input: { name: string; isCollapsed: boolean }
 	},
 }).createMachine({
 	id: 'column',
@@ -24,7 +24,9 @@ export const columnMachine = setup({
 			on: {
 				RENAME: 'editing',
 				TOGGLE_COLLAPSE: {
-					actions: assign({ isCollapsed: ({ context }) => !context.isCollapsed }),
+					actions: assign({
+						isCollapsed: ({ context }) => !context.isCollapsed,
+					}),
 				},
 			},
 		},
@@ -44,4 +46,4 @@ export const columnMachine = setup({
 			},
 		},
 	},
-});
+})
