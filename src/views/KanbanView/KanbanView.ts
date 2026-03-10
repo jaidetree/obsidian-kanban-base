@@ -133,6 +133,9 @@ export class KanbanView extends BasesView {
 				},
 				onRenameColumn: (oldName: string, newName: string) =>
 					this.handleRenameColumn(oldName, newName),
+				onUpdateColumnOrder: (newOrder: string[]) => {
+					this.config.set("columnOrder", JSON.stringify(newOrder))
+				},
 			}),
 			this.containerEl,
 		)

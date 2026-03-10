@@ -296,14 +296,19 @@ XState using the hooks in src/hooks/xstate.ts.
 Save any XState machine defs in the src/machines directory. Update lint config
 to cover those files.
 
-- [ ] Implement `columnOrderMachine`: states
-      `idle → dragging → reordered/canceled  `; on `reordered` persist new order
-      to `columnOrder` option
-- [ ] Render a column drag handle and highlight active position while a column
-      is being reordered
-- [ ] Wire pointer events (mousedown/mousemove/mouseup or HTML5 drag events) to
-      both machines
-- [ ] Write Storybook stories for drag states: column reordering
+- [x] Implement `columnOrderMachine`: states
+      `idle → dragging → reordered/canceled`; on `reordered` persist new order
+      to `columnOrder` option — `src/machines/columnOrderMachine.ts`
+- [x] Render a column drag handle
+- [x] Highlight active position while a column is being reordered — CSS classes
+      `kanban-base-column--dragging` (opacity 0.5) and
+      `kanban-base-column--drop-target` (accent outline)
+- [x] Wire HTML5 drag events to machine — `draggable` on handle,
+      `onDragStart`/`onDragOver`/`onDrop`/`onDragEnd` on column div
+- [x] Live preview column order during drag via `previewColumns` in
+      `KanbanBoard`; persist to `columnOrder` on drop
+- [x] Write Storybook stories for drag states: `ColumnDragging`,
+      `ColumnDropTarget` in `KanbanColumn.stories.tsx` and `KanbanBoard.stories.tsx`
 - [ ] Manual end-to-end test: reorder columns, verify order persists
 
 #### Drag and Drop Cards Between Columns

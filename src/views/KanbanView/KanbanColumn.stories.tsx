@@ -36,9 +36,12 @@ interface StoryProps {
 	isCollapsed: boolean;
 	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void;
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>;
+	dragIndex?: number;
+	isDragging?: boolean;
+	isDragTarget?: boolean;
 }
 
-function KanbanColumnStory({ columnIcons, cardProperties, ...rest }: StoryProps) {
+function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, ...rest }: StoryProps) {
 	const iconsSignal = useSignal(columnIcons);
 	return (
 		<KanbanColumn
@@ -46,6 +49,13 @@ function KanbanColumnStory({ columnIcons, cardProperties, ...rest }: StoryProps)
 			app={createMockApp()}
 			cardProperties={cardProperties as BasesPropertyId[]}
 			iconsSignal={iconsSignal}
+			dragIndex={dragIndex}
+			onDragStart={() => {}}
+			onDragOver={() => {}}
+			onDrop={() => {}}
+			onDragCancel={() => {}}
+			isDragging={isDragging}
+			isDragTarget={isDragTarget}
 		/>
 	);
 }
@@ -109,3 +119,15 @@ export const WithChosenIcon: Story = {
 		},
 	},
 };
+
+export const ColumnDragging: Story = {
+	args: {
+		isDragging: true,
+	},
+};
+
+export const ColumnDropTarget: Story = {
+	args: {
+		isDragTarget: true,
+	},
+};;

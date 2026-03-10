@@ -1,9 +1,11 @@
 import { useSignal, useSignalEffect } from '@preact/signals'
+import { useXState } from 'hooks/xstate'
 import type { App, BasesPropertyId } from 'obsidian'
 import type { CSSProperties } from 'preact'
-import { useState } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
+import { columnOrderMachine, reorderColumns } from '../../machines/columnOrderMachine'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
 
@@ -18,6 +20,7 @@ interface KanbanBoardProps {
 	onUpdateIcons: (icons: BoardIcons) => void
 	onUpdateColumnStates: (states: BoardColumnStates) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+	onUpdateColumnOrder: (newOrder: string[]) => void
 }
 
 export function KanbanBoard({
@@ -30,12 +33,40 @@ export function KanbanBoard({
 	onUpdateIcons,
 	onUpdateColumnStates,
 	onRenameColumn,
+	onUpdateColumnOrder,
 	app,
 }: KanbanBoardProps) {
 	const iconsSignal = useSignal(columnIcons)
 	const columnStatesSignal = useSignal(columnStates)
 	const [adding, setAdding] = useState(false)
 	const [newName, setNewName] = useState('')
+
+	const [dragSnapshot, dragSend] = useXState(columnOrderMachine)
+
+	// Compute preview order during drag
+	const { dragIndex, dropIndex } = dragSnapshot.context
+	const columnNames = columns.map(c => c.folder.name)
+	const previewNames =
+		dragSnapshot.matches('dragging') &&
+		dragIndex !== null &&
+		dropIndex !== null
+			? reorderColumns(columnNames, dragIndex, dropIndex)
+			: columnNames
+	const previewColumns = previewNames
+		.map(name => columns.find(c => c.folder.name === name))
+		.filter((c): c is IKanbanColumn => c !== undefined)
+
+	// Fire onUpdateColumnOrder when machine enters reordered state
+	useEffect(() => {
+		if (
+			dragSnapshot.matches('reordered') &&
+			dragIndex !== null &&
+			dropIndex !== null
+		) {
+			const newOrder = reorderColumns(columnNames, dragIndex, dropIndex)
+			onUpdateColumnOrder(newOrder)
+		}
+	}, [dragSnapshot.value])
 
 	const handleConfirm = async () => {
 		const name = newName.trim()
@@ -80,7 +111,7 @@ export function KanbanBoard({
 				{ '--kanban-column-width': `${cardSize}px` } as CSSProperties
 			}
 		>
-			{columns.map(column => (
+			{previewColumns.map((column, idx) => (
 				<KanbanColumn
 					key={column.folder.path}
 					app={app}
@@ -93,6 +124,13 @@ export function KanbanBoard({
 					}
 					onStateChange={handleStateChange}
 					onRenameColumn={onRenameColumn}
+					dragIndex={idx}
+					onDragStart={index => dragSend({ type: 'DRAG_START', index })}
+					onDragOver={index => dragSend({ type: 'DRAG_OVER', index })}
+					onDrop={() => dragSend({ type: 'DROP' })}
+					onDragCancel={() => dragSend({ type: 'CANCEL' })}
+					isDragging={dragSnapshot.matches('dragging') && dragIndex === idx}
+					isDragTarget={dragSnapshot.matches('dragging') && dropIndex === idx}
 				/>
 			))}
 			{adding ? (

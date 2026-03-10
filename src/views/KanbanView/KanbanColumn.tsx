@@ -55,10 +55,23 @@ function IconButton({ folderName, app, iconsSignal }: IconButtonProps) {
 	)
 }
 
-interface KanbanColumnDragHandleProps {}
+interface KanbanColumnDragHandleProps {
+	onDragStart: () => void
+}
 
-function KanbanColumnDragHandle({}: KanbanColumnDragHandleProps) {
-	return <span class="kanban-base-column-drag-handle">⫼</span>
+function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
+	return (
+		<span
+			class="kanban-base-column-drag-handle"
+			draggable
+			onDragStart={e => {
+				e.dataTransfer!.effectAllowed = 'move'
+				onDragStart()
+			}}
+		>
+			⫼
+		</span>
+	)
 }
 
 function KanbanCard({
@@ -92,6 +105,13 @@ interface KanbanColumnProps {
 	isCollapsed: boolean
 	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+	dragIndex: number
+	onDragStart: (index: number) => void
+	onDragOver: (index: number) => void
+	onDrop: () => void
+	onDragCancel: () => void
+	isDragging: boolean
+	isDragTarget: boolean
 }
 
 export function KanbanColumn({
@@ -102,6 +122,13 @@ export function KanbanColumn({
 	isCollapsed,
 	onStateChange,
 	onRenameColumn,
+	dragIndex,
+	onDragStart,
+	onDragOver,
+	onDrop,
+	onDragCancel,
+	isDragging,
+	isDragTarget,
 }: KanbanColumnProps) {
 	const [snapshot, send] = useXState(columnMachine, {
 		input: { name: column.folder.name, isCollapsed },
@@ -157,13 +184,33 @@ export function KanbanColumn({
 		if (e.key === 'Escape') send({ type: 'CANCEL' })
 	}
 
+	const dragClasses = [
+		'kanban-base-column',
+		snapshot.context.isCollapsed ? 'kanban-base-column--collapsed' : '',
+		isDragging ? 'kanban-base-column--dragging' : '',
+		isDragTarget ? 'kanban-base-column--drop-target' : '',
+	]
+		.filter(Boolean)
+		.join(' ')
+
 	return (
 		<div
-			class={`kanban-base-column${snapshot.context.isCollapsed ? ' kanban-base-column--collapsed' : ''}`}
+			class={dragClasses}
+			onDragOver={e => {
+				e.preventDefault()
+				onDragOver(dragIndex)
+			}}
+			onDrop={e => {
+				e.preventDefault()
+				onDrop()
+			}}
+			onDragEnd={() => {
+				onDragCancel()
+			}}
 		>
 			<div class="kanban-base-column-container">
 				<div class="kanban-base-column-header">
-					<KanbanColumnDragHandle />
+					<KanbanColumnDragHandle onDragStart={() => onDragStart(dragIndex)} />
 					<IconButton
 						folderName={column.folder.name}
 						app={app}

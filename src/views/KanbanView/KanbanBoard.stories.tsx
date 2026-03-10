@@ -45,6 +45,7 @@ const meta: Meta<typeof KanbanBoard> = {
 		onUpdateIcons: (_icons: BoardIcons) => {},
 		onUpdateColumnStates: (_states: BoardColumnStates) => {},
 		onRenameColumn: async (_oldName: string, _newName: string) => {},
+		onUpdateColumnOrder: (_newOrder: string[]) => {},
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },
 			{ folder: inProgress, entries: [entryInFolder(inProgress, 'Task 3')] },
@@ -70,5 +71,27 @@ export const EmptyColumns: Story = {
 export const AddColumnForm: Story = {
 	args: {
 		columns: [],
+	},
+};
+
+export const ColumnDragIdle: Story = {};
+
+export const ColumnDragging: Story = {
+	args: {
+		columns: [
+			{ folder: todo, entries: [entryInFolder(todo, 'Task 1')] },
+			{ folder: inProgress, entries: [entryInFolder(inProgress, 'Task 3')] },
+			{ folder: done, entries: [] },
+		],
+	},
+};
+
+export const ColumnDropTarget: Story = {
+	args: {
+		columns: [
+			{ folder: todo, entries: [entryInFolder(todo, 'Task 1')] },
+			{ folder: inProgress, entries: [] },
+			{ folder: done, entries: [] },
+		],
 	},
 };

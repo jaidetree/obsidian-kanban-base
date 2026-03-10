@@ -97,6 +97,15 @@
 	opacity: 0.5;
 }
 
+.kanban-base-column--dragging {
+	opacity: 0.5;
+}
+
+.kanban-base-column--drop-target {
+	outline: 2px solid var(--interactive-accent);
+	border-radius: var(--radius-m);
+}
+
 .kanban-base-column--collapsed {
 	width: 3rem;
 	min-width: 0;
