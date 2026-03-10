@@ -49,6 +49,14 @@ export function useActorState<T extends AnyStateMachine>(
 	return [snapshot, send] as const;
 }
 
+export function useActorRef<M extends AnyStateMachine>(
+	actor: Actor<M>,
+): ActorRef<M> {
+	const ref: MutableRef<Actor<M>> = useRef(actor)
+	ref.current = actor
+	return ref
+}
+
 export function useXState<M extends AnyStateMachine>(
 	machine: M,
 	options?: Parameters<typeof createActor<M>>[1],

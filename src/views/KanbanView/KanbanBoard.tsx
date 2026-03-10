@@ -1,10 +1,11 @@
 import { useSignal, useSignalEffect } from '@preact/signals'
-import { useXState } from 'hooks/xstate'
+import { useActorRef, useActorState } from 'hooks/xstate'
 import type { App, BasesPropertyId } from 'obsidian'
 import type { CSSProperties } from 'preact'
-import { useEffect, useState } from 'preact/hooks'
+import { useState } from 'preact/hooks'
 import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
+import { type Actor } from 'xstate'
 import {
 	columnOrderMachine,
 	reorderColumns,
@@ -23,7 +24,7 @@ interface KanbanBoardProps {
 	onUpdateIcons: (icons: BoardIcons) => void
 	onUpdateColumnStates: (states: BoardColumnStates) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
-	onUpdateColumnOrder: (newOrder: string[]) => void
+	columnOrderActor: Actor<typeof columnOrderMachine>
 }
 
 export function KanbanBoard({
@@ -36,7 +37,7 @@ export function KanbanBoard({
 	onUpdateIcons,
 	onUpdateColumnStates,
 	onRenameColumn,
-	onUpdateColumnOrder,
+	columnOrderActor,
 	app,
 }: KanbanBoardProps) {
 	const iconsSignal = useSignal(columnIcons)
@@ -44,32 +45,24 @@ export function KanbanBoard({
 	const [adding, setAdding] = useState(false)
 	const [newName, setNewName] = useState('')
 
-	const [dragSnapshot, dragSend] = useXState(columnOrderMachine)
+	const actorRef = useActorRef(columnOrderActor)
+	const [dragSnapshot, dragSend] = useActorState(actorRef)
 
-	// Compute preview order during drag
-	const { dragIndex, dropIndex } = dragSnapshot.context
-	const columnNames = columns.map(c => c.folder.name)
-	const previewNames =
-		dragSnapshot.matches('dragging') &&
-		dragIndex !== null &&
-		dropIndex !== null
-			? reorderColumns(columnNames, dragIndex, dropIndex)
-			: columnNames
-	const previewColumns = previewNames
-		.map(name => columns.find(c => c.folder.name === name))
-		.filter((c): c is IKanbanColumn => c !== undefined)
+	// Machine context is the source of truth for committed column order
+	const { columns: committedNames, dragIndex, dropIndex } = dragSnapshot.context
+	const displayNames =
+		dragSnapshot.matches('dragging') && dragIndex !== null && dropIndex !== null
+			? reorderColumns(committedNames, dragIndex, dropIndex)
+			: committedNames
 
-	// Fire onUpdateColumnOrder when machine enters reordered state
-	useEffect(() => {
-		if (
-			dragSnapshot.matches('reordered') &&
-			dragIndex !== null &&
-			dropIndex !== null
-		) {
-			const newOrder = reorderColumns(columnNames, dragIndex, dropIndex)
-			onUpdateColumnOrder(newOrder)
-		}
-	}, [dragSnapshot.value])
+	// Map names → actual column data; append any columns not yet in machine context
+	const known = new Set(displayNames)
+	const previewColumns: IKanbanColumn[] = [
+		...displayNames
+			.map(name => columns.find(c => c.folder.name === name))
+			.filter((c): c is IKanbanColumn => c !== undefined),
+		...columns.filter(c => !known.has(c.folder.name)),
+	]
 
 	const handleConfirm = async () => {
 		const name = newName.trim()

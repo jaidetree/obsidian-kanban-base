@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { createActor } from 'xstate'
 import { columnOrderMachine, reorderColumns } from './columnOrderMachine'
 
+const defaultInput = { columns: ['A', 'B', 'C'] }
+
 describe('reorderColumns', () => {
 	it('moves item forward', () => {
 		expect(reorderColumns(['A', 'B', 'C'], 0, 2)).toEqual(['B', 'C', 'A'])
@@ -21,15 +23,16 @@ describe('reorderColumns', () => {
 })
 
 describe('columnOrderMachine', () => {
-	it('starts in idle state', () => {
-		const actor = createActor(columnOrderMachine)
+	it('starts in idle state with provided columns', () => {
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
 		actor.start()
 		expect(actor.getSnapshot().value).toBe('idle')
+		expect(actor.getSnapshot().context.columns).toEqual(['A', 'B', 'C'])
 		actor.stop()
 	})
 
 	it('transitions to dragging on DRAG_START and records dragIndex', () => {
-		const actor = createActor(columnOrderMachine)
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
 		actor.start()
 		actor.send({ type: 'DRAG_START', index: 1 })
 		const snap = actor.getSnapshot()
@@ -39,7 +42,7 @@ describe('columnOrderMachine', () => {
 	})
 
 	it('updates dropIndex on DRAG_OVER', () => {
-		const actor = createActor(columnOrderMachine)
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
 		actor.start()
 		actor.send({ type: 'DRAG_START', index: 0 })
 		actor.send({ type: 'DRAG_OVER', index: 2 })
@@ -47,33 +50,48 @@ describe('columnOrderMachine', () => {
 		actor.stop()
 	})
 
-	it('goes to reordered then idle on DROP', () => {
-		const actor = createActor(columnOrderMachine)
+	it('goes to idle on DROP and reorders columns', () => {
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
 		actor.start()
 		actor.send({ type: 'DRAG_START', index: 0 })
+		actor.send({ type: 'DRAG_OVER', index: 2 })
 		actor.send({ type: 'DROP' })
-		// reordered is an always-transition state, so it immediately goes to idle
-		expect(actor.getSnapshot().value).toBe('idle')
+		const snap = actor.getSnapshot()
+		expect(snap.value).toBe('idle')
+		expect(snap.context.columns).toEqual(['B', 'C', 'A'])
+		expect(snap.context.dragIndex).toBeNull()
+		expect(snap.context.dropIndex).toBeNull()
 		actor.stop()
 	})
 
-	it('returns to idle on CANCEL', () => {
-		const actor = createActor(columnOrderMachine)
+	it('returns to idle on CANCEL without reordering', () => {
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
 		actor.start()
 		actor.send({ type: 'DRAG_START', index: 0 })
+		actor.send({ type: 'DRAG_OVER', index: 2 })
 		actor.send({ type: 'CANCEL' })
-		expect(actor.getSnapshot().value).toBe('idle')
+		const snap = actor.getSnapshot()
+		expect(snap.value).toBe('idle')
+		expect(snap.context.columns).toEqual(['A', 'B', 'C'])
 		actor.stop()
 	})
 
-	it('clears dropIndex on DRAG_START', () => {
-		const actor = createActor(columnOrderMachine)
+	it('clears drag indices on DRAG_START', () => {
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
 		actor.start()
 		actor.send({ type: 'DRAG_START', index: 0 })
 		actor.send({ type: 'DRAG_OVER', index: 2 })
 		actor.send({ type: 'CANCEL' })
 		actor.send({ type: 'DRAG_START', index: 1 })
 		expect(actor.getSnapshot().context.dropIndex).toBeNull()
+		actor.stop()
+	})
+
+	it('updates columns on SET_COLUMNS', () => {
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
+		actor.start()
+		actor.send({ type: 'SET_COLUMNS', columns: ['A', 'B', 'C', 'D'] })
+		expect(actor.getSnapshot().context.columns).toEqual(['A', 'B', 'C', 'D'])
 		actor.stop()
 	})
 })

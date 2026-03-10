@@ -6,6 +6,13 @@ import { KanbanBoard } from './KanbanBoard';
 import type { TFolder } from 'obsidian';
 import type { BoardIcons } from '../../types/icons';
 import type { BoardColumnStates } from '../../types/columns';
+import { createActor } from 'xstate';
+import { columnOrderMachine } from '../../machines/columnOrderMachine';
+
+const storyActor = createActor(columnOrderMachine, {
+	input: { columns: ['Todo', 'In Progress', 'Done'] },
+});
+storyActor.start();
 
 function mockFolder(name: string, parent: TFolder | null = null): TFolder {
 	return {
@@ -45,7 +52,7 @@ const meta: Meta<typeof KanbanBoard> = {
 		onUpdateIcons: (_icons: BoardIcons) => {},
 		onUpdateColumnStates: (_states: BoardColumnStates) => {},
 		onRenameColumn: async (_oldName: string, _newName: string) => {},
-		onUpdateColumnOrder: (_newOrder: string[]) => {},
+		columnOrderActor: storyActor,
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },
 			{ folder: inProgress, entries: [entryInFolder(inProgress, 'Task 3')] },

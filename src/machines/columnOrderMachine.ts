@@ -11,11 +11,14 @@ function reorder(columns: string[], from: number, to: number): string[] {
 
 export const columnOrderMachine = setup({
 	types: {} as {
+		input: { columns: string[] }
 		context: {
+			columns: string[]
 			dragIndex: number | null
 			dropIndex: number | null
 		}
 		events:
+			| { type: 'SET_COLUMNS'; columns: string[] }
 			| { type: 'DRAG_START'; index: number }
 			| { type: 'DRAG_OVER'; index: number }
 			| { type: 'DROP' }
@@ -24,13 +27,17 @@ export const columnOrderMachine = setup({
 }).createMachine({
 	id: 'columnOrder',
 	initial: 'idle',
-	context: {
+	context: ({ input }) => ({
+		columns: input.columns,
 		dragIndex: null,
 		dropIndex: null,
-	},
+	}),
 	states: {
 		idle: {
 			on: {
+				SET_COLUMNS: {
+					actions: assign({ columns: ({ event }) => event.columns }),
+				},
 				DRAG_START: {
 					target: 'dragging',
 					actions: assign({
@@ -47,15 +54,26 @@ export const columnOrderMachine = setup({
 						dropIndex: ({ event }) => event.index,
 					}),
 				},
-				DROP: { target: 'reordered' },
-				CANCEL: { target: 'canceled' },
+				DROP: {
+					target: 'idle',
+					actions: assign({
+						columns: ({ context }) =>
+							context.dragIndex !== null && context.dropIndex !== null
+								? reorder(
+										context.columns,
+										context.dragIndex,
+										context.dropIndex,
+									)
+								: context.columns,
+						dragIndex: null,
+						dropIndex: null,
+					}),
+				},
+				CANCEL: {
+					target: 'idle',
+					actions: assign({ dragIndex: null, dropIndex: null }),
+				},
 			},
-		},
-		reordered: {
-			always: { target: 'idle' },
-		},
-		canceled: {
-			always: { target: 'idle' },
 		},
 	},
 })

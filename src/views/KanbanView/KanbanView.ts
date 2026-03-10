@@ -3,8 +3,10 @@ import { BasesView, TFolder, type QueryController } from 'obsidian'
 import { h, render } from 'preact'
 import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
+import { createActor, type Actor } from 'xstate'
 import { KANBAN_ID } from '.'
 import { KanbanBoard } from './KanbanBoard'
+import { columnOrderMachine } from '../../machines/columnOrderMachine'
 
 export interface IKanbanColumn {
 	folder: TFolder
@@ -81,21 +83,50 @@ export class KanbanView extends BasesView {
 	readonly type = KANBAN_ID
 	private readonly containerEl: HTMLElement
 	private firstColumnFolder: TFolder | null = null
+	private columnOrderActor: Actor<typeof columnOrderMachine> | null = null
+	private lastExternalColumns: string[] | null = null
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
 		super(controller)
 		this.containerEl = containerEl
-		// data is not yet available in the constructor — wait for onDataUpdated()
 	}
 
 	onDataUpdated(): void {
 		const cardProperties =
 			(this.config.get('cardProperties') as string[] | null) ?? []
 		const cardSize = (this.config.get('cardSize') as number | null) ?? 220
-		const columns = applyColumnOrder(
-			deriveColumns(this.data.data),
-			this.parseColumnOrder(),
-		)
+		const rawColumns = deriveColumns(this.data.data)
+
+		let columns: IKanbanColumn[]
+		if (!this.columnOrderActor) {
+			// First call: initialise actor with order from saved config
+			columns = applyColumnOrder(rawColumns, this.parseColumnOrder())
+			const colNames = columns.map(c => c.folder.name)
+			this.columnOrderActor = createActor(columnOrderMachine, {
+				input: { columns: colNames },
+			})
+			let prevCols: string[] | null = null
+			this.columnOrderActor.subscribe((snapshot) => {
+				const cols = snapshot.context.columns
+				if (
+					prevCols !== null &&
+					cols !== prevCols &&
+					cols !== this.lastExternalColumns
+				) {
+					this.config.set('columnOrder', JSON.stringify(cols))
+				}
+				prevCols = cols
+			})
+			this.columnOrderActor.start()
+		} else {
+			// Subsequent calls: preserve machine order, merge in any new/removed columns
+			const machineOrder = this.columnOrderActor.getSnapshot().context.columns
+			columns = applyColumnOrder(rawColumns, machineOrder)
+			const colNames = columns.map(c => c.folder.name)
+			this.lastExternalColumns = colNames
+			this.columnOrderActor.send({ type: 'SET_COLUMNS', columns: colNames })
+		}
+
 		this.firstColumnFolder = columns[0]?.folder ?? null
 
 		const columnIconsRaw =
@@ -133,9 +164,7 @@ export class KanbanView extends BasesView {
 				},
 				onRenameColumn: (oldName: string, newName: string) =>
 					this.handleRenameColumn(oldName, newName),
-				onUpdateColumnOrder: (newOrder: string[]) => {
-					this.config.set("columnOrder", JSON.stringify(newOrder))
-				},
+				columnOrderActor: this.columnOrderActor,
 			}),
 			this.containerEl,
 		)
@@ -155,6 +184,7 @@ export class KanbanView extends BasesView {
 	}
 
 	onunload(): void {
+		this.columnOrderActor?.stop()
 		render(null, this.containerEl)
 	}
 

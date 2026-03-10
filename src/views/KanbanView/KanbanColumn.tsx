@@ -210,7 +210,9 @@ export function KanbanColumn({
 		>
 			<div class="kanban-base-column-container">
 				<div class="kanban-base-column-header">
-					<KanbanColumnDragHandle onDragStart={() => onDragStart(dragIndex)} />
+					<KanbanColumnDragHandle
+						onDragStart={() => onDragStart(dragIndex)}
+					/>
 					<IconButton
 						folderName={column.folder.name}
 						app={app}
