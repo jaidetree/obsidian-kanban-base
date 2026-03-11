@@ -308,8 +308,9 @@ to cover those files.
 - [x] Live preview column order during drag via `previewColumns` in
       `KanbanBoard`; persist to `columnOrder` on drop
 - [x] Write Storybook stories for drag states: `ColumnDragging`,
-      `ColumnDropTarget` in `KanbanColumn.stories.tsx` and `KanbanBoard.stories.tsx`
-- [ ] Manual end-to-end test: reorder columns, verify order persists
+      `ColumnDropTarget` in `KanbanColumn.stories.tsx` and
+      `KanbanBoard.stories.tsx`
+- [x] Manual end-to-end test: reorder columns, verify order persists
 
 #### Drag and Drop Cards Between Columns
 
@@ -325,3 +326,16 @@ to cover those files.
 - [ ] Write Storybook stories for drag states: card dragging
 - [ ] Manual end-to-end test: drag card across columns, verify file moves on
       disk
+
+### Phase VII: Properties
+
+Render selected properties from the base menu bar on each card.
+
+### Phase VIII: Polish
+
+- [x] Fix column header content alignment
+- [ ] Improve Add column button styles
+- [ ] Move add column logic into state machine
+- [ ] Move column state machines into machines/ directory
+
+### Phase IX: Group By Version

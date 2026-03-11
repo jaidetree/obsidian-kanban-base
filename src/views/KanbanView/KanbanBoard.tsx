@@ -7,6 +7,7 @@ import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
 import { type Actor } from 'xstate'
 import { columnOrderMachine } from '../../machines/columnOrderMachine'
+import { AppContext } from './AppContext'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
 
@@ -93,6 +94,7 @@ export function KanbanBoard({
 	}
 
 	return (
+		<AppContext.Provider value={app}>
 		<div
 			class="kanban-base-board"
 			style={
@@ -102,7 +104,6 @@ export function KanbanBoard({
 			{previewColumns.map((column, idx) => (
 				<KanbanColumn
 					key={column.folder.path}
-					app={app}
 					column={column}
 					cardProperties={cardProperties as BasesPropertyId[]}
 					iconsSignal={iconsSignal}
@@ -164,5 +165,6 @@ export function KanbanBoard({
 				</button>
 			)}
 		</div>
+		</AppContext.Provider>
 	)
 }

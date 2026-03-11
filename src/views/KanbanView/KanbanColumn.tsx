@@ -1,11 +1,12 @@
 import type { Signal } from '@preact/signals'
 import { useComputed } from '@preact/signals'
 import { useXState } from 'hooks/xstate'
-import type { App, BasesEntry, BasesPropertyId } from 'obsidian'
-import { Menu, setIcon } from 'obsidian'
+import type { BasesEntry, BasesPropertyId } from 'obsidian'
+import { Keymap, Menu, setIcon } from 'obsidian'
 import { useEffect, useRef } from 'preact/hooks'
 import { BoardIcons } from 'types/icons'
-import { columnMachine } from './columnMachine'
+import { columnMachine } from '../../machines/columnMachine'
+import { useApp } from './AppContext'
 import { IconSuggestModal } from './IconSuggestModal'
 import type { IKanbanColumn } from './KanbanView'
 
@@ -21,11 +22,11 @@ function IconRenderer({ iconId }: { iconId: string }) {
 
 interface IconButtonProps {
 	folderName: string
-	app: App
 	iconsSignal: Signal<BoardIcons>
 }
 
-function IconButton({ folderName, app, iconsSignal }: IconButtonProps) {
+function IconButton({ folderName, iconsSignal }: IconButtonProps) {
+	const app = useApp()
 	const chosenIcon = useComputed(() => iconsSignal.value[folderName])
 	const displayIcon = useComputed(
 		() => chosenIcon.value?.value ?? DEFAULT_ICON,
@@ -81,8 +82,15 @@ function KanbanCard({
 	entry: BasesEntry
 	cardProperties: BasesPropertyId[]
 }) {
+	const app = useApp()
+
+	const handleClick = (e: MouseEvent) => {
+		const leaf = app.workspace.getLeaf(Keymap.isModEvent(e))
+		void leaf.openFile(entry.file)
+	}
+
 	return (
-		<div class="kanban-base-card">
+		<div class="kanban-base-card" onClick={handleClick}>
 			<div class="kanban-base-card-title">{entry.file.basename}</div>
 			{cardProperties.map(propId => {
 				const value = entry.getValue(propId)
@@ -98,7 +106,6 @@ function KanbanCard({
 }
 
 interface KanbanColumnProps {
-	app: App
 	column: IKanbanColumn
 	cardProperties: BasesPropertyId[]
 	iconsSignal: Signal<BoardIcons>
@@ -115,7 +122,6 @@ interface KanbanColumnProps {
 }
 
 export function KanbanColumn({
-	app,
 	column,
 	cardProperties,
 	iconsSignal,
@@ -215,7 +221,6 @@ export function KanbanColumn({
 					/>
 					<IconButton
 						folderName={column.folder.name}
-						app={app}
 						iconsSignal={iconsSignal}
 					/>
 					{snapshot.value === 'editing' ? (
@@ -259,16 +264,17 @@ export function KanbanColumn({
 						<IconRenderer iconId="lucide-more-horizontal" />
 					</button>
 				</div>
-				<div class="kanban-base-column-body">
-					{!snapshot.context.isCollapsed &&
-						column.entries.map(entry => (
+				{!snapshot.context.isCollapsed && (
+					<div class="kanban-base-column-body">
+						{column.entries.map(entry => (
 							<KanbanCard
 								key={entry.file.path}
 								entry={entry}
 								cardProperties={cardProperties}
 							/>
 						))}
-				</div>
+					</div>
+				)}
 			</div>
 		</div>
 	)

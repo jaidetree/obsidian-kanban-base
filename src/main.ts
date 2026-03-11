@@ -21,7 +21,7 @@ export default class KanbanBasePlugin extends Plugin {
 					c => (c as any)?.view?.type === KANBAN_ID,
 				)
 				if (hasKanban) {
-					location.reload()
+					// location.reload()
 				}
 			}
 		})

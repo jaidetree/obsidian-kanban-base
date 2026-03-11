@@ -5,6 +5,7 @@ import { aFile } from '../../__mocks__/aFile';
 import { aBasesEntry } from '../../__mocks__/aBasesEntry';
 import { createMockApp } from '../../__mocks__/create-mock-app';
 import type { BoardIcons } from '../../types/icons';
+import { AppContext } from './AppContext';
 import type { IKanbanColumn } from './KanbanView';
 import { KanbanColumn } from './KanbanColumn';
 
@@ -44,19 +45,20 @@ interface StoryProps {
 function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, ...rest }: StoryProps) {
 	const iconsSignal = useSignal(columnIcons);
 	return (
-		<KanbanColumn
-			{...rest}
-			app={createMockApp()}
-			cardProperties={cardProperties as BasesPropertyId[]}
-			iconsSignal={iconsSignal}
-			dragIndex={dragIndex}
-			onDragStart={() => {}}
-			onDragOver={() => {}}
-			onDrop={() => {}}
-			onDragCancel={() => {}}
-			isDragging={isDragging}
-			isDragTarget={isDragTarget}
-		/>
+		<AppContext.Provider value={createMockApp()}>
+			<KanbanColumn
+				{...rest}
+				cardProperties={cardProperties as BasesPropertyId[]}
+				iconsSignal={iconsSignal}
+				dragIndex={dragIndex}
+				onDragStart={() => {}}
+				onDragOver={() => {}}
+				onDrop={() => {}}
+				onDragCancel={() => {}}
+				isDragging={isDragging}
+				isDragTarget={isDragTarget}
+			/>
+		</AppContext.Provider>
 	);
 }
 
