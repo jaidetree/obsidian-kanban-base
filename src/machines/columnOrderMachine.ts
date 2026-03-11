@@ -14,6 +14,7 @@ export const columnOrderMachine = setup({
 		input: { columns: string[] }
 		context: {
 			columns: string[]
+			displayColumns: string[]
 			dragIndex: number | null
 			dropIndex: number | null
 		}
@@ -29,6 +30,7 @@ export const columnOrderMachine = setup({
 	initial: 'idle',
 	context: ({ input }) => ({
 		columns: input.columns,
+		displayColumns: input.columns,
 		dragIndex: null,
 		dropIndex: null,
 	}),
@@ -36,13 +38,17 @@ export const columnOrderMachine = setup({
 		idle: {
 			on: {
 				SET_COLUMNS: {
-					actions: assign({ columns: ({ event }) => event.columns }),
+					actions: assign({
+						columns: ({ event }) => event.columns,
+						displayColumns: ({ event }) => event.columns,
+					}),
 				},
 				DRAG_START: {
 					target: 'dragging',
 					actions: assign({
 						dragIndex: ({ event }) => event.index,
 						dropIndex: null,
+						displayColumns: ({ context }) => context.columns,
 					}),
 				},
 			},
@@ -52,26 +58,27 @@ export const columnOrderMachine = setup({
 				DRAG_OVER: {
 					actions: assign({
 						dropIndex: ({ event }) => event.index,
+						displayColumns: ({ context, event }) =>
+							context.dragIndex !== null
+								? reorder(context.columns, context.dragIndex, event.index)
+								: context.columns,
 					}),
 				},
 				DROP: {
 					target: 'idle',
-					actions: assign({
-						columns: ({ context }) =>
-							context.dragIndex !== null && context.dropIndex !== null
-								? reorder(
-										context.columns,
-										context.dragIndex,
-										context.dropIndex,
-									)
-								: context.columns,
+					actions: assign(({ context }) => ({
+						columns: context.displayColumns,
 						dragIndex: null,
 						dropIndex: null,
-					}),
+					})),
 				},
 				CANCEL: {
 					target: 'idle',
-					actions: assign({ dragIndex: null, dropIndex: null }),
+					actions: assign(({ context }) => ({
+						dragIndex: null,
+						dropIndex: null,
+						displayColumns: context.columns,
+					})),
 				},
 			},
 		},

@@ -6,10 +6,7 @@ import { useState } from 'preact/hooks'
 import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
 import { type Actor } from 'xstate'
-import {
-	columnOrderMachine,
-	reorderColumns,
-} from '../../machines/columnOrderMachine'
+import { columnOrderMachine } from '../../machines/columnOrderMachine'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
 
@@ -48,12 +45,7 @@ export function KanbanBoard({
 	const actorRef = useActorRef(columnOrderActor)
 	const [dragSnapshot, dragSend] = useActorState(actorRef)
 
-	// Machine context is the source of truth for committed column order
-	const { columns: committedNames, dragIndex, dropIndex } = dragSnapshot.context
-	const displayNames =
-		dragSnapshot.matches('dragging') && dragIndex !== null && dropIndex !== null
-			? reorderColumns(committedNames, dragIndex, dropIndex)
-			: committedNames
+	const { displayColumns: displayNames, dragIndex, dropIndex } = dragSnapshot.context
 
 	// Map names → actual column data; append any columns not yet in machine context
 	const known = new Set(displayNames)

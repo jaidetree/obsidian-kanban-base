@@ -50,6 +50,15 @@ describe('columnOrderMachine', () => {
 		actor.stop()
 	})
 
+	it('DRAG_OVER updates displayColumns to preview order', () => {
+		const actor = createActor(columnOrderMachine, { input: defaultInput })
+		actor.start()
+		actor.send({ type: 'DRAG_START', index: 0 })
+		actor.send({ type: 'DRAG_OVER', index: 2 })
+		expect(actor.getSnapshot().context.displayColumns).toEqual(['B', 'C', 'A'])
+		actor.stop()
+	})
+
 	it('goes to idle on DROP and reorders columns', () => {
 		const actor = createActor(columnOrderMachine, { input: defaultInput })
 		actor.start()
@@ -59,6 +68,7 @@ describe('columnOrderMachine', () => {
 		const snap = actor.getSnapshot()
 		expect(snap.value).toBe('idle')
 		expect(snap.context.columns).toEqual(['B', 'C', 'A'])
+		expect(snap.context.displayColumns).toEqual(['B', 'C', 'A'])
 		expect(snap.context.dragIndex).toBeNull()
 		expect(snap.context.dropIndex).toBeNull()
 		actor.stop()
@@ -73,6 +83,7 @@ describe('columnOrderMachine', () => {
 		const snap = actor.getSnapshot()
 		expect(snap.value).toBe('idle')
 		expect(snap.context.columns).toEqual(['A', 'B', 'C'])
+		expect(snap.context.displayColumns).toEqual(['A', 'B', 'C'])
 		actor.stop()
 	})
 
