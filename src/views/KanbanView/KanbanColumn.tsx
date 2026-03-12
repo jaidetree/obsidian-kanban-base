@@ -428,6 +428,11 @@ export function KanbanColumn({
 									className="kanban-base-column__add-card-input"
 									placeholder="Card name"
 									value={newCardName}
+									ref={el => {
+										if (el) {
+											el.focus()
+										}
+									}}
 									onInput={e =>
 										setNewCardName(
 											(e.target as HTMLInputElement)

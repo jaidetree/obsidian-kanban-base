@@ -207,6 +207,7 @@
 	overflow: hidden;
 	padding: 0.5rem;
 	border-top: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
 }
 
 .kanban-base-card {
@@ -493,7 +494,7 @@
 	height: 0.825rem;
 }
 .kanban-base-column .kanban-base-column__add-button {
-	background: var(--background-secondary);
+	background: var(--background-primary);
 	display: flex;
 	flex-flow: row;
 	box-shadow: none;
