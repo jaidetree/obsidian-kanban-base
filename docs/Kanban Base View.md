@@ -314,17 +314,17 @@ to cover those files.
 
 #### Drag and Drop Cards Between Columns
 
-- [ ] Implement `cardDragMachine`: states `idle → dragging → dropped/canceled`;
+- [x] Implement `cardDragMachine`: states `idle → dragging → dropped/canceled`;
       on `dropped` call `app.vault.rename()` to move file to target folder, then
       trigger base re-render
-- [ ] Wire pointer events (mousedown/mousemove/mouseup or HTML5 drag events) to
+- [x] Wire pointer events (mousedown/mousemove/mouseup or HTML5 drag events) to
       both machines
-- [ ] Render a drop-target highlight on the active column while a card is being
+- [x] Render a drop-target highlight on the active column while a card is being
       dragged
-- [ ] Handle edge cases: dropping card onto its own column (no-op), dropping
+- [x] Handle edge cases: dropping card onto its own column (no-op), dropping
       outside any column (cancel)
-- [ ] Write Storybook stories for drag states: card dragging
-- [ ] Manual end-to-end test: drag card across columns, verify file moves on
+- [x] Write Storybook stories for drag states: card dragging
+- [x] Manual end-to-end test: drag card across columns, verify file moves on
       disk
 
 ### Phase VII: Properties
