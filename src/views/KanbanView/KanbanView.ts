@@ -1,11 +1,12 @@
 import type { BasesEntry } from 'obsidian'
-import { BasesView, TFolder, type QueryController } from 'obsidian'
+import { BasesView, TFile, TFolder, type QueryController } from 'obsidian'
 import { h, render } from 'preact'
 import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
 import { createActor, type Actor } from 'xstate'
 import { KANBAN_ID } from '.'
 import { KanbanBoard } from './KanbanBoard'
+import { cardDragMachine } from '../../machines/cardDragMachine'
 import { columnOrderMachine } from '../../machines/columnOrderMachine'
 
 export interface IKanbanColumn {
@@ -84,6 +85,7 @@ export class KanbanView extends BasesView {
 	private readonly containerEl: HTMLElement
 	private firstColumnFolder: TFolder | null = null
 	private columnOrderActor: Actor<typeof columnOrderMachine> | null = null
+	private cardDragActor: Actor<typeof cardDragMachine> | null = null
 	private lastExternalColumns: string[] | null = null
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
@@ -98,6 +100,11 @@ export class KanbanView extends BasesView {
 		const rawColumns = deriveColumns(this.data.data)
 
 		let columns: IKanbanColumn[]
+		if (!this.cardDragActor) {
+			this.cardDragActor = createActor(cardDragMachine)
+			this.cardDragActor.start()
+		}
+
 		if (!this.columnOrderActor) {
 			// First call: initialise actor with order from saved config
 			columns = applyColumnOrder(rawColumns, this.parseColumnOrder())
@@ -165,6 +172,9 @@ export class KanbanView extends BasesView {
 				onRenameColumn: (oldName: string, newName: string) =>
 					this.handleRenameColumn(oldName, newName),
 				columnOrderActor: this.columnOrderActor,
+				cardDragActor: this.cardDragActor,
+				onCardDrop: (filePath: string, targetFolderName: string) =>
+					this.handleCardDrop(filePath, targetFolderName),
 			}),
 			this.containerEl,
 		)
@@ -185,7 +195,24 @@ export class KanbanView extends BasesView {
 
 	onunload(): void {
 		this.columnOrderActor?.stop()
+		this.cardDragActor?.stop()
 		render(null, this.containerEl)
+	}
+
+	private async handleCardDrop(
+		filePath: string,
+		targetFolderName: string,
+	): Promise<void> {
+		const file = this.app.vault.getAbstractFileByPath(filePath)
+		if (!(file instanceof TFile)) return
+		const targetColumn = deriveColumns(this.data.data).find(
+			c => c.folder.name === targetFolderName,
+		)
+		if (!targetColumn) return
+		await this.app.vault.rename(
+			file,
+			targetColumn.folder.path + '/' + file.name,
+		)
 	}
 
 	private parseColumnOrder(): string[] {

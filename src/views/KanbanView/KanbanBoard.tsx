@@ -6,6 +6,7 @@ import { useState } from 'preact/hooks'
 import type { BoardColumnStates } from 'types/columns'
 import type { BoardIcons } from 'types/icons'
 import { type Actor } from 'xstate'
+import { cardDragMachine } from '../../machines/cardDragMachine'
 import { columnOrderMachine } from '../../machines/columnOrderMachine'
 import { AppContext } from './AppContext'
 import { KanbanColumn } from './KanbanColumn'
@@ -23,6 +24,8 @@ interface KanbanBoardProps {
 	onUpdateColumnStates: (states: BoardColumnStates) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
 	columnOrderActor: Actor<typeof columnOrderMachine>
+	cardDragActor: Actor<typeof cardDragMachine>
+	onCardDrop: (filePath: string, targetFolderName: string) => Promise<void>
 }
 
 export function KanbanBoard({
@@ -36,6 +39,8 @@ export function KanbanBoard({
 	onUpdateColumnStates,
 	onRenameColumn,
 	columnOrderActor,
+	cardDragActor,
+	onCardDrop,
 	app,
 }: KanbanBoardProps) {
 	const iconsSignal = useSignal(columnIcons)
@@ -45,6 +50,21 @@ export function KanbanBoard({
 
 	const actorRef = useActorRef(columnOrderActor)
 	const [dragSnapshot, dragSend] = useActorState(actorRef)
+
+	const cardDragActorRef = useActorRef(cardDragActor)
+	const [cardDragSnapshot, cardDragSend] = useActorState(cardDragActorRef)
+
+	const handleCardDrop = (folderName: string) => {
+		const snap = cardDragActorRef.current.getSnapshot()
+		if (
+			snap.value === 'dragging' &&
+			snap.context.dragFile !== null &&
+			snap.context.sourceColumn !== folderName
+		) {
+			void onCardDrop(snap.context.dragFile, folderName)
+		}
+		cardDragSend({ type: 'DROP' })
+	}
 
 	const { displayColumns: displayNames, dragIndex, dropIndex } = dragSnapshot.context
 
@@ -125,6 +145,18 @@ export function KanbanBoard({
 					}
 					isDragTarget={
 						dragSnapshot.matches('dragging') && dropIndex === idx
+					}
+					onCardDragStart={filePath =>
+						cardDragSend({ type: 'DRAG_START', filePath, sourceColumn: column.folder.name })
+					}
+					onCardDragOver={() =>
+						cardDragSend({ type: 'DRAG_OVER', targetColumn: column.folder.name })
+					}
+					onCardDrop={() => handleCardDrop(column.folder.name)}
+					onCardDragCancel={() => cardDragSend({ type: 'CANCEL' })}
+					isCardDragTarget={
+						cardDragSnapshot.matches('dragging') &&
+						cardDragSnapshot.context.targetColumn === column.folder.name
 					}
 				/>
 			))}

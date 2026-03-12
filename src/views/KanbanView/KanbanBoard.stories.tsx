@@ -8,11 +8,15 @@ import type { BoardIcons } from '../../types/icons';
 import type { BoardColumnStates } from '../../types/columns';
 import { createActor } from 'xstate';
 import { columnOrderMachine } from '../../machines/columnOrderMachine';
+import { cardDragMachine } from '../../machines/cardDragMachine';
 
 const storyActor = createActor(columnOrderMachine, {
 	input: { columns: ['Todo', 'In Progress', 'Done'] },
 });
 storyActor.start();
+
+const cardDragStoryActor = createActor(cardDragMachine);
+cardDragStoryActor.start();
 
 function mockFolder(name: string, parent: TFolder | null = null): TFolder {
 	return {
@@ -53,6 +57,8 @@ const meta: Meta<typeof KanbanBoard> = {
 		onUpdateColumnStates: (_states: BoardColumnStates) => {},
 		onRenameColumn: async (_oldName: string, _newName: string) => {},
 		columnOrderActor: storyActor,
+		cardDragActor: cardDragStoryActor,
+		onCardDrop: noop,
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },
 			{ folder: inProgress, entries: [entryInFolder(inProgress, 'Task 3')] },
@@ -100,5 +106,26 @@ export const ColumnDropTarget: Story = {
 			{ folder: inProgress, entries: [] },
 			{ folder: done, entries: [] },
 		],
+	},
+};
+
+const cardDraggingActor = createActor(cardDragMachine);
+cardDraggingActor.start();
+cardDraggingActor.send({ type: 'DRAG_START', filePath: 'Project/Todo/Task 1.md', sourceColumn: 'Todo' });
+
+export const CardDragging: Story = {
+	args: {
+		cardDragActor: cardDraggingActor,
+	},
+};
+
+const cardDropTargetActor = createActor(cardDragMachine);
+cardDropTargetActor.start();
+cardDropTargetActor.send({ type: 'DRAG_START', filePath: 'Project/Todo/Task 1.md', sourceColumn: 'Todo' });
+cardDropTargetActor.send({ type: 'DRAG_OVER', targetColumn: 'Done' });
+
+export const CardDropTarget: Story = {
+	args: {
+		cardDragActor: cardDropTargetActor,
 	},
 };

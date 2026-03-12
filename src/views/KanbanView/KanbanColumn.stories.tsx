@@ -40,9 +40,10 @@ interface StoryProps {
 	dragIndex?: number;
 	isDragging?: boolean;
 	isDragTarget?: boolean;
+	isCardDragTarget?: boolean;
 }
 
-function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, ...rest }: StoryProps) {
+function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, isCardDragTarget = false, ...rest }: StoryProps) {
 	const iconsSignal = useSignal(columnIcons);
 	return (
 		<AppContext.Provider value={createMockApp()}>
@@ -57,6 +58,11 @@ function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragg
 				onDragCancel={() => {}}
 				isDragging={isDragging}
 				isDragTarget={isDragTarget}
+				onCardDragStart={() => {}}
+				onCardDragOver={() => {}}
+				onCardDrop={() => {}}
+				onCardDragCancel={() => {}}
+				isCardDragTarget={isCardDragTarget}
 			/>
 		</AppContext.Provider>
 	);
@@ -132,4 +138,10 @@ export const ColumnDropTarget: Story = {
 	args: {
 		isDragTarget: true,
 	},
-};;
+};
+
+export const CardDropTarget: Story = {
+	args: {
+		isCardDragTarget: true,
+	},
+};

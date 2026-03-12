@@ -214,8 +214,17 @@
 	cursor: pointer;
 }
 
+.kanban-base-card[draggable="true"] { cursor: grab; }
+.kanban-base-card[draggable="true"]:active { cursor: grabbing; }
+
 .kanban-base-card:hover {
 	background: var(--background-modifier-hover);
+}
+
+.kanban-base-column--card-drop-target {
+	outline: 2px solid var(--interactive-accent);
+	border-radius: var(--radius-m);
+	background-color: var(--background-modifier-hover);
 }
 
 .kanban-base-card-title {

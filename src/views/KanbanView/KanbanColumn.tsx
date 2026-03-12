@@ -78,9 +78,13 @@ function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
 function KanbanCard({
 	entry,
 	cardProperties,
+	onDragStart,
+	onDragCancel,
 }: {
 	entry: BasesEntry
 	cardProperties: BasesPropertyId[]
+	onDragStart: (filePath: string) => void
+	onDragCancel: () => void
 }) {
 	const app = useApp()
 
@@ -90,7 +94,21 @@ function KanbanCard({
 	}
 
 	return (
-		<div class="kanban-base-card" onClick={handleClick}>
+		<div
+			class="kanban-base-card"
+			draggable
+			onClick={handleClick}
+			onDragStart={e => {
+				e.dataTransfer!.effectAllowed = 'move'
+				e.dataTransfer!.setData('text/card', entry.file.path)
+				onDragStart(entry.file.path)
+			}}
+			onDragEnd={e => {
+				if (e.dataTransfer!.dropEffect === 'none') {
+					onDragCancel()
+				}
+			}}
+		>
 			<div class="kanban-base-card-title">{entry.file.basename}</div>
 			{cardProperties.map(propId => {
 				const value = entry.getValue(propId)
@@ -119,6 +137,11 @@ interface KanbanColumnProps {
 	onDragCancel: () => void
 	isDragging: boolean
 	isDragTarget: boolean
+	onCardDragStart: (filePath: string) => void
+	onCardDragOver: () => void
+	onCardDrop: () => void
+	onCardDragCancel: () => void
+	isCardDragTarget: boolean
 }
 
 export function KanbanColumn({
@@ -135,6 +158,11 @@ export function KanbanColumn({
 	onDragCancel,
 	isDragging,
 	isDragTarget,
+	onCardDragStart,
+	onCardDragOver,
+	onCardDrop,
+	onCardDragCancel,
+	isCardDragTarget,
 }: KanbanColumnProps) {
 	const [snapshot, send] = useXState(columnMachine, {
 		input: { name: column.folder.name, isCollapsed },
@@ -195,6 +223,7 @@ export function KanbanColumn({
 		snapshot.context.isCollapsed ? 'kanban-base-column--collapsed' : '',
 		isDragging ? 'kanban-base-column--dragging' : '',
 		isDragTarget ? 'kanban-base-column--drop-target' : '',
+		isCardDragTarget ? 'kanban-base-column--card-drop-target' : '',
 	]
 		.filter(Boolean)
 		.join(' ')
@@ -204,11 +233,19 @@ export function KanbanColumn({
 			class={dragClasses}
 			onDragOver={e => {
 				e.preventDefault()
-				onDragOver(dragIndex)
+				if (e.dataTransfer?.types.includes('text/card')) {
+					onCardDragOver()
+				} else {
+					onDragOver(dragIndex)
+				}
 			}}
 			onDrop={e => {
 				e.preventDefault()
-				onDrop()
+				if (e.dataTransfer?.types.includes('text/card')) {
+					onCardDrop()
+				} else {
+					onDrop()
+				}
 			}}
 			onDragEnd={() => {
 				onDragCancel()
@@ -271,6 +308,8 @@ export function KanbanColumn({
 								key={entry.file.path}
 								entry={entry}
 								cardProperties={cardProperties}
+								onDragStart={onCardDragStart}
+								onDragCancel={onCardDragCancel}
 							/>
 						))}
 					</div>
