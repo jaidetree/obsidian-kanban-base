@@ -1,3 +1,6 @@
+.bases-view[data-view-type='kanban-base'] {
+	padding: 0;
+}
 .kanban-base-board {
 	display: flex;
 	flex-direction: row;
@@ -109,7 +112,7 @@
 	height: 2rem;
 	line-height: 0.9;
 	flex-flow: column;
-	justify-items: center;
+	justify-content: center;
 	align-items: center;
 	font-size: 2rem;
 	cursor: grab;
@@ -232,18 +235,17 @@
 	height: 1rem;
 	margin-top: 1px;
 	cursor: grab;
-	color: var(--text-faint);
-	opacity: 0;
+	color: var(--text-muted);
+	opacity: 0.5;
 	transition: opacity 0.1s;
+}
+.kanban-base-card:hover .kanban-base-card-drag-handle {
+	opacity: 1;
 }
 
 .kanban-base-card-drag-handle .kanban-base-icon {
 	width: 0.875rem;
 	height: 0.875rem;
-}
-
-.kanban-base-card:hover .kanban-base-card-drag-handle {
-	opacity: 1;
 }
 
 .kanban-base-card-drag-handle:active {
@@ -265,11 +267,11 @@
 	margin-top: 1px;
 	cursor: pointer;
 	border-radius: var(--radius-s);
-	color: var(--text-faint);
+	color: var(--text-muted);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	opacity: 0;
+	opacity: 0.5;
 	transition: opacity 0.1s;
 }
 

@@ -81,7 +81,7 @@ function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
 				onDragStart()
 			}}
 		>
-			⫼
+			<ObsidianIcon iconId="lucide-grip-vertical" />
 		</span>
 	)
 }
@@ -182,9 +182,7 @@ function KanbanCard({
 							class="kanban-base-card-rename-input"
 							value={draft}
 							onInput={e =>
-								setDraft(
-									(e.target as HTMLInputElement).value,
-								)
+								setDraft((e.target as HTMLInputElement).value)
 							}
 							onKeyDown={handleRenameKeyDown}
 							autoFocus
