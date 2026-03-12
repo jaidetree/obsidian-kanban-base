@@ -3,7 +3,7 @@ import { useComputed } from '@preact/signals'
 import { useXState } from 'hooks/xstate'
 import type { BasesEntry, BasesPropertyId } from 'obsidian'
 import { Keymap, Menu, setIcon } from 'obsidian'
-import { useEffect, useRef } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import { BoardIcons } from 'types/icons'
 import { columnMachine } from '../../machines/columnMachine'
 import { useApp } from './AppContext'
@@ -98,38 +98,134 @@ function KanbanCard({
 	onDragCancel: () => void
 }) {
 	const app = useApp()
+	const [isRenaming, setIsRenaming] = useState(false)
+	const [draft, setDraft] = useState('')
 
 	const handleClick = (e: MouseEvent) => {
+		if (isRenaming) return
 		const leaf = app.workspace.getLeaf(Keymap.isModEvent(e))
 		void leaf.openFile(entry.file)
 	}
 
+	const handleMenuClick = (e: MouseEvent) => {
+		e.stopPropagation()
+		const menu = new Menu()
+		menu.addItem(item => {
+			item.setTitle('Open')
+				.setIcon('lucide-file-text')
+				.onClick(() => {
+					void app.workspace.getLeaf(false).openFile(entry.file)
+				})
+		})
+		menu.addItem(item => {
+			item.setTitle('Open in new tab')
+				.setIcon('lucide-plus')
+				.onClick(() => {
+					void app.workspace.getLeaf('tab').openFile(entry.file)
+				})
+		})
+		menu.addItem(item => {
+			item.setTitle('Rename')
+				.setIcon('pencil')
+				.onClick(() => {
+					setDraft(entry.file.basename)
+					setIsRenaming(true)
+				})
+		})
+		menu.addItem(item => {
+			item.setTitle('Delete')
+				.setIcon('trash')
+				.onClick(() => {
+					void app.fileManager.trashFile(entry.file)
+				})
+		})
+		menu.showAtMouseEvent(e)
+	}
+
+	const handleRenameConfirm = async () => {
+		const newName = draft.trim()
+		setIsRenaming(false)
+		if (newName && newName !== entry.file.basename) {
+			const dir = entry.file.parent?.path
+			const newPath = dir ? `${dir}/${newName}.md` : `${newName}.md`
+			await app.fileManager.renameFile(entry.file, newPath)
+		}
+	}
+
+	const handleRenameKeyDown = (e: KeyboardEvent) => {
+		if (e.key === 'Enter') void handleRenameConfirm()
+		if (e.key === 'Escape') setIsRenaming(false)
+	}
+
 	return (
-		<div
-			class="kanban-base-card"
-			draggable
-			onClick={handleClick}
-			onDragStart={e => {
-				e.dataTransfer!.effectAllowed = 'move'
-				e.dataTransfer!.setData('text/card', entry.file.path)
-				onDragStart(entry.file.path)
-			}}
-			onDragEnd={e => {
-				if (e.dataTransfer!.dropEffect === 'none') {
-					onDragCancel()
-				}
-			}}
-		>
-			<div class="kanban-base-card-title">{entry.file.basename}</div>
-			{cardProperties.map(propId => {
-				const value = entry.getValue(propId)
-				if (!value?.isTruthy()) return null
-				return (
-					<div key={propId} class="kanban-base-card-prop">
-						{value.toString()}
+		<div class="kanban-base-card" onClick={handleClick}>
+			<span
+				class="kanban-base-card-drag-handle"
+				draggable
+				onDragStart={e => {
+					e.dataTransfer!.effectAllowed = 'move'
+					e.dataTransfer!.setData('text/card', entry.file.path)
+					onDragStart(entry.file.path)
+				}}
+				onDragEnd={e => {
+					if (e.dataTransfer!.dropEffect === 'none') {
+						onDragCancel()
+					}
+				}}
+			>
+				<ObsidianIcon iconId="lucide-grip-vertical" />
+			</span>
+			<div class="kanban-base-card-content">
+				{isRenaming ? (
+					<>
+						<input
+							class="kanban-base-card-rename-input"
+							value={draft}
+							onInput={e =>
+								setDraft(
+									(e.target as HTMLInputElement).value,
+								)
+							}
+							onKeyDown={handleRenameKeyDown}
+							autoFocus
+						/>
+						<div class="kanban-base-card-rename-actions">
+							<button
+								class="kanban-base-card-rename-confirm"
+								onClick={() => void handleRenameConfirm()}
+							>
+								Save
+							</button>
+							<button
+								class="kanban-base-card-rename-cancel"
+								onClick={() => setIsRenaming(false)}
+							>
+								Cancel
+							</button>
+						</div>
+					</>
+				) : (
+					<div class="kanban-base-card-title">
+						{entry.file.basename}
 					</div>
-				)
-			})}
+				)}
+				{cardProperties.map(propId => {
+					const value = entry.getValue(propId)
+					if (!value?.isTruthy()) return null
+					return (
+						<div key={propId} class="kanban-base-card-prop">
+							{value.toString()}
+						</div>
+					)
+				})}
+			</div>
+			<button
+				class="kanban-base-card-menu-btn clickable-icon"
+				aria-label="Card options"
+				onClick={handleMenuClick}
+			>
+				<ObsidianIcon iconId="lucide-more-horizontal" />
+			</button>
 		</div>
 	)
 }
@@ -141,6 +237,7 @@ interface KanbanColumnProps {
 	isCollapsed: boolean
 	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+	onAddCard: (name: string) => Promise<void>
 	dragIndex: number
 	onDragStart: (index: number) => void
 	onDragOver: (index: number) => void
@@ -162,6 +259,7 @@ export function KanbanColumn({
 	isCollapsed,
 	onStateChange,
 	onRenameColumn,
+	onAddCard,
 	dragIndex,
 	onDragStart,
 	onDragOver,
@@ -175,6 +273,9 @@ export function KanbanColumn({
 	onCardDragCancel,
 	isCardDragTarget,
 }: KanbanColumnProps) {
+	const [isAddingCard, setIsAddingCard] = useState(false)
+	const [newCardName, setNewCardName] = useState('')
+
 	const [snapshot, send] = useXState(columnMachine, {
 		input: { name: column.folder.name, isCollapsed },
 	})
@@ -324,10 +425,43 @@ export function KanbanColumn({
 							/>
 						))}
 						<div className="kanban-base-column__footer">
-							<button className="kanban-base-column__add-button">
-								<ObsidianIcon iconId="lucide-plus-circle" />
-								Add Card
-							</button>
+							{isAddingCard ? (
+								<input
+									className="kanban-base-column__add-card-input"
+									placeholder="Card name"
+									value={newCardName}
+									onInput={e =>
+										setNewCardName(
+											(e.target as HTMLInputElement)
+												.value,
+										)
+									}
+									onKeyDown={async e => {
+										if (e.key === 'Enter') {
+											const name = newCardName.trim()
+											if (name) await onAddCard(name)
+											setNewCardName('')
+										}
+										if (e.key === 'Escape') {
+											setIsAddingCard(false)
+											setNewCardName('')
+										}
+									}}
+									onBlur={() => {
+										setIsAddingCard(false)
+										setNewCardName('')
+									}}
+									autoFocus
+								/>
+							) : (
+								<button
+									className="kanban-base-column__add-button"
+									onClick={() => setIsAddingCard(true)}
+								>
+									<ObsidianIcon iconId="lucide-plus-circle" />
+									Add Card
+								</button>
+							)}
 						</div>
 					</div>
 				)}

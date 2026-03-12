@@ -59,6 +59,7 @@ const meta: Meta<typeof KanbanBoard> = {
 		onUpdateIcons: (_icons: BoardIcons) => {},
 		onUpdateColumnStates: (_states: BoardColumnStates) => {},
 		onRenameColumn: async (_oldName: string, _newName: string) => {},
+		onAddCard: async (_folderName: string, _name: string) => {},
 		columnOrderActor: storyActor,
 		cardDragActor: cardDragStoryActor,
 		onCardDrop: noop,

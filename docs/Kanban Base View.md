@@ -376,13 +376,13 @@ Maybe there is another option I'm not considering?
 
 #### Cards
 
-- [ ] Add drag handle to left edge of card
-- [ ] Add an ellipsis context menu button on the right edge of card
-- [ ] Add rename to context menu
-- [ ] Add delete to context menu
-- [ ] Add open to context menu
-- [ ] Add open in new tab to context menu
-- [ ] Add new button at the bottom of every column
+- [x] Add drag handle to left edge of card
+- [x] Add an ellipsis context menu button on the right edge of card
+- [x] Add rename to context menu
+- [x] Add delete to context menu
+- [x] Add open to context menu
+- [x] Add open in new tab to context menu
+- [x] Add new button at the bottom of every column (inline input, Enter adds card and stays open for next)
 
 #### General Cleanup
 

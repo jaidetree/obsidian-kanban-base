@@ -227,6 +227,8 @@ export class KanbanView extends BasesView {
 				},
 				onRenameColumn: (oldName: string, newName: string) =>
 					this.handleRenameColumn(oldName, newName),
+				onAddCard: (folderName: string, name: string) =>
+				this.handleAddCard(folderName, name),
 				columnOrderActor: this.columnOrderActor,
 				cardDragActor: this.cardDragActor,
 				onCardDrop: (filePath: string, targetFolderName: string) =>
@@ -332,6 +334,26 @@ export class KanbanView extends BasesView {
 		} catch {
 			// ignore malformed config
 		}
+	}
+
+	private async handleAddCard(
+		folderName: string,
+		name: string,
+	): Promise<void> {
+		const folder =
+			this.columnRootFolder?.children.find(
+				(c): c is TFolder =>
+					'children' in c && !('extension' in c) && c.name === folderName,
+			) ?? null
+		if (!folder) return
+		const base = `${folder.path}/${name}`
+		let path = `${base}.md`
+		let i = 1
+		while (this.app.vault.getAbstractFileByPath(path)) {
+			path = `${base} ${i}.md`
+			i++
+		}
+		await this.app.vault.create(path, '')
 	}
 
 	private async handleAddColumn(name: string): Promise<void> {

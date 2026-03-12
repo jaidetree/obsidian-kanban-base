@@ -1,5 +1,9 @@
 import type { App, TFile } from "obsidian";
 
+const mockLeaf = {
+  openFile: async (_file: TFile): Promise<void> => {},
+};
+
 export const createMockApp = (overrides?: Partial<App>): App => {
   return {
     fileManager: {
@@ -7,6 +11,8 @@ export const createMockApp = (overrides?: Partial<App>): App => {
         // no-op stub
       },
       createNewMarkdownFile: async (_folder: unknown, _name: string): Promise<TFile> => ({} as TFile),
+      renameFile: async (_file: TFile, _newPath: string): Promise<void> => {},
+      trashFile: async (_file: TFile): Promise<void> => {},
     },
     metadataCache: {
       getFirstLinkpathDest: (_linkpath: string, _sourcePath: string) => null,
@@ -26,6 +32,7 @@ export const createMockApp = (overrides?: Partial<App>): App => {
     workspace: {
       openLinkText: async (_linktext: string, _sourcePath: string, _newLeaf: boolean): Promise<void> => {},
       trigger: (_event: string, ..._args: unknown[]) => {},
+      getLeaf: (_newLeaf?: boolean | 'tab' | 'split' | 'window') => mockLeaf,
       ...(overrides?.workspace ?? {}),
     },
     ...overrides,

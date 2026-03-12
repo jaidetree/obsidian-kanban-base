@@ -207,7 +207,11 @@
 }
 
 .kanban-base-card {
-	padding: 8px 10px;
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 4px;
+	padding: 6px 6px 6px 4px;
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
@@ -215,14 +219,124 @@
 	box-shadow: var(--shadow-xs);
 }
 
-.kanban-base-card[draggable='true'] {
-	cursor: grab;
+.kanban-base-card:hover {
+	background: var(--background-modifier-hover);
 }
-.kanban-base-card[draggable='true']:active {
+
+.kanban-base-card-drag-handle {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1rem;
+	height: 1rem;
+	margin-top: 1px;
+	cursor: grab;
+	color: var(--text-faint);
+	opacity: 0;
+	transition: opacity 0.1s;
+}
+
+.kanban-base-card-drag-handle .kanban-base-icon {
+	width: 0.875rem;
+	height: 0.875rem;
+}
+
+.kanban-base-card:hover .kanban-base-card-drag-handle {
+	opacity: 1;
+}
+
+.kanban-base-card-drag-handle:active {
 	cursor: grabbing;
 }
 
-.kanban-base-card:hover {
+.kanban-base-card-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.kanban-base-card-menu-btn {
+	flex-shrink: 0;
+	background: none;
+	border: none;
+	padding: 0;
+	width: 1rem;
+	height: 1rem;
+	margin-top: 1px;
+	cursor: pointer;
+	border-radius: var(--radius-s);
+	color: var(--text-faint);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	transition: opacity 0.1s;
+}
+
+.kanban-base-card-menu-btn .kanban-base-icon {
+	width: 0.875rem;
+	height: 0.875rem;
+}
+
+.kanban-base-card:hover .kanban-base-card-menu-btn {
+	opacity: 1;
+}
+
+.kanban-base-card-menu-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+	opacity: 1;
+}
+
+.kanban-base-card-rename-input {
+	width: 100%;
+	padding: 1px 4px;
+	background: var(--background-primary);
+	border: 1px solid var(--interactive-accent);
+	border-radius: var(--radius-s);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	font-family: var(--font-interface);
+	box-sizing: border-box;
+}
+
+.kanban-base-card-rename-input:focus {
+	outline: none;
+}
+
+.kanban-base-card-rename-actions {
+	display: flex;
+	gap: 4px;
+	margin-top: 4px;
+}
+
+.kanban-base-card-rename-confirm,
+.kanban-base-card-rename-cancel {
+	flex: 1;
+	padding: 2px 4px;
+	border-radius: var(--radius-s);
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+}
+
+.kanban-base-card-rename-confirm {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.kanban-base-card-rename-confirm:hover {
+	filter: brightness(1.1);
+}
+
+.kanban-base-card-rename-cancel {
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.kanban-base-card-rename-cancel:hover {
 	background: var(--background-modifier-hover);
 }
 
@@ -355,7 +469,22 @@
 	justify-content: center;
 }
 .kanban-base-column__footer {
-	margin-top: 1rem;
+	margin-top: 0.25rem;
+}
+
+.kanban-base-column__add-card-input {
+	width: 100%;
+	padding: 4px 8px;
+	background: var(--background-primary);
+	border: 1px solid var(--interactive-accent);
+	border-radius: var(--radius-s);
+	color: var(--text-normal);
+	font-size: var(--font-ui-small);
+	box-sizing: border-box;
+}
+
+.kanban-base-column__add-card-input:focus {
+	outline: none;
 }
 .kanban-base-column__footer .kanban-base-icon {
 	width: 0.825rem;
@@ -365,6 +494,7 @@
 	background: var(--background-secondary);
 	display: flex;
 	flex-flow: row;
+	box-shadow: none;
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 0 0 var(--radius-s) var(--radius-s);
 	align-items: center;

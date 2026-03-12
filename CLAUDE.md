@@ -15,6 +15,7 @@ A similar plugin is located in ~/projects/obsidian/lovely-bases.
   committing
 - After work is complete, after running tests, prompt me to manually test before
   committing
+- After testing, mark any tasks as completed in the spec
 - After each task is done make a git commit including updating the tasks section
   to mark features as complete.
 - Work atomically so each commit keeps the project in an operational state

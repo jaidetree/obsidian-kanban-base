@@ -26,6 +26,7 @@ interface KanbanBoardProps {
 	onUpdateIcons: (icons: BoardIcons) => void
 	onUpdateColumnStates: (states: BoardColumnStates) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+	onAddCard: (folderName: string, name: string) => Promise<void>
 	columnOrderActor: Actor<typeof columnOrderMachine>
 	cardDragActor: Actor<typeof cardDragMachine>
 	onCardDrop: (filePath: string, targetFolderName: string) => Promise<void>
@@ -43,6 +44,7 @@ export function KanbanBoard({
 	onUpdateIcons,
 	onUpdateColumnStates,
 	onRenameColumn,
+	onAddCard,
 	columnOrderActor,
 	cardDragActor,
 	onCardDrop,
@@ -144,6 +146,7 @@ export function KanbanBoard({
 						}
 						onStateChange={handleStateChange}
 						onRenameColumn={onRenameColumn}
+						onAddCard={name => onAddCard(column.folder.name, name)}
 						dragIndex={idx}
 						onDragStart={index =>
 							dragSend({ type: 'DRAG_START', index })

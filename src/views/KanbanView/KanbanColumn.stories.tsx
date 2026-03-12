@@ -63,6 +63,7 @@ function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragg
 				onCardDrop={() => {}}
 				onCardDragCancel={() => {}}
 				isCardDragTarget={isCardDragTarget}
+				onAddCard={async (_name: string) => {}}
 			/>
 		</AppContext.Provider>
 	);
