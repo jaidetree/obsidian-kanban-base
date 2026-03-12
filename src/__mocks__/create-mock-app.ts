@@ -20,6 +20,8 @@ export const createMockApp = (overrides?: Partial<App>): App => {
       rename: async (_file: TFile, _newPath: string): Promise<void> => {},
       create: async (_path: string, _data: string): Promise<TFile> => ({} as TFile),
       createFolder: async (_path: string): Promise<void> => {},
+      getFolderByPath: (_path: string) => null,
+      getAllFolders: (_includeRoot?: boolean) => [],
     },
     workspace: {
       openLinkText: async (_linktext: string, _sourcePath: string, _newLeaf: boolean): Promise<void> => {},

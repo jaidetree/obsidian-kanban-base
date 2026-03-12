@@ -1,6 +1,6 @@
 import { useSignal, useSignalEffect } from '@preact/signals'
 import { useActorRef, useActorState } from 'hooks/xstate'
-import type { App, BasesPropertyId } from 'obsidian'
+import type { App, BasesPropertyId, TFolder } from 'obsidian'
 import type { CSSProperties } from 'preact'
 import { useState } from 'preact/hooks'
 import type { BoardColumnStates } from 'types/columns'
@@ -9,6 +9,7 @@ import { type Actor } from 'xstate'
 import { cardDragMachine } from '../../machines/cardDragMachine'
 import { columnOrderMachine } from '../../machines/columnOrderMachine'
 import { AppContext } from './AppContext'
+import { FolderSuggestModal } from './FolderSuggestModal'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
 
@@ -19,7 +20,9 @@ interface KanbanBoardProps {
 	cardSize: number
 	columnIcons: BoardIcons
 	columnStates: BoardColumnStates
+	columnRootSet: boolean
 	onAddColumn: (name: string) => Promise<void>
+	onSetColumnRoot: (folderPath: string) => void
 	onUpdateIcons: (icons: BoardIcons) => void
 	onUpdateColumnStates: (states: BoardColumnStates) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
@@ -34,7 +37,9 @@ export function KanbanBoard({
 	cardSize,
 	columnIcons,
 	columnStates,
+	columnRootSet,
 	onAddColumn,
+	onSetColumnRoot,
 	onUpdateIcons,
 	onUpdateColumnStates,
 	onRenameColumn,
@@ -160,7 +165,21 @@ export function KanbanBoard({
 					}
 				/>
 			))}
-			{adding ? (
+			{!columnRootSet ? (
+				<div class="kanban-base-no-root">
+					<p class="kanban-base-no-root-message">Select a root folder to get started</p>
+					<button
+						class="kanban-base-no-root-button"
+						onClick={() => {
+							new FolderSuggestModal(app, (folder: TFolder) => {
+								onSetColumnRoot(folder.path)
+							}).open()
+						}}
+					>
+						Select folder
+					</button>
+				</div>
+			) : adding ? (
 				<div class="kanban-base-column-add">
 					<input
 						class="kanban-base-column-add-input"

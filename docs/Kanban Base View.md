@@ -327,15 +327,56 @@ to cover those files.
 - [x] Manual end-to-end test: drag card across columns, verify file moves on
       disk
 
-### Phase VII: Properties
+### Phase VII: Polish
 
-Render selected properties from the base menu bar on each card.
+#### Columns Refactor
 
-### Phase VIII: Polish
+Currently, the system picks up folder names based on the .md files that are
+received from the filter UI. The problem is, if all cards are moved to another
+column the original column will be hidden.
+
+I've come up with at least two options to solve this:
+
+##### Collect sibling folders from matching stories
+
+For every folder of every file that matches the query, automatically collect
+sibling folders as columns.
+
+This will surface empty columns without major changes. The downside though is
+this plugin becomes more opinionated about how kanban folders are organized.
+
+##### Specify parent folder in view settings
+
+Add a view setting similar to card size that lets users specify the target
+folder then list all direct subfolders as columns.
+
+This way it's more explicit.
+
+##### Other options
+
+Maybe there is another option I'm not considering?
+
+##### Tasks
+
+- [x] Discuss and plan a solution — chose explicit `FolderOption` (`columnRoot`) with inline empty-board prompt
+- [x] Register `columnRoot` as a `FolderOption` in `KANBAN_OPTIONS` (`index.ts`)
+- [x] Add `deriveColumnsFromRoot(root, entries)` pure function — seeds columns from all direct subfolders of root, assigns entries by parent path
+- [x] Modify `onDataUpdated` to resolve `columnRoot` config → call `deriveColumnsFromRoot`; show inline prompt when unset or folder deleted
+- [x] Fix `handleCardDrop`, `handleRenameColumn`, `handleAddColumn` to use `columnRootFolder` instead of re-deriving from entries
+- [x] Create `FolderSuggestModal` (patterned on `IconSuggestModal`) for folder picker
+- [x] Add empty-board prompt UI to `KanbanBoard` when `columnRootSet` is false
+- [x] Add `deriveColumnsFromRoot` vitest suite (5 cases); update `create-mock-app` with `getFolderByPath`/`getAllFolders` stubs
+- [x] Add `NoRootConfigured` Storybook story to `KanbanBoard.stories.tsx`
+
+#### General Cleanup
 
 - [x] Fix column header content alignment
 - [ ] Improve Add column button styles
 - [ ] Move add column logic into state machine
 - [ ] Move column state machines into machines/ directory
+
+### Phase VIII: Properties
+
+Render selected properties from the base menu bar on each card.
 
 ### Phase IX: Group By Version

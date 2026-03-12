@@ -15,6 +15,39 @@ export interface IKanbanColumn {
 }
 
 /**
+ * Derive columns from a known root folder. All direct subfolders of `root`
+ * become columns (including empty ones). Entries are assigned to columns based
+ * on their immediate parent folder path.
+ */
+export function deriveColumnsFromRoot(
+	root: TFolder,
+	entries: BasesEntry[],
+): IKanbanColumn[] {
+	// Seed columns from all direct subfolder children, sorted alphabetically.
+	// Use duck-typing ('children' in c) rather than instanceof TFolder so this
+	// works in both production and test environments (where TFolder is a mock).
+	const subfolders = root.children
+		.filter((c): c is TFolder => 'children' in c && !('extension' in c))
+		.sort((a, b) => a.name.localeCompare(b.name))
+
+	const folderMap = new Map<string, IKanbanColumn>()
+	for (const folder of subfolders) {
+		folderMap.set(folder.path, { folder, entries: [] })
+	}
+
+	// Assign markdown entries to matching direct-child columns
+	for (const entry of entries) {
+		if (entry.file.extension !== 'md') continue
+		const parent = entry.file.parent
+		if (!parent) continue
+		const col = folderMap.get(parent.path)
+		if (col) col.entries.push(entry)
+	}
+
+	return [...folderMap.values()]
+}
+
+/**
  * Given a flat list of entries, return columns derived from their immediate
  * parent folders. Only entries whose grandparent folder is the shared root are
  * included — entries nested deeper (subfolders) are excluded.
@@ -84,6 +117,7 @@ export class KanbanView extends BasesView {
 	readonly type = KANBAN_ID
 	private readonly containerEl: HTMLElement
 	private firstColumnFolder: TFolder | null = null
+	private columnRootFolder: TFolder | null = null
 	private columnOrderActor: Actor<typeof columnOrderMachine> | null = null
 	private cardDragActor: Actor<typeof cardDragMachine> | null = null
 	private lastExternalColumns: string[] | null = null
@@ -97,7 +131,25 @@ export class KanbanView extends BasesView {
 		const cardProperties =
 			(this.config.get('cardProperties') as string[] | null) ?? []
 		const cardSize = (this.config.get('cardSize') as number | null) ?? 220
-		const rawColumns = deriveColumns(this.data.data)
+
+		// Resolve columnRoot from config
+		const columnRootPath = this.config.get('columnRoot') as string | undefined
+		let rawColumns: IKanbanColumn[]
+		if (!columnRootPath) {
+			this.columnRootFolder = null
+			rawColumns = []
+		} else {
+			const resolved = this.app.vault.getFolderByPath(columnRootPath)
+			if (!resolved) {
+				// Folder was deleted — clear stale config and show prompt
+				this.config.set('columnRoot', '')
+				this.columnRootFolder = null
+				rawColumns = []
+			} else {
+				this.columnRootFolder = resolved
+				rawColumns = deriveColumnsFromRoot(resolved, this.data.data)
+			}
+		}
 
 		let columns: IKanbanColumn[]
 		if (!this.cardDragActor) {
@@ -162,7 +214,11 @@ export class KanbanView extends BasesView {
 				cardSize,
 				columnIcons,
 				columnStates,
+				columnRootSet: !!columnRootPath,
 				onAddColumn: (name: string) => this.handleAddColumn(name),
+				onSetColumnRoot: (folderPath: string) => {
+					this.config.set('columnRoot', folderPath)
+				},
 				onUpdateIcons: (icons: BoardIcons) => {
 					this.config.set('columnIcons', JSON.stringify(icons))
 				},
@@ -205,14 +261,13 @@ export class KanbanView extends BasesView {
 	): Promise<void> {
 		const file = this.app.vault.getAbstractFileByPath(filePath)
 		if (!(file instanceof TFile)) return
-		const targetColumn = deriveColumns(this.data.data).find(
-			c => c.folder.name === targetFolderName,
-		)
-		if (!targetColumn) return
-		await this.app.vault.rename(
-			file,
-			targetColumn.folder.path + '/' + file.name,
-		)
+		const targetFolder =
+			this.columnRootFolder?.children.find(
+				(c): c is TFolder =>
+					'children' in c && !('extension' in c) && c.name === targetFolderName,
+			) ?? null
+		if (!targetFolder) return
+		await this.app.vault.rename(file, targetFolder.path + '/' + file.name)
 	}
 
 	private parseColumnOrder(): string[] {
@@ -236,14 +291,16 @@ export class KanbanView extends BasesView {
 		const trimmed = newName.trim()
 		if (!trimmed || trimmed === oldName) return
 
-		const column = deriveColumns(this.data.data).find(
-			c => c.folder.name === oldName,
-		)
-		if (!column) return
+		const folder =
+			this.columnRootFolder?.children.find(
+				(c): c is TFolder =>
+					'children' in c && !('extension' in c) && c.name === oldName,
+			) ?? null
+		if (!folder) return
 
-		const parent = column.folder.parent
+		const parent = folder.parent
 		const parentPath = parent && !parent.isRoot() ? parent.path + '/' : ''
-		await this.app.vault.rename(column.folder, `${parentPath}${trimmed}`)
+		await this.app.vault.rename(folder, `${parentPath}${trimmed}`)
 
 		// Migrate column order
 		const currentOrder = this.parseColumnOrder()
@@ -279,17 +336,19 @@ export class KanbanView extends BasesView {
 
 	private async handleAddColumn(name: string): Promise<void> {
 		const trimmed = name.trim()
-		if (!trimmed || !this.firstColumnFolder) return
+		if (!trimmed || !this.columnRootFolder) return
 
-		const parent = this.firstColumnFolder.parent
-		const rootPath = parent && !parent.isRoot() ? parent.path : ''
+		const rootPath = !this.columnRootFolder.isRoot()
+			? this.columnRootFolder.path
+			: ''
 		const folderPath = rootPath ? `${rootPath}/${trimmed}` : trimmed
 
 		// Seed the column order from existing columns, then append the new name
 		const existingOrder = this.parseColumnOrder()
-		const existingNames = deriveColumns(this.data.data).map(
-			c => c.folder.name,
-		)
+		const existingNames = deriveColumnsFromRoot(
+			this.columnRootFolder,
+			this.data.data,
+		).map(c => c.folder.name)
 		const base = existingOrder.length > 0 ? existingOrder : existingNames
 		const newOrder = [...base.filter(n => n !== trimmed), trimmed]
 		this.config.set('columnOrder', JSON.stringify(newOrder))

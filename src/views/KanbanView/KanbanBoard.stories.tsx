@@ -41,6 +41,7 @@ const inProgress = mockFolder('In Progress', root);
 const done = mockFolder('Done', root);
 
 const noop = async () => {};
+const noopSync = () => {};
 
 const meta: Meta<typeof KanbanBoard> = {
 	title: 'Views/Kanban Board',
@@ -52,7 +53,9 @@ const meta: Meta<typeof KanbanBoard> = {
 		cardSize: 220,
 		columnIcons: {},
 		columnStates: {},
+		columnRootSet: true,
 		onAddColumn: noop,
+		onSetColumnRoot: noopSync,
 		onUpdateIcons: (_icons: BoardIcons) => {},
 		onUpdateColumnStates: (_states: BoardColumnStates) => {},
 		onRenameColumn: async (_oldName: string, _newName: string) => {},
@@ -127,5 +130,12 @@ cardDropTargetActor.send({ type: 'DRAG_OVER', targetColumn: 'Done' });
 export const CardDropTarget: Story = {
 	args: {
 		cardDragActor: cardDropTargetActor,
+	},
+};
+
+export const NoRootConfigured: Story = {
+	args: {
+		columnRootSet: false,
+		columns: [],
 	},
 };
