@@ -200,7 +200,7 @@
 .kanban-base-column-body {
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
+	gap: 0.5rem;
 	overflow-y: auto;
 	flex: 1;
 	max-height: 100%;
@@ -477,7 +477,7 @@
 
 .kanban-base-column__add-card-input {
 	width: 100%;
-	padding: 4px 8px;
+	padding: 0.5rem 0.5rem 0.5rem 1.5rem;
 	background: var(--background-primary);
 	border: 1px solid var(--interactive-accent);
 	border-radius: var(--radius-s);
@@ -499,7 +499,7 @@
 	flex-flow: row;
 	box-shadow: none;
 	border: 1px solid var(--background-modifier-border);
-	border-radius: 0 0 var(--radius-s) var(--radius-s);
+	border-radius: var(--radius-s);
 	align-items: center;
 	justify-content: center;
 	gap: 0.25rem;
