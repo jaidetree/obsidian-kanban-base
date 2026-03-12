@@ -358,22 +358,41 @@ Maybe there is another option I'm not considering?
 
 ##### Tasks
 
-- [x] Discuss and plan a solution — chose explicit `FolderOption` (`columnRoot`) with inline empty-board prompt
+- [x] Discuss and plan a solution — chose explicit `FolderOption` (`columnRoot`)
+      with inline empty-board prompt
 - [x] Register `columnRoot` as a `FolderOption` in `KANBAN_OPTIONS` (`index.ts`)
-- [x] Add `deriveColumnsFromRoot(root, entries)` pure function — seeds columns from all direct subfolders of root, assigns entries by parent path
-- [x] Modify `onDataUpdated` to resolve `columnRoot` config → call `deriveColumnsFromRoot`; show inline prompt when unset or folder deleted
-- [x] Fix `handleCardDrop`, `handleRenameColumn`, `handleAddColumn` to use `columnRootFolder` instead of re-deriving from entries
-- [x] Create `FolderSuggestModal` (patterned on `IconSuggestModal`) for folder picker
+- [x] Add `deriveColumnsFromRoot(root, entries)` pure function — seeds columns
+      from all direct subfolders of root, assigns entries by parent path
+- [x] Modify `onDataUpdated` to resolve `columnRoot` config → call
+      `deriveColumnsFromRoot`; show inline prompt when unset or folder deleted
+- [x] Fix `handleCardDrop`, `handleRenameColumn`, `handleAddColumn` to use
+      `columnRootFolder` instead of re-deriving from entries
+- [x] Create `FolderSuggestModal` (patterned on `IconSuggestModal`) for folder
+      picker
 - [x] Add empty-board prompt UI to `KanbanBoard` when `columnRootSet` is false
-- [x] Add `deriveColumnsFromRoot` vitest suite (5 cases); update `create-mock-app` with `getFolderByPath`/`getAllFolders` stubs
+- [x] Add `deriveColumnsFromRoot` vitest suite (5 cases); update
+      `create-mock-app` with `getFolderByPath`/`getAllFolders` stubs
 - [x] Add `NoRootConfigured` Storybook story to `KanbanBoard.stories.tsx`
+
+#### Cards
+
+- [ ] Add drag handle to left edge of card
+- [ ] Add an ellipsis context menu button on the right edge of card
+- [ ] Add rename to context menu
+- [ ] Add delete to context menu
+- [ ] Add open to context menu
+- [ ] Add open in new tab to context menu
+- [ ] Add new button at the bottom of every column
 
 #### General Cleanup
 
 - [x] Fix column header content alignment
+- [ ] Open cards in new tabs
 - [ ] Improve Add column button styles
 - [ ] Move add column logic into state machine
 - [ ] Move column state machines into machines/ directory
+- [ ] Retain order and icon when renaming columns
+- [ ] Pick up new folders when added to target directory
 
 ### Phase VIII: Properties
 

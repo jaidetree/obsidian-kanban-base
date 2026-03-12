@@ -212,10 +212,15 @@
 	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
 	cursor: pointer;
+	box-shadow: var(--shadow-xs);
 }
 
-.kanban-base-card[draggable="true"] { cursor: grab; }
-.kanban-base-card[draggable="true"]:active { cursor: grabbing; }
+.kanban-base-card[draggable='true'] {
+	cursor: grab;
+}
+.kanban-base-card[draggable='true']:active {
+	cursor: grabbing;
+}
 
 .kanban-base-card:hover {
 	background: var(--background-modifier-hover);
@@ -335,4 +340,35 @@
 }
 .kanban-base-icon-suggestion-name {
 	font-size: 0.8rem;
+}
+.kanban-base-no-root {
+	display: flex;
+	flex-flow: column;
+	justify-content: center;
+	align-items: center;
+	background: var(--background-secondary-alt);
+	padding: 1rem 2rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-l);
+}
+.kanban-base-board:has(.kanban-base-no-root) {
+	justify-content: center;
+}
+.kanban-base-column__footer {
+	margin-top: 1rem;
+}
+.kanban-base-column__footer .kanban-base-icon {
+	width: 0.825rem;
+	height: 0.825rem;
+}
+.kanban-base-column .kanban-base-column__add-button {
+	background: var(--background-secondary);
+	display: flex;
+	flex-flow: row;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 0 0 var(--radius-s) var(--radius-s);
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	width: 100%;
 }

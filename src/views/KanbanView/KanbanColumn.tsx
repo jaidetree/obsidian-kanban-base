@@ -12,12 +12,23 @@ import type { IKanbanColumn } from './KanbanView'
 
 const DEFAULT_ICON = 'lucide-circle'
 
-function IconRenderer({ iconId }: { iconId: string }) {
+function ObsidianIcon({
+	iconId,
+	className,
+}: {
+	iconId: string
+	className?: string
+}) {
 	const ref = useRef<HTMLSpanElement>(null)
 	useEffect(() => {
 		if (ref.current) setIcon(ref.current, iconId)
 	}, [iconId])
-	return <span ref={ref} class="kanban-base-icon" />
+	return (
+		<span
+			ref={ref}
+			class={'kanban-base-icon' + (className ? ' ' + className : '')}
+		/>
+	)
 }
 
 interface IconButtonProps {
@@ -50,7 +61,7 @@ function IconButton({ folderName, iconsSignal }: IconButtonProps) {
 			{chosenIcon.value?.prefix === 'Emoji' ? (
 				displayIcon
 			) : chosenIcon ? (
-				<IconRenderer iconId={displayIcon.value} />
+				<ObsidianIcon iconId={displayIcon.value} />
 			) : null}
 		</button>
 	)
@@ -298,7 +309,7 @@ export function KanbanColumn({
 						aria-label="Column options"
 						onClick={handleMenuClick}
 					>
-						<IconRenderer iconId="lucide-more-horizontal" />
+						<ObsidianIcon iconId="lucide-more-horizontal" />
 					</button>
 				</div>
 				{!snapshot.context.isCollapsed && (
@@ -312,6 +323,12 @@ export function KanbanColumn({
 								onDragCancel={onCardDragCancel}
 							/>
 						))}
+						<div className="kanban-base-column__footer">
+							<button className="kanban-base-column__add-button">
+								<ObsidianIcon iconId="lucide-plus-circle" />
+								Add Card
+							</button>
+						</div>
 					</div>
 				)}
 			</div>
