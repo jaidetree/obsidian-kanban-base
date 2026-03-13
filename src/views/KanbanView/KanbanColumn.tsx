@@ -134,20 +134,6 @@ function KanbanColumnHeader({
 }: KanbanColumnHeaderProps) {
 	const handleMenuClick = (evt: MouseEvent) => {
 		const menu = new Menu()
-		if (!snapshot.context.isCollapsed) {
-			menu.addItem(item => {
-				item.setTitle('Rename')
-					.setIcon('pencil')
-					.onClick(() => {
-						send({ type: 'RENAME' })
-					})
-			})
-			menu.addItem(item => {
-				item.setTitle('Remove folder')
-					.setIcon('trash')
-					.onClick(onRemoveColumn)
-			})
-		}
 		menu.addItem(item => {
 			const collapsed = snapshot.context.isCollapsed
 			item.setTitle(collapsed ? 'Expand' : 'Collapse')
@@ -158,13 +144,27 @@ function KanbanColumnHeader({
 		})
 		menu.addItem(item => {
 			item.setTitle('Remove icon')
-				.setIcon('x')
+				.setIcon('lucide-x')
 				.onClick(() => {
 					const updated = { ...iconsSignal.value }
 					delete updated[folderName]
 					iconsSignal.value = updated
 				})
 		})
+		if (!snapshot.context.isCollapsed) {
+			menu.addItem(item => {
+				item.setTitle('Rename folder')
+					.setIcon('lucide-pencil')
+					.onClick(() => {
+						send({ type: 'RENAME' })
+					})
+			})
+			menu.addItem(item => {
+				item.setTitle('Remove folder')
+					.setIcon('lucide-trash')
+					.onClick(onRemoveColumn)
+			})
+		}
 		menu.showAtMouseEvent(evt)
 	}
 
