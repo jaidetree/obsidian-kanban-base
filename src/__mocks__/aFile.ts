@@ -1,14 +1,12 @@
 import type { TFile } from "obsidian";
 
 export class MockTFile {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  vault: any = null;
+  vault: unknown = null;
   basename: string = '';
   path: string = '';
   extension: string = '';
   name: string = '';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  parent: any = null;
+  parent: unknown = null;
   stat = { ctime: 0, mtime: 0, size: 0 };
   content?: string;
 

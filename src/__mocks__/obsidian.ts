@@ -36,18 +36,20 @@ export class Platform {
   static isMobile = false;
 }
 
+interface MockController {
+  app?: ReturnType<typeof createMockApp>;
+  config?: { get: (key: string) => unknown };
+  data?: { entries: unknown[]; groupedData: unknown[] };
+}
+
 // Mocked BasesView base class
 export class BasesView {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  app: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  config: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
+  app: ReturnType<typeof createMockApp>;
+  config: { get: (key: string) => unknown };
+  data: { entries: unknown[]; groupedData: unknown[] };
   containerEl: HTMLElement;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(controller: any) {
+  constructor(controller?: MockController) {
     this.app = controller?.app ?? createMockApp();
     this.config = controller?.config ?? { get: (_key: string) => null };
     this.data = controller?.data ?? { entries: [], groupedData: [] };

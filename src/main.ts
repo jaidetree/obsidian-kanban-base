@@ -16,10 +16,11 @@ export default class KanbanBasePlugin extends Plugin {
 		// new code takes effect cleanly without prototype patching.
 		this.app.workspace.iterateAllLeaves(leaf => {
 			if (leaf?.view?.getViewType?.() === 'bases') {
-				const children: unknown[] = (leaf.view as any)._children ?? []
-				const hasKanban = children.some(
-					c => (c as any)?.view?.type === KANBAN_ID,
-				)
+				interface BasesViewInternal {
+					_children?: Array<{ view?: { type?: string } }>
+				}
+				const children = (leaf.view as unknown as BasesViewInternal)._children ?? []
+				const hasKanban = children.some(c => c.view?.type === KANBAN_ID)
 				if (hasKanban) {
 					// location.reload()
 				}

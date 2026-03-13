@@ -164,6 +164,15 @@ export function KanbanColumn({
 		}
 	}
 
+	const handleAddCardKeyDown = async (e: KeyboardEvent) => {
+		if (e.key === 'Enter') {
+			const name = snapshot.context.newCardName.trim()
+			if (name) await onAddCard(name)
+			send({ type: 'CONFIRM_ADD_CARD' })
+		}
+		if (e.key === 'Escape') send({ type: 'CANCEL_ADD_CARD' })
+	}
+
 	const handleRenameKeyDown = (e: KeyboardEvent) => {
 		if (e.key === 'Enter') handleConfirm()
 		if (e.key === 'Escape') send({ type: 'CANCEL' })
@@ -277,14 +286,7 @@ export function KanbanColumn({
 											name: (e.target as HTMLInputElement).value,
 										})
 									}
-									onKeyDown={async e => {
-										if (e.key === 'Enter') {
-											const name = snapshot.context.newCardName.trim()
-											if (name) await onAddCard(name)
-											send({ type: 'CONFIRM_ADD_CARD' })
-										}
-										if (e.key === 'Escape') send({ type: 'CANCEL_ADD_CARD' })
-									}}
+									onKeyDown={e => { void handleAddCardKeyDown(e) }}
 									onBlur={() => send({ type: 'CANCEL_ADD_CARD' })}
 								/>
 							) : (

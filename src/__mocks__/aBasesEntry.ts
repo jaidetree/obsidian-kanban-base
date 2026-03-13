@@ -17,8 +17,7 @@ export class MockBasesEntry implements BasesEntry {
 
     if (source === 'file') {
       if (property === 'name') return aValue(this.file.basename);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return aValue((this.file as any)[property]);
+      return aValue((this.file as unknown as Record<string, unknown>)[property]);
     }
 
     return aValue(this._frontmatter[property]);
