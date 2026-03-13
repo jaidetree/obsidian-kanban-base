@@ -2,17 +2,20 @@ import { assign, setup } from 'xstate'
 
 export const columnMachine = setup({
 	types: {} as {
-		context: { name: string; draft: string; isCollapsed: boolean; newCardName: string }
+		context: {
+			name: string
+			draft: string
+			isCollapsed: boolean
+			newCardName: string
+		}
 		events:
 			| { type: 'RENAME' }
 			| { type: 'SET_DRAFT'; draft: string }
 			| { type: 'CONFIRM' }
 			| { type: 'CANCEL' }
 			| { type: 'TOGGLE_COLLAPSE' }
-			| { type: 'START_ADD_CARD' }
+			| { type: 'ADD_CARD' }
 			| { type: 'SET_NEW_CARD_NAME'; name: string }
-			| { type: 'CONFIRM_ADD_CARD' }
-			| { type: 'CANCEL_ADD_CARD' }
 		input: { name: string; isCollapsed: boolean }
 	},
 	guards: {
@@ -59,11 +62,11 @@ export const columnMachine = setup({
 				SET_NEW_CARD_NAME: {
 					actions: assign({ newCardName: ({ event }) => event.name }),
 				},
-				CONFIRM_ADD_CARD: {
-					target: 'idle',
+				CONFIRM: {
+					target: 'addingCard',
 					actions: assign({ newCardName: '' }),
 				},
-				CANCEL_ADD_CARD: {
+				CANCEL: {
 					target: 'idle',
 					actions: assign({ newCardName: '' }),
 				},

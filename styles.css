@@ -139,64 +139,6 @@
 	max-height: 0;
 }
 
-.kanban-base-column-rename {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-
-.kanban-base-column-rename-input {
-	width: 100%;
-	padding: 2px 6px;
-	background: var(--background-primary);
-	border: 1px solid var(--interactive-accent);
-	border-radius: var(--radius-s);
-	color: var(--text-normal);
-	font-size: var(--font-ui-small);
-	font-weight: var(--font-semibold);
-	font-family: var(--font-interface);
-	box-sizing: border-box;
-}
-
-.kanban-base-column-rename-input:focus {
-	outline: none;
-}
-
-.kanban-base-column-rename-actions {
-	display: flex;
-	gap: 4px;
-}
-
-.kanban-base-column-rename-confirm,
-.kanban-base-column-rename-cancel {
-	flex: 1;
-	padding: 2px 6px;
-	border-radius: var(--radius-s);
-	font-size: var(--font-ui-smaller);
-	cursor: pointer;
-	border: 1px solid var(--background-modifier-border);
-}
-
-.kanban-base-column-rename-confirm {
-	background: var(--interactive-accent);
-	color: var(--text-on-accent);
-	border-color: var(--interactive-accent);
-}
-
-.kanban-base-column-rename-confirm:hover {
-	filter: brightness(1.1);
-}
-
-.kanban-base-column-rename-cancel {
-	background: var(--background-primary);
-	color: var(--text-normal);
-}
-
-.kanban-base-column-rename-cancel:hover {
-	background: var(--background-modifier-hover);
-}
-
 .kanban-base-column-body {
 	display: flex;
 	flex-direction: column;
@@ -475,9 +417,16 @@
 	margin-top: 0.25rem;
 }
 
-.kanban-base-column__add-card-input {
+.kanban-base-inline-form {
+	display: flex;
+	flex: 1 0;
+	flex-flow: row nowrap;
+	gap: 0.25rem;
+}
+.kanban-base-inline-form__input {
+	flex: 1 1;
 	width: 100%;
-	padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+	padding: 0.25rem;
 	background: var(--background-primary);
 	border: 1px solid var(--interactive-accent);
 	border-radius: var(--radius-s);
@@ -485,10 +434,15 @@
 	font-size: var(--font-ui-small);
 	box-sizing: border-box;
 }
-
-.kanban-base-column__add-card-input:focus {
+.kanban-base-inline-form__input:focus {
 	outline: none;
 }
+.kanban-base-inline-form__submit,
+.kanban-base-inline-form__cancel {
+	width: 1.875rem;
+	padding: 0;
+}
+
 .kanban-base-column__footer .kanban-base-icon {
 	width: 0.825rem;
 	height: 0.825rem;

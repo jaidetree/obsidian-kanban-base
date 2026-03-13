@@ -1,20 +1,21 @@
 import type { Signal } from '@preact/signals'
 import { useComputed } from '@preact/signals'
-import { useXState } from 'hooks/xstate'
 import type { SendFrom } from 'hooks/xstate'
+import { useXState } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
 import { Menu } from 'obsidian'
 import { useEffect } from 'preact/hooks'
-import type { SnapshotFrom } from 'xstate'
 import { BoardIcons } from 'types/icons'
+import type { SnapshotFrom } from 'xstate'
 import { columnMachine } from '../../machines/columnMachine'
 import { useApp } from './AppContext'
 import { IconSuggestModal } from './IconSuggestModal'
+import { InlineForm } from './InlineForm'
 import { KanbanCard } from './KanbanCard'
 import type { IKanbanColumn } from './KanbanView'
+import { useKanbanView } from './KanbanViewContext'
 import { ObsidianIcon } from './ObsidianIcon'
 import { RemoveColumnModal } from './RemoveColumnModal'
-import { useKanbanView } from './KanbanViewContext'
 
 const DEFAULT_ICON = 'lucide-circle'
 
@@ -88,7 +89,8 @@ function KanbanColumnRenameInput({
 	send,
 }: KanbanColumnRenameInputProps) {
 	const view = useKanbanView()
-	const handleConfirm = () => {
+
+	function handleSubmit(_e: SubmitEvent) {
 		const newName = draft.trim()
 		send({ type: 'CONFIRM' })
 		if (newName && newName !== folderName) {
@@ -96,40 +98,20 @@ function KanbanColumnRenameInput({
 		}
 	}
 
-	const handleKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter') handleConfirm()
-		if (e.key === 'Escape') send({ type: 'CANCEL' })
-	}
-
 	return (
-		<div class="kanban-base-column-rename">
-			<input
-				class="kanban-base-column-rename-input"
-				value={draft}
-				onInput={e =>
-					send({
-						type: 'SET_DRAFT',
-						draft: (e.target as HTMLInputElement).value,
-					})
-				}
-				onKeyDown={handleKeyDown}
-				autoFocus
-			/>
-			<div class="kanban-base-column-rename-actions">
-				<button
-					class="kanban-base-column-rename-confirm"
-					onClick={handleConfirm}
-				>
-					Save
-				</button>
-				<button
-					class="kanban-base-column-rename-cancel"
-					onClick={() => send({ type: 'CANCEL' })}
-				>
-					Cancel
-				</button>
-			</div>
-		</div>
+		<InlineForm
+			value={draft}
+			onSubmit={handleSubmit}
+			onInput={e => {
+				send({
+					type: 'SET_DRAFT',
+					draft: e.currentTarget.value,
+				})
+			}}
+			onCancel={() => {
+				send({ type: 'CANCEL' })
+			}}
+		/>
 	)
 }
 
@@ -220,38 +202,40 @@ interface KanbanColumnFooterProps {
 	folderName: string
 }
 
-function KanbanColumnFooter({ snapshot, send, folderName }: KanbanColumnFooterProps) {
+function KanbanColumnFooter({
+	snapshot,
+	send,
+	folderName,
+}: KanbanColumnFooterProps) {
 	const view = useKanbanView()
-	const handleAddCardKeyDown = async (e: KeyboardEvent) => {
-		if (e.key === 'Enter') {
-			const name = snapshot.context.newCardName.trim()
-			if (name) await view.addCard(folderName, name)
-			send({ type: 'CONFIRM_ADD_CARD' })
-		}
-		if (e.key === 'Escape') send({ type: 'CANCEL_ADD_CARD' })
+
+	async function handleSubmit(_e: SubmitEvent) {
+		const name = snapshot.context.newCardName.trim()
+		if (name) await view.addCard(folderName, name)
+		send({ type: 'CONFIRM' })
 	}
 
 	return (
 		<div className="kanban-base-column__footer">
 			{snapshot.value === 'addingCard' ? (
-				<input
-					className="kanban-base-column__add-card-input"
+				<InlineForm
 					placeholder="Card name"
 					value={snapshot.context.newCardName}
-					ref={el => { if (el) el.focus() }}
-					onInput={e =>
+					onSubmit={handleSubmit}
+					onInput={e => {
 						send({
 							type: 'SET_NEW_CARD_NAME',
-							name: (e.target as HTMLInputElement).value,
+							name: e.currentTarget.value,
 						})
-					}
-					onKeyDown={e => { void handleAddCardKeyDown(e) }}
-					onBlur={() => send({ type: 'CANCEL_ADD_CARD' })}
+					}}
+					onCancel={() => {
+						send({ type: 'CANCEL' })
+					}}
 				/>
 			) : (
 				<button
 					className="kanban-base-column__add-button"
-					onClick={() => send({ type: 'START_ADD_CARD' })}
+					onClick={() => send({ type: 'ADD_CARD' })}
 				>
 					<ObsidianIcon iconId="lucide-plus-circle" />
 					Add Card
