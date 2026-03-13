@@ -305,13 +305,22 @@ export class KanbanView extends BasesView {
 		const parentPath = parent && !parent.isRoot() ? parent.path + '/' : ''
 		await this.app.vault.rename(folder, `${parentPath}${trimmed}`)
 
-		// Migrate column order
+		// Migrate column order in config
 		const currentOrder = this.parseColumnOrder()
 		if (currentOrder.length > 0) {
 			const newOrder = currentOrder.map(n =>
 				n === oldName ? trimmed : n,
 			)
 			this.config.set('columnOrder', JSON.stringify(newOrder))
+		}
+
+		// Migrate column order in the in-memory actor so the next
+		// onDataUpdated render preserves position
+		if (this.columnOrderActor) {
+			const machineOrder = this.columnOrderActor.getSnapshot().context.columns
+			const updatedOrder = machineOrder.map(n => n === oldName ? trimmed : n)
+			this.lastExternalColumns = updatedOrder
+			this.columnOrderActor.send({ type: 'SET_COLUMNS', columns: updatedOrder })
 		}
 
 		// Migrate column icons and states to new key
