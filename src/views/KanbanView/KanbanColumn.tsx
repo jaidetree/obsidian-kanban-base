@@ -74,6 +74,64 @@ function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
 	)
 }
 
+interface KanbanColumnRenameInputProps {
+	draft: string
+	folderName: string
+	send: SendFrom<typeof columnMachine>
+	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+}
+
+function KanbanColumnRenameInput({
+	draft,
+	folderName,
+	send,
+	onRenameColumn,
+}: KanbanColumnRenameInputProps) {
+	const handleConfirm = () => {
+		const newName = draft.trim()
+		send({ type: 'CONFIRM' })
+		if (newName && newName !== folderName) {
+			void onRenameColumn(folderName, newName)
+		}
+	}
+
+	const handleKeyDown = (e: KeyboardEvent) => {
+		if (e.key === 'Enter') handleConfirm()
+		if (e.key === 'Escape') send({ type: 'CANCEL' })
+	}
+
+	return (
+		<div class="kanban-base-column-rename">
+			<input
+				class="kanban-base-column-rename-input"
+				value={draft}
+				onInput={e =>
+					send({
+						type: 'SET_DRAFT',
+						draft: (e.target as HTMLInputElement).value,
+					})
+				}
+				onKeyDown={handleKeyDown}
+				autoFocus
+			/>
+			<div class="kanban-base-column-rename-actions">
+				<button
+					class="kanban-base-column-rename-confirm"
+					onClick={handleConfirm}
+				>
+					Save
+				</button>
+				<button
+					class="kanban-base-column-rename-cancel"
+					onClick={() => send({ type: 'CANCEL' })}
+				>
+					Cancel
+				</button>
+			</div>
+		</div>
+	)
+}
+
 interface KanbanColumnHeaderProps {
 	folderName: string
 	iconsSignal: Signal<BoardIcons>
@@ -122,19 +180,6 @@ function KanbanColumnHeader({
 		menu.showAtMouseEvent(evt)
 	}
 
-	const handleConfirm = () => {
-		const newName = snapshot.context.draft.trim()
-		send({ type: 'CONFIRM' })
-		if (newName && newName !== folderName) {
-			void onRenameColumn(folderName, newName)
-		}
-	}
-
-	const handleRenameKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter') handleConfirm()
-		if (e.key === 'Escape') send({ type: 'CANCEL' })
-	}
-
 	return (
 		<div class="kanban-base-column-header">
 			<KanbanColumnDragHandle onDragStart={onDragStart} />
@@ -144,34 +189,12 @@ function KanbanColumnHeader({
 				disabled={snapshot.context.isCollapsed}
 			/>
 			{snapshot.value === 'editing' ? (
-				<div class="kanban-base-column-rename">
-					<input
-						class="kanban-base-column-rename-input"
-						value={snapshot.context.draft}
-						onInput={e =>
-							send({
-								type: 'SET_DRAFT',
-								draft: (e.target as HTMLInputElement).value,
-							})
-						}
-						onKeyDown={handleRenameKeyDown}
-						autoFocus
-					/>
-					<div class="kanban-base-column-rename-actions">
-						<button
-							class="kanban-base-column-rename-confirm"
-							onClick={handleConfirm}
-						>
-							Save
-						</button>
-						<button
-							class="kanban-base-column-rename-cancel"
-							onClick={() => send({ type: 'CANCEL' })}
-						>
-							Cancel
-						</button>
-					</div>
-				</div>
+				<KanbanColumnRenameInput
+					draft={snapshot.context.draft}
+					folderName={folderName}
+					send={send}
+					onRenameColumn={onRenameColumn}
+				/>
 			) : (
 				<h2>{snapshot.context.name}</h2>
 			)}
