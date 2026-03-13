@@ -1,35 +1,18 @@
 import type { Signal } from '@preact/signals'
 import { useComputed } from '@preact/signals'
 import { useXState } from 'hooks/xstate'
-import type { BasesEntry, BasesPropertyId } from 'obsidian'
-import { Keymap, Menu, setIcon } from 'obsidian'
-import { useEffect, useRef, useState } from 'preact/hooks'
+import type { BasesPropertyId } from 'obsidian'
+import { Menu } from 'obsidian'
+import { useEffect, useState } from 'preact/hooks'
 import { BoardIcons } from 'types/icons'
 import { columnMachine } from '../../machines/columnMachine'
 import { useApp } from './AppContext'
 import { IconSuggestModal } from './IconSuggestModal'
+import { KanbanCard } from './KanbanCard'
 import type { IKanbanColumn } from './KanbanView'
+import { ObsidianIcon } from './ObsidianIcon'
 
 const DEFAULT_ICON = 'lucide-circle'
-
-function ObsidianIcon({
-	iconId,
-	className,
-}: {
-	iconId: string
-	className?: string
-}) {
-	const ref = useRef<HTMLSpanElement>(null)
-	useEffect(() => {
-		if (ref.current) setIcon(ref.current, iconId)
-	}, [iconId])
-	return (
-		<span
-			ref={ref}
-			class={'kanban-base-icon' + (className ? ' ' + className : '')}
-		/>
-	)
-}
 
 interface IconButtonProps {
 	folderName: string
@@ -86,147 +69,6 @@ function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
 	)
 }
 
-function KanbanCard({
-	entry,
-	cardProperties,
-	onDragStart,
-	onDragCancel,
-}: {
-	entry: BasesEntry
-	cardProperties: BasesPropertyId[]
-	onDragStart: (filePath: string) => void
-	onDragCancel: () => void
-}) {
-	const app = useApp()
-	const [isRenaming, setIsRenaming] = useState(false)
-	const [draft, setDraft] = useState('')
-
-	const handleClick = (e: MouseEvent) => {
-		if (isRenaming) return
-		const leaf = app.workspace.getLeaf(Keymap.isModEvent(e))
-		void leaf.openFile(entry.file)
-	}
-
-	const handleMenuClick = (e: MouseEvent) => {
-		e.stopPropagation()
-		const menu = new Menu()
-		menu.addItem(item => {
-			item.setTitle('Open')
-				.setIcon('lucide-file-text')
-				.onClick(() => {
-					void app.workspace.getLeaf(false).openFile(entry.file)
-				})
-		})
-		menu.addItem(item => {
-			item.setTitle('Open in new tab')
-				.setIcon('lucide-plus')
-				.onClick(() => {
-					void app.workspace.getLeaf('tab').openFile(entry.file)
-				})
-		})
-		menu.addItem(item => {
-			item.setTitle('Rename')
-				.setIcon('pencil')
-				.onClick(() => {
-					setDraft(entry.file.basename)
-					setIsRenaming(true)
-				})
-		})
-		menu.addItem(item => {
-			item.setTitle('Delete')
-				.setIcon('trash')
-				.onClick(() => {
-					void app.fileManager.trashFile(entry.file)
-				})
-		})
-		menu.showAtMouseEvent(e)
-	}
-
-	const handleRenameConfirm = async () => {
-		const newName = draft.trim()
-		setIsRenaming(false)
-		if (newName && newName !== entry.file.basename) {
-			const dir = entry.file.parent?.path
-			const newPath = dir ? `${dir}/${newName}.md` : `${newName}.md`
-			await app.fileManager.renameFile(entry.file, newPath)
-		}
-	}
-
-	const handleRenameKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter') void handleRenameConfirm()
-		if (e.key === 'Escape') setIsRenaming(false)
-	}
-
-	return (
-		<div class="kanban-base-card" onClick={handleClick}>
-			<span
-				class="kanban-base-card-drag-handle"
-				draggable
-				onDragStart={e => {
-					e.dataTransfer!.effectAllowed = 'move'
-					e.dataTransfer!.setData('text/card', entry.file.path)
-					onDragStart(entry.file.path)
-				}}
-				onDragEnd={e => {
-					if (e.dataTransfer!.dropEffect === 'none') {
-						onDragCancel()
-					}
-				}}
-			>
-				<ObsidianIcon iconId="lucide-grip-vertical" />
-			</span>
-			<div class="kanban-base-card-content">
-				{isRenaming ? (
-					<>
-						<input
-							class="kanban-base-card-rename-input"
-							value={draft}
-							onInput={e =>
-								setDraft((e.target as HTMLInputElement).value)
-							}
-							onKeyDown={handleRenameKeyDown}
-							autoFocus
-						/>
-						<div class="kanban-base-card-rename-actions">
-							<button
-								class="kanban-base-card-rename-confirm"
-								onClick={() => void handleRenameConfirm()}
-							>
-								Save
-							</button>
-							<button
-								class="kanban-base-card-rename-cancel"
-								onClick={() => setIsRenaming(false)}
-							>
-								Cancel
-							</button>
-						</div>
-					</>
-				) : (
-					<div class="kanban-base-card-title">
-						{entry.file.basename}
-					</div>
-				)}
-				{cardProperties.map(propId => {
-					const value = entry.getValue(propId)
-					if (!value?.isTruthy()) return null
-					return (
-						<div key={propId} class="kanban-base-card-prop">
-							{value.toString()}
-						</div>
-					)
-				})}
-			</div>
-			<button
-				class="kanban-base-card-menu-btn clickable-icon"
-				aria-label="Card options"
-				onClick={handleMenuClick}
-			>
-				<ObsidianIcon iconId="lucide-more-horizontal" />
-			</button>
-		</div>
-	)
-}
 
 interface KanbanColumnProps {
 	column: IKanbanColumn
