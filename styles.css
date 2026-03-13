@@ -505,3 +505,8 @@
 	gap: 0.25rem;
 	width: 100%;
 }
+
+.kanban-base-column .kanban-base-column__add-button:hover {
+	background: var(--background-modifier-hover);
+	cursor: pointer;
+}
