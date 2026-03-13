@@ -1,8 +1,9 @@
 import { TargetedInputEvent, TargetedKeyboardEvent } from 'preact'
 import { ObsidianIcon } from './ObsidianIcon'
 
-interface InlineFormProps {
+export interface InlineFormProps {
 	value: string
+	class?: string
 	placeholder?: string
 	onInput: (e: TargetedInputEvent<HTMLInputElement>) => void
 	onSubmit: (e: SubmitEvent) => void
@@ -11,6 +12,7 @@ interface InlineFormProps {
 
 export function InlineForm({
 	value,
+	class: className,
 	placeholder,
 	onInput,
 	onSubmit,
@@ -42,7 +44,9 @@ export function InlineForm({
 
 	return (
 		<form
-			class="kanban-base-inline-form"
+			class={
+				'kanban-base-inline-form' + (className ? ` ${className}` : '')
+			}
 			onKeyDown={handleKeyDown}
 			onSubmit={handleSubmit}
 		>

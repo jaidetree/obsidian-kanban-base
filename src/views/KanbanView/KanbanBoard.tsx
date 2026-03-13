@@ -8,11 +8,55 @@ import type { BoardIcons } from 'types/icons'
 import { type Actor } from 'xstate'
 import { cardDragMachine } from '../../machines/cardDragMachine'
 import { columnOrderMachine } from '../../machines/columnOrderMachine'
-import { useApp } from './AppContext'
 import { FolderSuggestModal } from './FolderSuggestModal'
+import { InlineForm, InlineFormProps } from './InlineForm'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
 import { useKanbanView } from './KanbanViewContext'
+
+interface EmptyBoardProps {}
+
+function EmptyBoard({}: EmptyBoardProps) {
+	const view = useKanbanView()
+
+	return (
+		<div class="kanban-base-no-root">
+			<p class="kanban-base-no-root-message">
+				Select a root folder to get started
+			</p>
+			<button
+				class="kanban-base-no-root-button"
+				onClick={() => {
+					new FolderSuggestModal(app, (folder: TFolder) => {
+						view.setColumnRoot(folder.path)
+					}).open()
+				}}
+			>
+				Select folder
+			</button>
+		</div>
+	)
+}
+
+interface NewColumnProps {
+	onSubmit: (newColumnName: string) => void
+	onCancel: InlineFormProps['onCancel']
+}
+
+function NewColumn({ onCancel, onSubmit }: NewColumnProps) {
+	const [newName, setNewName] = useState('')
+
+	return (
+		<InlineForm
+			class="kanban-base-add-column"
+			placeholder="New column name"
+			value={newName}
+			onInput={e => setNewName(e.currentTarget.value)}
+			onCancel={onCancel}
+			onSubmit={_e => onSubmit(newName.trim())}
+		/>
+	)
+}
 
 export interface KanbanBoardProps {
 	columns: IKanbanColumn[]
@@ -36,12 +80,10 @@ export function KanbanBoard({
 	cardDragActor,
 }: KanbanBoardProps) {
 	const view = useKanbanView()
-	const app = useApp()
 
 	const iconsSignal = useSignal(columnIcons)
 	const columnStatesSignal = useSignal(columnStates)
 	const [adding, setAdding] = useState(false)
-	const [newName, setNewName] = useState('')
 
 	const actorRef = useActorRef(columnOrderActor)
 	const [dragSnapshot, dragSend] = useActorState(actorRef)
@@ -76,22 +118,10 @@ export function KanbanBoard({
 		...columns.filter(c => !known.has(c.folder.name)),
 	]
 
-	const handleConfirm = async () => {
-		const name = newName.trim()
-		if (!name) return
-		await view.addColumn(name)
+	async function handleConfirmNewColumn(newColumnName: string) {
+		if (!newColumnName) return
+		await view.addColumn(newColumnName)
 		setAdding(false)
-		setNewName('')
-	}
-
-	const handleCancel = () => {
-		setAdding(false)
-		setNewName('')
-	}
-
-	const handleKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter') void handleConfirm()
-		if (e.key === 'Escape') handleCancel()
 	}
 
 	useSignalEffect(() => {
@@ -139,18 +169,14 @@ export function KanbanBoard({
 					onDragStart={index =>
 						dragSend({ type: 'DRAG_START', index })
 					}
-					onDragOver={index =>
-						dragSend({ type: 'DRAG_OVER', index })
-					}
+					onDragOver={index => dragSend({ type: 'DRAG_OVER', index })}
 					onDrop={() => dragSend({ type: 'DROP' })}
 					onDragCancel={() => dragSend({ type: 'CANCEL' })}
 					isDragging={
-						dragSnapshot.matches('dragging') &&
-						dragIndex === idx
+						dragSnapshot.matches('dragging') && dragIndex === idx
 					}
 					isDragTarget={
-						dragSnapshot.matches('dragging') &&
-						dropIndex === idx
+						dragSnapshot.matches('dragging') && dropIndex === idx
 					}
 					onCardDragStart={filePath =>
 						cardDragSend({
@@ -166,9 +192,7 @@ export function KanbanBoard({
 						})
 					}
 					onCardDrop={() => handleCardDrop(column.folder.name)}
-					onCardDragCancel={() =>
-						cardDragSend({ type: 'CANCEL' })
-					}
+					onCardDragCancel={() => cardDragSend({ type: 'CANCEL' })}
 					isCardDragTarget={
 						cardDragSnapshot.matches('dragging') &&
 						cardDragSnapshot.context.targetColumn ===
@@ -177,55 +201,19 @@ export function KanbanBoard({
 				/>
 			))}
 			{!columnRootSet ? (
-				<div class="kanban-base-no-root">
-					<p class="kanban-base-no-root-message">
-						Select a root folder to get started
-					</p>
-					<button
-						class="kanban-base-no-root-button"
-						onClick={() => {
-							new FolderSuggestModal(
-								app,
-								(folder: TFolder) => {
-									view.setColumnRoot(folder.path)
-								},
-							).open()
-						}}
-					>
-						Select folder
-					</button>
-				</div>
+				<EmptyBoard />
 			) : adding ? (
-				<div class="kanban-base-column-add">
-					<input
-						class="kanban-base-column-add-input"
-						type="text"
-						placeholder="Column name"
-						value={newName}
-						onInput={e =>
-							setNewName((e.target as HTMLInputElement).value)
-						}
-						onKeyDown={handleKeyDown}
-						autoFocus
-					/>
-					<div class="kanban-base-column-add-actions">
-						<button
-							class="kanban-base-column-add-confirm"
-							onClick={() => void handleConfirm()}
-						>
-							Add
-						</button>
-						<button
-							class="kanban-base-column-add-cancel"
-							onClick={handleCancel}
-						>
-							Cancel
-						</button>
-					</div>
-				</div>
+				<NewColumn
+					onSubmit={(newColumnString: string) => {
+						handleConfirmNewColumn(newColumnString)
+					}}
+					onCancel={() => {
+						setAdding(false)
+					}}
+				/>
 			) : (
 				<button
-					class="kanban-base-add-column"
+					class="kanban-base__add-column"
 					onClick={() => setAdding(true)}
 				>
 					+ Add column

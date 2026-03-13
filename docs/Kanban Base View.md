@@ -405,8 +405,8 @@ cancel.
 - [x] Create reusable inline form
 - [x] Apply inline form to rename column, new column, rename card UIs
 - [x] Focus on inline form UI
-- [ ] Open cards in new tabs
-- [ ] Improve Add column button styles
+- [x] Open cards in new tabs
+- [x] Improve Add column button styles
 - [x] Move add column logic into state machine
 - [x] Move column state machines into machines/ directory
 - [ ] Retain order and icon when renaming columns

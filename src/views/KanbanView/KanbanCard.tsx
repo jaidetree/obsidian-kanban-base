@@ -1,5 +1,6 @@
 import type { BasesEntry, BasesPropertyId } from 'obsidian'
 import { Keymap, Menu } from 'obsidian'
+import { TargetedDragEvent } from 'preact'
 import { useState } from 'preact/hooks'
 import { useApp } from './AppContext'
 import { InlineForm } from './InlineForm'
@@ -21,8 +22,12 @@ export function KanbanCard({
 	const [draft, setDraft] = useState('')
 
 	const handleClick = (e: MouseEvent) => {
-		if (isRenaming) return
-		const leaf = app.workspace.getLeaf(Keymap.isModEvent(e))
+		if (isRenaming) {
+			e.preventDefault()
+			e.stopPropagation()
+			return
+		}
+		const leaf = app.workspace.getLeaf(!Keymap.isModEvent(e))
 		void leaf.openFile(entry.file)
 	}
 
@@ -61,7 +66,7 @@ export function KanbanCard({
 		menu.showAtMouseEvent(e)
 	}
 
-	const handleRenameConfirm = async () => {
+	async function handleRenameConfirm() {
 		const newName = draft.trim()
 		if (newName && newName !== entry.file.basename) {
 			const dir = entry.file.parent?.path
@@ -71,21 +76,35 @@ export function KanbanCard({
 		setIsRenaming(false)
 	}
 
+	function handleDragStart(
+		e: TargetedDragEvent<HTMLDivElement | HTMLSpanElement>,
+	) {
+		e.dataTransfer!.effectAllowed = 'move'
+		e.dataTransfer!.setData('text/card', entry.file.path)
+		onDragStart(entry.file.path)
+	}
+
+	function handleDragEvent(
+		e: TargetedDragEvent<HTMLDivElement | HTMLSpanElement>,
+	) {
+		if (e.dataTransfer!.dropEffect === 'none') {
+			onDragCancel()
+		}
+	}
+
 	return (
-		<div class="kanban-base-card" onClick={handleClick}>
+		<div
+			class="kanban-base-card"
+			onClick={handleClick}
+			draggable
+			onDragStart={handleDragStart}
+			onDragEnd={handleDragEvent}
+		>
 			<span
 				class="kanban-base-card-drag-handle"
 				draggable
-				onDragStart={e => {
-					e.dataTransfer!.effectAllowed = 'move'
-					e.dataTransfer!.setData('text/card', entry.file.path)
-					onDragStart(entry.file.path)
-				}}
-				onDragEnd={e => {
-					if (e.dataTransfer!.dropEffect === 'none') {
-						onDragCancel()
-					}
-				}}
+				onDragStart={handleDragStart}
+				onDragEnd={handleDragEvent}
 			>
 				<ObsidianIcon iconId="lucide-grip-vertical" />
 			</span>
