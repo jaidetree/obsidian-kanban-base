@@ -109,6 +109,17 @@ export class Menu {
   showAtPosition(_pos: { x: number; y: number }) { return this; }
 }
 
+export class Modal {
+  contentEl: HTMLElement;
+  constructor(_app: unknown) {
+    this.contentEl = document.createElement('div');
+  }
+  open() {}
+  close() {}
+  onOpen() {}
+  onClose() {}
+}
+
 export const openExternal = (url: string): void => {
   window.open(url, '_blank');
 };

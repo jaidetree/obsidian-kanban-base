@@ -227,6 +227,8 @@ export class KanbanView extends BasesView {
 				},
 				onRenameColumn: (oldName: string, newName: string) =>
 					this.handleRenameColumn(oldName, newName),
+				onRemoveColumn: (folderName: string, targetFolderName?: string) =>
+					this.handleRemoveColumn(folderName, targetFolderName),
 				onAddCard: (folderName: string, name: string) =>
 				this.handleAddCard(folderName, name),
 				columnOrderActor: this.columnOrderActor,
@@ -329,6 +331,58 @@ export class KanbanView extends BasesView {
 			if (oldName in data) {
 				data[newName] = data[oldName]
 				delete data[oldName]
+				this.config.set(configKey, JSON.stringify(data))
+			}
+		} catch {
+			// ignore malformed config
+		}
+	}
+
+	private async handleRemoveColumn(
+		folderName: string,
+		targetFolderName?: string,
+	): Promise<void> {
+		const folder =
+			this.columnRootFolder?.children.find(
+				(c): c is TFolder =>
+					'children' in c && !('extension' in c) && c.name === folderName,
+			) ?? null
+		if (!folder) return
+
+		if (targetFolderName) {
+			const targetFolder =
+				this.columnRootFolder?.children.find(
+					(c): c is TFolder =>
+						'children' in c &&
+						!('extension' in c) &&
+						c.name === targetFolderName,
+				) ?? null
+			if (!targetFolder) return
+			for (const child of [...folder.children]) {
+				if (child instanceof TFile) {
+					await this.app.vault.rename(
+						child,
+						`${targetFolder.path}/${child.name}`,
+					)
+				}
+			}
+		}
+
+		await this.app.vault.delete(folder, true)
+
+		const order = this.parseColumnOrder().filter(n => n !== folderName)
+		this.config.set('columnOrder', JSON.stringify(order))
+
+		this.deleteColumnKey('columnIcons', folderName)
+		this.deleteColumnKey('columnStates', folderName)
+	}
+
+	private deleteColumnKey(configKey: string, folderName: string): void {
+		try {
+			const raw = (this.config.get(configKey) as string | null) ?? '{}'
+			const data = JSON.parse(raw) as Record<string, unknown>
+			if (folderName in data) {
+				delete data[folderName]
 				this.config.set(configKey, JSON.stringify(data))
 			}
 		} catch {

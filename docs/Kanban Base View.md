@@ -385,20 +385,21 @@ Maybe there is another option I'm not considering?
 - [x] Add new button at the bottom of every column (inline input, Enter adds
       card and stays open for next)
 
-#### Remove Column Menu Item
+#### Add "Remove Folder" Menu Item to Column
 
 In the Column context menu, add an option to remove the column. If the column is
 empty just delete the column and folder. If there are at least one card, show a
 modal to select which column to move tickets to with a button to confirm or
 cancel.
 
-- [ ] Define modal with column select UI, confirm, and cancel buttons
-- [ ] Add menu action to remove column
-- [ ] Link add menu action to modal
-- [ ] Ensure column cannot be removed while collapsed
+- [x] Define modal with column select UI, confirm, and cancel buttons
+- [x] Add menu action to remove column
+- [x] Link add menu action to modal
+- [x] Ensure column cannot be removed while collapsed
 
 #### General Cleanup
 
+- [ ] Use context to pass ref to KanbanView
 - [x] Fix column header content alignment
 - [ ] Open cards in new tabs
 - [ ] Improve Add column button styles

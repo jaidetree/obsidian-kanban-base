@@ -13,6 +13,7 @@ import { IconSuggestModal } from './IconSuggestModal'
 import { KanbanCard } from './KanbanCard'
 import type { IKanbanColumn } from './KanbanView'
 import { ObsidianIcon } from './ObsidianIcon'
+import { RemoveColumnModal } from './RemoveColumnModal'
 
 const DEFAULT_ICON = 'lucide-circle'
 
@@ -139,6 +140,7 @@ interface KanbanColumnHeaderProps {
 	send: SendFrom<typeof columnMachine>
 	onDragStart: () => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+	onRemoveColumn: () => void
 }
 
 function KanbanColumnHeader({
@@ -148,6 +150,7 @@ function KanbanColumnHeader({
 	send,
 	onDragStart,
 	onRenameColumn,
+	onRemoveColumn,
 }: KanbanColumnHeaderProps) {
 	const handleMenuClick = (evt: MouseEvent) => {
 		const menu = new Menu()
@@ -158,6 +161,11 @@ function KanbanColumnHeader({
 					.onClick(() => {
 						send({ type: 'RENAME' })
 					})
+			})
+			menu.addItem(item => {
+				item.setTitle('Remove folder')
+					.setIcon('trash')
+					.onClick(onRemoveColumn)
 			})
 		}
 		menu.addItem(item => {
@@ -262,6 +270,8 @@ interface KanbanColumnProps {
 	isCollapsed: boolean
 	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+	onRemoveColumn: (targetFolderName?: string) => Promise<void>
+	otherColumnNames: string[]
 	onAddCard: (name: string) => Promise<void>
 	dragIndex: number
 	onDragStart: (index: number) => void
@@ -284,6 +294,8 @@ export function KanbanColumn({
 	isCollapsed,
 	onStateChange,
 	onRenameColumn,
+	onRemoveColumn,
+	otherColumnNames,
 	onAddCard,
 	dragIndex,
 	onDragStart,
@@ -298,6 +310,8 @@ export function KanbanColumn({
 	onCardDragCancel,
 	isCardDragTarget,
 }: KanbanColumnProps) {
+	const app = useApp()
+
 	const [snapshot, send] = useXState(columnMachine, {
 		input: { name: column.folder.name, isCollapsed },
 	})
@@ -307,6 +321,16 @@ export function KanbanColumn({
 			isCollapsed: snapshot.context.isCollapsed,
 		})
 	}, [snapshot.context.isCollapsed])
+
+	const handleRemoveColumn = () => {
+		if (column.entries.length === 0) {
+			void onRemoveColumn()
+		} else {
+			new RemoveColumnModal(app, otherColumnNames, targetName => {
+				void onRemoveColumn(targetName)
+			}).open()
+		}
+	}
 
 	const dragClasses = [
 		'kanban-base-column',
@@ -349,6 +373,7 @@ export function KanbanColumn({
 					send={send}
 					onDragStart={() => onDragStart(dragIndex)}
 					onRenameColumn={onRenameColumn}
+					onRemoveColumn={handleRemoveColumn}
 				/>
 				{!snapshot.context.isCollapsed && (
 					<div class="kanban-base-column-body">

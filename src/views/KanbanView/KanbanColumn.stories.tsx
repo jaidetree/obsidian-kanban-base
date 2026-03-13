@@ -38,6 +38,8 @@ interface StoryProps {
 	isCollapsed: boolean;
 	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void;
 	onRenameColumn: (oldName: string, newName: string) => Promise<void>;
+	onRemoveColumn: (targetFolderName?: string) => Promise<void>;
+	otherColumnNames: string[];
 	dragIndex?: number;
 	isDragging?: boolean;
 	isDragTarget?: boolean;
@@ -88,6 +90,8 @@ const meta: Meta<typeof KanbanColumnStory> = {
 		isCollapsed: false,
 		onStateChange: () => {},
 		onRenameColumn: async () => {},
+		onRemoveColumn: async () => {},
+		otherColumnNames: ['In Progress', 'Done'],
 	},
 };
 
