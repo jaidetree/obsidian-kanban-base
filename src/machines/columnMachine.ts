@@ -2,14 +2,21 @@ import { assign, setup } from 'xstate'
 
 export const columnMachine = setup({
 	types: {} as {
-		context: { name: string; draft: string; isCollapsed: boolean }
+		context: { name: string; draft: string; isCollapsed: boolean; newCardName: string }
 		events:
 			| { type: 'RENAME' }
 			| { type: 'SET_DRAFT'; draft: string }
 			| { type: 'CONFIRM' }
 			| { type: 'CANCEL' }
 			| { type: 'TOGGLE_COLLAPSE' }
+			| { type: 'START_ADD_CARD' }
+			| { type: 'SET_NEW_CARD_NAME'; name: string }
+			| { type: 'CONFIRM_ADD_CARD' }
+			| { type: 'CANCEL_ADD_CARD' }
 		input: { name: string; isCollapsed: boolean }
+	},
+	guards: {
+		notCollapsed: ({ context }) => !context.isCollapsed,
 	},
 }).createMachine({
 	id: 'column',
@@ -18,16 +25,18 @@ export const columnMachine = setup({
 		name: input.name,
 		draft: input.name,
 		isCollapsed: input.isCollapsed,
+		newCardName: '',
 	}),
 	states: {
 		idle: {
 			on: {
-				RENAME: 'editing',
+				RENAME: { target: 'editing', guard: 'notCollapsed' },
 				TOGGLE_COLLAPSE: {
 					actions: assign({
 						isCollapsed: ({ context }) => !context.isCollapsed,
 					}),
 				},
+				START_ADD_CARD: { target: 'addingCard', guard: 'notCollapsed' },
 			},
 		},
 		editing: {
@@ -42,6 +51,21 @@ export const columnMachine = setup({
 				CANCEL: {
 					target: 'idle',
 					actions: assign({ draft: ({ context }) => context.name }),
+				},
+			},
+		},
+		addingCard: {
+			on: {
+				SET_NEW_CARD_NAME: {
+					actions: assign({ newCardName: ({ event }) => event.name }),
+				},
+				CONFIRM_ADD_CARD: {
+					target: 'idle',
+					actions: assign({ newCardName: '' }),
+				},
+				CANCEL_ADD_CARD: {
+					target: 'idle',
+					actions: assign({ newCardName: '' }),
 				},
 			},
 		},

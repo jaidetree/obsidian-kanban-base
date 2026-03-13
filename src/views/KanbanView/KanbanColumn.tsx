@@ -3,7 +3,7 @@ import { useComputed } from '@preact/signals'
 import { useXState } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
 import { Menu } from 'obsidian'
-import { useEffect, useState } from 'preact/hooks'
+import { useEffect } from 'preact/hooks'
 import { BoardIcons } from 'types/icons'
 import { columnMachine } from '../../machines/columnMachine'
 import { useApp } from './AppContext'
@@ -17,9 +17,10 @@ const DEFAULT_ICON = 'lucide-circle'
 interface IconButtonProps {
 	folderName: string
 	iconsSignal: Signal<BoardIcons>
+	disabled?: boolean
 }
 
-function IconButton({ folderName, iconsSignal }: IconButtonProps) {
+function IconButton({ folderName, iconsSignal, disabled }: IconButtonProps) {
 	const app = useApp()
 	const chosenIcon = useComputed(() => iconsSignal.value[folderName])
 	const displayIcon = useComputed(
@@ -29,6 +30,7 @@ function IconButton({ folderName, iconsSignal }: IconButtonProps) {
 	const isDefault = chosenIcon.value === undefined
 
 	const handleClick = () => {
+		if (disabled) return
 		const modal = new IconSuggestModal(app, icon => {
 			iconsSignal.value = { ...iconsSignal.value, [folderName]: icon }
 		})
@@ -39,6 +41,7 @@ function IconButton({ folderName, iconsSignal }: IconButtonProps) {
 		<button
 			class={`kanban-base-icon-btn clickable-icon${isDefault ? ' kanban-base-icon-btn--default' : ''}`}
 			onClick={handleClick}
+			disabled={disabled}
 			aria-label="Change column icon"
 		>
 			{chosenIcon.value?.prefix === 'Emoji' ? (
@@ -68,7 +71,6 @@ function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
 		</span>
 	)
 }
-
 
 interface KanbanColumnProps {
 	column: IKanbanColumn
@@ -113,9 +115,6 @@ export function KanbanColumn({
 	onCardDragCancel,
 	isCardDragTarget,
 }: KanbanColumnProps) {
-	const [isAddingCard, setIsAddingCard] = useState(false)
-	const [newCardName, setNewCardName] = useState('')
-
 	const [snapshot, send] = useXState(columnMachine, {
 		input: { name: column.folder.name, isCollapsed },
 	})
@@ -211,6 +210,7 @@ export function KanbanColumn({
 					<IconButton
 						folderName={column.folder.name}
 						iconsSignal={iconsSignal}
+						disabled={snapshot.context.isCollapsed}
 					/>
 					{snapshot.value === 'editing' ? (
 						<div class="kanban-base-column-rename">
@@ -265,43 +265,32 @@ export function KanbanColumn({
 							/>
 						))}
 						<div className="kanban-base-column__footer">
-							{isAddingCard ? (
+							{snapshot.value === 'addingCard' ? (
 								<input
 									className="kanban-base-column__add-card-input"
 									placeholder="Card name"
-									value={newCardName}
-									ref={el => {
-										if (el) {
-											el.focus()
-										}
-									}}
+									value={snapshot.context.newCardName}
+									ref={el => { if (el) el.focus() }}
 									onInput={e =>
-										setNewCardName(
-											(e.target as HTMLInputElement)
-												.value,
-										)
+										send({
+											type: 'SET_NEW_CARD_NAME',
+											name: (e.target as HTMLInputElement).value,
+										})
 									}
 									onKeyDown={async e => {
 										if (e.key === 'Enter') {
-											const name = newCardName.trim()
+											const name = snapshot.context.newCardName.trim()
 											if (name) await onAddCard(name)
-											setNewCardName('')
+											send({ type: 'CONFIRM_ADD_CARD' })
 										}
-										if (e.key === 'Escape') {
-											setIsAddingCard(false)
-											setNewCardName('')
-										}
+										if (e.key === 'Escape') send({ type: 'CANCEL_ADD_CARD' })
 									}}
-									onBlur={() => {
-										setIsAddingCard(false)
-										setNewCardName('')
-									}}
-									autoFocus
+									onBlur={() => send({ type: 'CANCEL_ADD_CARD' })}
 								/>
 							) : (
 								<button
 									className="kanban-base-column__add-button"
-									onClick={() => setIsAddingCard(true)}
+									onClick={() => send({ type: 'START_ADD_CARD' })}
 								>
 									<ObsidianIcon iconId="lucide-plus-circle" />
 									Add Card

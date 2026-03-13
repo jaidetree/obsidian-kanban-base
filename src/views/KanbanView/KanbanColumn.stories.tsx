@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact-vite';
 import { useSignal } from '@preact/signals';
+import { userEvent, within } from 'storybook/test';
 import type { BasesPropertyId, TFolder } from 'obsidian';
 import { aFile } from '../../__mocks__/aFile';
 import { aBasesEntry } from '../../__mocks__/aBasesEntry';
@@ -144,5 +145,12 @@ export const ColumnDropTarget: Story = {
 export const CardDropTarget: Story = {
 	args: {
 		isCardDragTarget: true,
+	},
+};
+
+export const AddingCard: Story = {
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement)
+		await userEvent.click(canvas.getByRole('button', { name: /add card/i }))
 	},
 };
