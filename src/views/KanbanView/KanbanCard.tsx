@@ -63,17 +63,12 @@ export function KanbanCard({
 
 	const handleRenameConfirm = async () => {
 		const newName = draft.trim()
-		setIsRenaming(false)
 		if (newName && newName !== entry.file.basename) {
 			const dir = entry.file.parent?.path
 			const newPath = dir ? `${dir}/${newName}.md` : `${newName}.md`
 			await app.fileManager.renameFile(entry.file, newPath)
 		}
-	}
-
-	const handleRenameKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter') void handleRenameConfirm()
-		if (e.key === 'Escape') setIsRenaming(false)
+		setIsRenaming(false)
 	}
 
 	return (

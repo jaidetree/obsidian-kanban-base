@@ -39,7 +39,7 @@ export const columnMachine = setup({
 						isCollapsed: ({ context }) => !context.isCollapsed,
 					}),
 				},
-				START_ADD_CARD: { target: 'addingCard', guard: 'notCollapsed' },
+				ADD_CARD: { target: 'addingCard', guard: 'notCollapsed' },
 			},
 		},
 		editing: {

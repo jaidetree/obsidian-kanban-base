@@ -234,7 +234,7 @@ function KanbanColumnFooter({
 				/>
 			) : (
 				<button
-					className="kanban-base-column__add-button"
+					className="kanban-base-column__add"
 					onClick={() => send({ type: 'ADD_CARD' })}
 				>
 					<ObsidianIcon iconId="lucide-plus-circle" />
@@ -303,9 +303,14 @@ export function KanbanColumn({
 		if (column.entries.length === 0) {
 			void view.removeColumn(column.folder.name)
 		} else {
-			new RemoveColumnModal(app, otherColumnNames, targetName => {
-				void view.removeColumn(column.folder.name, targetName)
-			}).open()
+			new RemoveColumnModal(
+				app,
+				column.folder.name,
+				otherColumnNames,
+				targetName => {
+					view.removeColumn(column.folder.name, targetName)
+				},
+			).open()
 		}
 	}
 

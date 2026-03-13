@@ -198,10 +198,6 @@
 .kanban-base-card-content {
 	flex: 1;
 	min-width: 0;
-	min-height: 1.875rem;
-	display: flex;
-	flex-flow: column;
-	justify-content: center;
 }
 
 .kanban-base-card-menu-btn {
@@ -244,9 +240,10 @@
 }
 
 .kanban-base-card-title {
-	font-size: var(--font-ui-small);
+	font-size: var(--font-ui-medium);
 	font-weight: var(--font-medium);
 	color: var(--text-normal);
+	padding: 0.3125rem 0;
 }
 
 .kanban-base-card-prop {
@@ -399,7 +396,7 @@
 	width: 0.825rem;
 	height: 0.825rem;
 }
-.kanban-base-column .kanban-base-column__add-button {
+.kanban-base-column .kanban-base-column__add {
 	background: var(--background-primary);
 	display: flex;
 	flex-flow: row;
@@ -412,7 +409,37 @@
 	width: 100%;
 }
 
-.kanban-base-column .kanban-base-column__add-button:hover {
+.kanban-base-column .kanban-base-column__add:hover {
 	background: var(--background-modifier-hover);
 	cursor: pointer;
+}
+
+.kanban-base-remove-column-modal {
+	display: flex;
+}
+.kanban-base-remove-column-modal__form {
+	display: flex;
+	flex-flow: column;
+	gap: 1rem;
+	align-items: center;
+}
+.kanban-base-remove-column-modal__intro {
+	margin: 0;
+}
+.kanban-base-remove-column-modal__label {
+	align-self: flex-start;
+	color: var(--text-muted);
+}
+.kanban-base-remove-column-modal select {
+	height: auto;
+	width: 100%;
+	font-size: 1.25rem;
+	padding: 0.5rem 1rem;
+}
+.kanban-base-remove-column-modal__actions {
+	display: flex;
+	gap: 0.5rem;
+}
+.kanban-base-remove-column-modal .kanban-base-remove-column-modal__confirm {
+	color: var(--text-error);
 }

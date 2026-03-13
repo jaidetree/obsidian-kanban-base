@@ -401,10 +401,10 @@ cancel.
 
 - [x] Use context to pass ref to KanbanView
 - [x] Fix column header content alignment
-- [ ] Fix rename card cancel button
-- [ ] Create reusable inline form
-- [ ] Apply inline form to rename column, new column, rename card UIs
-- [ ] Focus on inline form UI
+- [x] Fix rename card cancel button
+- [x] Create reusable inline form
+- [x] Apply inline form to rename column, new column, rename card UIs
+- [x] Focus on inline form UI
 - [ ] Open cards in new tabs
 - [ ] Improve Add column button styles
 - [x] Move add column logic into state machine
