@@ -399,7 +399,7 @@ cancel.
 
 #### General Cleanup
 
-- [ ] Use context to pass ref to KanbanView
+- [x] Use context to pass ref to KanbanView
 - [x] Fix column header content alignment
 - [ ] Open cards in new tabs
 - [ ] Improve Add column button styles

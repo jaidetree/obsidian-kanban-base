@@ -5,8 +5,10 @@ import type { BasesPropertyId, TFolder } from 'obsidian';
 import { aFile } from '../../__mocks__/aFile';
 import { aBasesEntry } from '../../__mocks__/aBasesEntry';
 import { createMockApp } from '../../__mocks__/create-mock-app';
+import { createMockKanbanViewActions } from '../../__mocks__/create-mock-kanban-view-actions';
 import type { BoardIcons } from '../../types/icons';
 import { AppContext } from './AppContext';
+import { KanbanViewContext } from './KanbanViewContext';
 import type { IKanbanColumn } from './KanbanView';
 import { KanbanColumn } from './KanbanColumn';
 
@@ -37,8 +39,6 @@ interface StoryProps {
 	columnIcons: BoardIcons;
 	isCollapsed: boolean;
 	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void;
-	onRenameColumn: (oldName: string, newName: string) => Promise<void>;
-	onRemoveColumn: (targetFolderName?: string) => Promise<void>;
 	otherColumnNames: string[];
 	dragIndex?: number;
 	isDragging?: boolean;
@@ -49,26 +49,27 @@ interface StoryProps {
 function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, isCardDragTarget = false, ...rest }: StoryProps) {
 	const iconsSignal = useSignal(columnIcons);
 	return (
-		<AppContext.Provider value={createMockApp()}>
-			<KanbanColumn
-				{...rest}
-				cardProperties={cardProperties as BasesPropertyId[]}
-				iconsSignal={iconsSignal}
-				dragIndex={dragIndex}
-				onDragStart={() => {}}
-				onDragOver={() => {}}
-				onDrop={() => {}}
-				onDragCancel={() => {}}
-				isDragging={isDragging}
-				isDragTarget={isDragTarget}
-				onCardDragStart={() => {}}
-				onCardDragOver={() => {}}
-				onCardDrop={() => {}}
-				onCardDragCancel={() => {}}
-				isCardDragTarget={isCardDragTarget}
-				onAddCard={async (_name: string) => {}}
-			/>
-		</AppContext.Provider>
+		<KanbanViewContext.Provider value={createMockKanbanViewActions()}>
+			<AppContext.Provider value={createMockApp()}>
+				<KanbanColumn
+					{...rest}
+					cardProperties={cardProperties as BasesPropertyId[]}
+					iconsSignal={iconsSignal}
+					dragIndex={dragIndex}
+					onDragStart={() => {}}
+					onDragOver={() => {}}
+					onDrop={() => {}}
+					onDragCancel={() => {}}
+					isDragging={isDragging}
+					isDragTarget={isDragTarget}
+					onCardDragStart={() => {}}
+					onCardDragOver={() => {}}
+					onCardDrop={() => {}}
+					onCardDragCancel={() => {}}
+					isCardDragTarget={isCardDragTarget}
+				/>
+			</AppContext.Provider>
+		</KanbanViewContext.Provider>
 	);
 }
 
@@ -89,8 +90,6 @@ const meta: Meta<typeof KanbanColumnStory> = {
 		columnIcons: {},
 		isCollapsed: false,
 		onStateChange: () => {},
-		onRenameColumn: async () => {},
-		onRemoveColumn: async () => {},
 		otherColumnNames: ['In Progress', 'Done'],
 	},
 };

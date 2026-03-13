@@ -14,6 +14,7 @@ import { KanbanCard } from './KanbanCard'
 import type { IKanbanColumn } from './KanbanView'
 import { ObsidianIcon } from './ObsidianIcon'
 import { RemoveColumnModal } from './RemoveColumnModal'
+import { useKanbanView } from './KanbanViewContext'
 
 const DEFAULT_ICON = 'lucide-circle'
 
@@ -79,20 +80,19 @@ interface KanbanColumnRenameInputProps {
 	draft: string
 	folderName: string
 	send: SendFrom<typeof columnMachine>
-	onRenameColumn: (oldName: string, newName: string) => Promise<void>
 }
 
 function KanbanColumnRenameInput({
 	draft,
 	folderName,
 	send,
-	onRenameColumn,
 }: KanbanColumnRenameInputProps) {
+	const view = useKanbanView()
 	const handleConfirm = () => {
 		const newName = draft.trim()
 		send({ type: 'CONFIRM' })
 		if (newName && newName !== folderName) {
-			void onRenameColumn(folderName, newName)
+			void view.renameColumn(folderName, newName)
 		}
 	}
 
@@ -139,7 +139,6 @@ interface KanbanColumnHeaderProps {
 	snapshot: SnapshotFrom<typeof columnMachine>
 	send: SendFrom<typeof columnMachine>
 	onDragStart: () => void
-	onRenameColumn: (oldName: string, newName: string) => Promise<void>
 	onRemoveColumn: () => void
 }
 
@@ -149,7 +148,6 @@ function KanbanColumnHeader({
 	snapshot,
 	send,
 	onDragStart,
-	onRenameColumn,
 	onRemoveColumn,
 }: KanbanColumnHeaderProps) {
 	const handleMenuClick = (evt: MouseEvent) => {
@@ -201,7 +199,6 @@ function KanbanColumnHeader({
 					draft={snapshot.context.draft}
 					folderName={folderName}
 					send={send}
-					onRenameColumn={onRenameColumn}
 				/>
 			) : (
 				<h2>{snapshot.context.name}</h2>
@@ -220,14 +217,15 @@ function KanbanColumnHeader({
 interface KanbanColumnFooterProps {
 	snapshot: SnapshotFrom<typeof columnMachine>
 	send: SendFrom<typeof columnMachine>
-	onAddCard: (name: string) => Promise<void>
+	folderName: string
 }
 
-function KanbanColumnFooter({ snapshot, send, onAddCard }: KanbanColumnFooterProps) {
+function KanbanColumnFooter({ snapshot, send, folderName }: KanbanColumnFooterProps) {
+	const view = useKanbanView()
 	const handleAddCardKeyDown = async (e: KeyboardEvent) => {
 		if (e.key === 'Enter') {
 			const name = snapshot.context.newCardName.trim()
-			if (name) await onAddCard(name)
+			if (name) await view.addCard(folderName, name)
 			send({ type: 'CONFIRM_ADD_CARD' })
 		}
 		if (e.key === 'Escape') send({ type: 'CANCEL_ADD_CARD' })
@@ -269,10 +267,7 @@ interface KanbanColumnProps {
 	iconsSignal: Signal<BoardIcons>
 	isCollapsed: boolean
 	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void
-	onRenameColumn: (oldName: string, newName: string) => Promise<void>
-	onRemoveColumn: (targetFolderName?: string) => Promise<void>
 	otherColumnNames: string[]
-	onAddCard: (name: string) => Promise<void>
 	dragIndex: number
 	onDragStart: (index: number) => void
 	onDragOver: (index: number) => void
@@ -293,10 +288,7 @@ export function KanbanColumn({
 	iconsSignal,
 	isCollapsed,
 	onStateChange,
-	onRenameColumn,
-	onRemoveColumn,
 	otherColumnNames,
-	onAddCard,
 	dragIndex,
 	onDragStart,
 	onDragOver,
@@ -311,6 +303,7 @@ export function KanbanColumn({
 	isCardDragTarget,
 }: KanbanColumnProps) {
 	const app = useApp()
+	const view = useKanbanView()
 
 	const [snapshot, send] = useXState(columnMachine, {
 		input: { name: column.folder.name, isCollapsed },
@@ -324,10 +317,10 @@ export function KanbanColumn({
 
 	const handleRemoveColumn = () => {
 		if (column.entries.length === 0) {
-			void onRemoveColumn()
+			void view.removeColumn(column.folder.name)
 		} else {
 			new RemoveColumnModal(app, otherColumnNames, targetName => {
-				void onRemoveColumn(targetName)
+				void view.removeColumn(column.folder.name, targetName)
 			}).open()
 		}
 	}
@@ -372,7 +365,6 @@ export function KanbanColumn({
 					snapshot={snapshot}
 					send={send}
 					onDragStart={() => onDragStart(dragIndex)}
-					onRenameColumn={onRenameColumn}
 					onRemoveColumn={handleRemoveColumn}
 				/>
 				{!snapshot.context.isCollapsed && (
@@ -389,7 +381,7 @@ export function KanbanColumn({
 						<KanbanColumnFooter
 							snapshot={snapshot}
 							send={send}
-							onAddCard={onAddCard}
+							folderName={column.folder.name}
 						/>
 					</div>
 				)}

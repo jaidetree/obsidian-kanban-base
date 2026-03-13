@@ -6,6 +6,8 @@ import type { BoardIcons } from 'types/icons'
 import { createActor, type Actor } from 'xstate'
 import { KANBAN_ID } from '.'
 import { KanbanBoard } from './KanbanBoard'
+import { AppContext } from './AppContext'
+import { KanbanViewContext } from './KanbanViewContext'
 import { cardDragMachine } from '../../machines/cardDragMachine'
 import { columnOrderMachine } from '../../machines/columnOrderMachine'
 
@@ -207,35 +209,20 @@ export class KanbanView extends BasesView {
 		}
 
 		render(
-			h(KanbanBoard, {
-				columns,
-				app: this.app,
-				cardProperties,
-				cardSize,
-				columnIcons,
-				columnStates,
-				columnRootSet: !!columnRootPath,
-				onAddColumn: (name: string) => this.handleAddColumn(name),
-				onSetColumnRoot: (folderPath: string) => {
-					this.config.set('columnRoot', folderPath)
-				},
-				onUpdateIcons: (icons: BoardIcons) => {
-					this.config.set('columnIcons', JSON.stringify(icons))
-				},
-				onUpdateColumnStates: (states: BoardColumnStates) => {
-					this.config.set('columnStates', JSON.stringify(states))
-				},
-				onRenameColumn: (oldName: string, newName: string) =>
-					this.handleRenameColumn(oldName, newName),
-				onRemoveColumn: (folderName: string, targetFolderName?: string) =>
-					this.handleRemoveColumn(folderName, targetFolderName),
-				onAddCard: (folderName: string, name: string) =>
-				this.handleAddCard(folderName, name),
-				columnOrderActor: this.columnOrderActor,
-				cardDragActor: this.cardDragActor,
-				onCardDrop: (filePath: string, targetFolderName: string) =>
-					this.handleCardDrop(filePath, targetFolderName),
-			}),
+			h(KanbanViewContext.Provider, { value: this },
+				h(AppContext.Provider, { value: this.app },
+					h(KanbanBoard, {
+						columns,
+						cardProperties,
+						cardSize,
+						columnIcons,
+						columnStates,
+						columnRootSet: !!columnRootPath,
+						columnOrderActor: this.columnOrderActor,
+						cardDragActor: this.cardDragActor,
+					}),
+				),
+			),
 			this.containerEl,
 		)
 	}
@@ -259,7 +246,19 @@ export class KanbanView extends BasesView {
 		render(null, this.containerEl)
 	}
 
-	private async handleCardDrop(
+	setColumnRoot(folderPath: string): void {
+		this.config.set('columnRoot', folderPath)
+	}
+
+	updateIcons(icons: BoardIcons): void {
+		this.config.set('columnIcons', JSON.stringify(icons))
+	}
+
+	updateColumnStates(states: BoardColumnStates): void {
+		this.config.set('columnStates', JSON.stringify(states))
+	}
+
+	async dropCard(
 		filePath: string,
 		targetFolderName: string,
 	): Promise<void> {
@@ -288,7 +287,7 @@ export class KanbanView extends BasesView {
 		}
 	}
 
-	private async handleRenameColumn(
+	async renameColumn(
 		oldName: string,
 		newName: string,
 	): Promise<void> {
@@ -338,7 +337,7 @@ export class KanbanView extends BasesView {
 		}
 	}
 
-	private async handleRemoveColumn(
+	async removeColumn(
 		folderName: string,
 		targetFolderName?: string,
 	): Promise<void> {
@@ -390,7 +389,7 @@ export class KanbanView extends BasesView {
 		}
 	}
 
-	private async handleAddCard(
+	async addCard(
 		folderName: string,
 		name: string,
 	): Promise<void> {
@@ -410,7 +409,7 @@ export class KanbanView extends BasesView {
 		await this.app.vault.create(path, '')
 	}
 
-	private async handleAddColumn(name: string): Promise<void> {
+	async addColumn(name: string): Promise<void> {
 		const trimmed = name.trim()
 		if (!trimmed || !this.columnRootFolder) return
 

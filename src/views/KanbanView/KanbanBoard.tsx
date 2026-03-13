@@ -1,6 +1,6 @@
 import { useSignal, useSignalEffect } from '@preact/signals'
 import { useActorRef, useActorState } from 'hooks/xstate'
-import type { App, BasesPropertyId, TFolder } from 'obsidian'
+import type { BasesPropertyId, TFolder } from 'obsidian'
 import type { CSSProperties } from 'preact'
 import { useState } from 'preact/hooks'
 import type { BoardColumnStates } from 'types/columns'
@@ -8,29 +8,21 @@ import type { BoardIcons } from 'types/icons'
 import { type Actor } from 'xstate'
 import { cardDragMachine } from '../../machines/cardDragMachine'
 import { columnOrderMachine } from '../../machines/columnOrderMachine'
-import { AppContext } from './AppContext'
+import { useApp } from './AppContext'
 import { FolderSuggestModal } from './FolderSuggestModal'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
+import { useKanbanView } from './KanbanViewContext'
 
-interface KanbanBoardProps {
+export interface KanbanBoardProps {
 	columns: IKanbanColumn[]
-	app: App
 	cardProperties: string[]
 	cardSize: number
 	columnIcons: BoardIcons
 	columnStates: BoardColumnStates
 	columnRootSet: boolean
-	onAddColumn: (name: string) => Promise<void>
-	onSetColumnRoot: (folderPath: string) => void
-	onUpdateIcons: (icons: BoardIcons) => void
-	onUpdateColumnStates: (states: BoardColumnStates) => void
-	onRenameColumn: (oldName: string, newName: string) => Promise<void>
-	onRemoveColumn: (folderName: string, targetFolderName?: string) => Promise<void>
-	onAddCard: (folderName: string, name: string) => Promise<void>
 	columnOrderActor: Actor<typeof columnOrderMachine>
 	cardDragActor: Actor<typeof cardDragMachine>
-	onCardDrop: (filePath: string, targetFolderName: string) => Promise<void>
 }
 
 export function KanbanBoard({
@@ -40,18 +32,12 @@ export function KanbanBoard({
 	columnIcons,
 	columnStates,
 	columnRootSet,
-	onAddColumn,
-	onSetColumnRoot,
-	onUpdateIcons,
-	onUpdateColumnStates,
-	onRenameColumn,
-	onRemoveColumn,
-	onAddCard,
 	columnOrderActor,
 	cardDragActor,
-	onCardDrop,
-	app,
 }: KanbanBoardProps) {
+	const view = useKanbanView()
+	const app = useApp()
+
 	const iconsSignal = useSignal(columnIcons)
 	const columnStatesSignal = useSignal(columnStates)
 	const [adding, setAdding] = useState(false)
@@ -70,7 +56,7 @@ export function KanbanBoard({
 			snap.context.dragFile !== null &&
 			snap.context.sourceColumn !== folderName
 		) {
-			void onCardDrop(snap.context.dragFile, folderName)
+			void view.dropCard(snap.context.dragFile, folderName)
 		}
 		cardDragSend({ type: 'DROP' })
 	}
@@ -93,7 +79,7 @@ export function KanbanBoard({
 	const handleConfirm = async () => {
 		const name = newName.trim()
 		if (!name) return
-		await onAddColumn(name)
+		await view.addColumn(name)
 		setAdding(false)
 		setNewName('')
 	}
@@ -109,11 +95,11 @@ export function KanbanBoard({
 	}
 
 	useSignalEffect(() => {
-		onUpdateIcons(iconsSignal.value)
+		view.updateIcons(iconsSignal.value)
 	})
 
 	useSignalEffect(() => {
-		onUpdateColumnStates(columnStatesSignal.value)
+		view.updateColumnStates(columnStatesSignal.value)
 	})
 
 	const handleStateChange = (
@@ -127,131 +113,124 @@ export function KanbanBoard({
 	}
 
 	return (
-		<AppContext.Provider value={app}>
-			<div
-				class="kanban-base-board"
-				style={
-					{
-						'--kanban-column-width': `${cardSize}px`,
-					} as CSSProperties
-				}
-			>
-				{previewColumns.map((column, idx) => (
-					<KanbanColumn
-						key={column.folder.path}
-						column={column}
-						cardProperties={cardProperties as BasesPropertyId[]}
-						iconsSignal={iconsSignal}
-						isCollapsed={
-							columnStatesSignal.value[column.folder.name]
-								?.isCollapsed ?? false
+		<div
+			class="kanban-base-board"
+			style={
+				{
+					'--kanban-column-width': `${cardSize}px`,
+				} as CSSProperties
+			}
+		>
+			{previewColumns.map((column, idx) => (
+				<KanbanColumn
+					key={column.folder.path}
+					column={column}
+					cardProperties={cardProperties as BasesPropertyId[]}
+					iconsSignal={iconsSignal}
+					isCollapsed={
+						columnStatesSignal.value[column.folder.name]
+							?.isCollapsed ?? false
+					}
+					onStateChange={handleStateChange}
+					otherColumnNames={previewColumns
+						.filter(c => c.folder.name !== column.folder.name)
+						.map(c => c.folder.name)}
+					dragIndex={idx}
+					onDragStart={index =>
+						dragSend({ type: 'DRAG_START', index })
+					}
+					onDragOver={index =>
+						dragSend({ type: 'DRAG_OVER', index })
+					}
+					onDrop={() => dragSend({ type: 'DROP' })}
+					onDragCancel={() => dragSend({ type: 'CANCEL' })}
+					isDragging={
+						dragSnapshot.matches('dragging') &&
+						dragIndex === idx
+					}
+					isDragTarget={
+						dragSnapshot.matches('dragging') &&
+						dropIndex === idx
+					}
+					onCardDragStart={filePath =>
+						cardDragSend({
+							type: 'DRAG_START',
+							filePath,
+							sourceColumn: column.folder.name,
+						})
+					}
+					onCardDragOver={() =>
+						cardDragSend({
+							type: 'DRAG_OVER',
+							targetColumn: column.folder.name,
+						})
+					}
+					onCardDrop={() => handleCardDrop(column.folder.name)}
+					onCardDragCancel={() =>
+						cardDragSend({ type: 'CANCEL' })
+					}
+					isCardDragTarget={
+						cardDragSnapshot.matches('dragging') &&
+						cardDragSnapshot.context.targetColumn ===
+							column.folder.name
+					}
+				/>
+			))}
+			{!columnRootSet ? (
+				<div class="kanban-base-no-root">
+					<p class="kanban-base-no-root-message">
+						Select a root folder to get started
+					</p>
+					<button
+						class="kanban-base-no-root-button"
+						onClick={() => {
+							new FolderSuggestModal(
+								app,
+								(folder: TFolder) => {
+									view.setColumnRoot(folder.path)
+								},
+							).open()
+						}}
+					>
+						Select folder
+					</button>
+				</div>
+			) : adding ? (
+				<div class="kanban-base-column-add">
+					<input
+						class="kanban-base-column-add-input"
+						type="text"
+						placeholder="Column name"
+						value={newName}
+						onInput={e =>
+							setNewName((e.target as HTMLInputElement).value)
 						}
-						onStateChange={handleStateChange}
-						onRenameColumn={onRenameColumn}
-						onRemoveColumn={targetFolderName =>
-							onRemoveColumn(column.folder.name, targetFolderName)
-						}
-						otherColumnNames={previewColumns
-							.filter(c => c.folder.name !== column.folder.name)
-							.map(c => c.folder.name)}
-						onAddCard={name => onAddCard(column.folder.name, name)}
-						dragIndex={idx}
-						onDragStart={index =>
-							dragSend({ type: 'DRAG_START', index })
-						}
-						onDragOver={index =>
-							dragSend({ type: 'DRAG_OVER', index })
-						}
-						onDrop={() => dragSend({ type: 'DROP' })}
-						onDragCancel={() => dragSend({ type: 'CANCEL' })}
-						isDragging={
-							dragSnapshot.matches('dragging') &&
-							dragIndex === idx
-						}
-						isDragTarget={
-							dragSnapshot.matches('dragging') &&
-							dropIndex === idx
-						}
-						onCardDragStart={filePath =>
-							cardDragSend({
-								type: 'DRAG_START',
-								filePath,
-								sourceColumn: column.folder.name,
-							})
-						}
-						onCardDragOver={() =>
-							cardDragSend({
-								type: 'DRAG_OVER',
-								targetColumn: column.folder.name,
-							})
-						}
-						onCardDrop={() => handleCardDrop(column.folder.name)}
-						onCardDragCancel={() =>
-							cardDragSend({ type: 'CANCEL' })
-						}
-						isCardDragTarget={
-							cardDragSnapshot.matches('dragging') &&
-							cardDragSnapshot.context.targetColumn ===
-								column.folder.name
-						}
+						onKeyDown={handleKeyDown}
+						autoFocus
 					/>
-				))}
-				{!columnRootSet ? (
-					<div class="kanban-base-no-root">
-						<p class="kanban-base-no-root-message">
-							Select a root folder to get started
-						</p>
+					<div class="kanban-base-column-add-actions">
 						<button
-							class="kanban-base-no-root-button"
-							onClick={() => {
-								new FolderSuggestModal(
-									app,
-									(folder: TFolder) => {
-										onSetColumnRoot(folder.path)
-									},
-								).open()
-							}}
+							class="kanban-base-column-add-confirm"
+							onClick={() => void handleConfirm()}
 						>
-							Select folder
+							Add
+						</button>
+						<button
+							class="kanban-base-column-add-cancel"
+							onClick={handleCancel}
+						>
+							Cancel
 						</button>
 					</div>
-				) : adding ? (
-					<div class="kanban-base-column-add">
-						<input
-							class="kanban-base-column-add-input"
-							type="text"
-							placeholder="Column name"
-							value={newName}
-							onInput={e =>
-								setNewName((e.target as HTMLInputElement).value)
-							}
-							onKeyDown={handleKeyDown}
-							autoFocus
-						/>
-						<div class="kanban-base-column-add-actions">
-							<button
-								class="kanban-base-column-add-confirm"
-								onClick={() => void handleConfirm()}
-							>
-								Add
-							</button>
-							<button
-								class="kanban-base-column-add-cancel"
-								onClick={handleCancel}
-							>
-								Cancel
-							</button>
-						</div>
-					</div>
-				) : (
-					<button
-						class="kanban-base-add-column"
-						onClick={() => setAdding(true)}
-					>
-						+ Add column
-					</button>
-				)}
-			</div>
-		</AppContext.Provider>
+				</div>
+			) : (
+				<button
+					class="kanban-base-add-column"
+					onClick={() => setAdding(true)}
+				>
+					+ Add column
+				</button>
+			)}
+		</div>
 	)
 }

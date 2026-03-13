@@ -2,10 +2,12 @@ import type { Meta, StoryObj } from '@storybook/preact-vite';
 import { aFile } from '../../__mocks__/aFile';
 import { aBasesEntry } from '../../__mocks__/aBasesEntry';
 import { createMockApp } from '../../__mocks__/create-mock-app';
+import { createMockKanbanViewActions } from '../../__mocks__/create-mock-kanban-view-actions';
 import { KanbanBoard } from './KanbanBoard';
+import type { KanbanBoardProps } from './KanbanBoard';
+import { AppContext } from './AppContext';
+import { KanbanViewContext } from './KanbanViewContext';
 import type { TFolder } from 'obsidian';
-import type { BoardIcons } from '../../types/icons';
-import type { BoardColumnStates } from '../../types/columns';
 import { createActor } from 'xstate';
 import { columnOrderMachine } from '../../machines/columnOrderMachine';
 import { cardDragMachine } from '../../machines/cardDragMachine';
@@ -40,30 +42,28 @@ const todo = mockFolder('Todo', root);
 const inProgress = mockFolder('In Progress', root);
 const done = mockFolder('Done', root);
 
-const noop = async () => {};
-const noopSync = () => {};
+function KanbanBoardStory(props: KanbanBoardProps) {
+	return (
+		<KanbanViewContext.Provider value={createMockKanbanViewActions()}>
+			<AppContext.Provider value={createMockApp()}>
+				<KanbanBoard {...props} />
+			</AppContext.Provider>
+		</KanbanViewContext.Provider>
+	);
+}
 
-const meta: Meta<typeof KanbanBoard> = {
+const meta: Meta<typeof KanbanBoardStory> = {
 	title: 'Views/Kanban Board',
-	component: KanbanBoard,
+	component: KanbanBoardStory,
 	tags: ['autodocs'],
 	args: {
-		app: createMockApp(),
 		cardProperties: [],
 		cardSize: 220,
 		columnIcons: {},
 		columnStates: {},
 		columnRootSet: true,
-		onAddColumn: noop,
-		onSetColumnRoot: noopSync,
-		onUpdateIcons: (_icons: BoardIcons) => {},
-		onUpdateColumnStates: (_states: BoardColumnStates) => {},
-		onRenameColumn: async (_oldName: string, _newName: string) => {},
-		onRemoveColumn: async (_folderName: string, _targetFolderName?: string) => {},
-		onAddCard: async (_folderName: string, _name: string) => {},
 		columnOrderActor: storyActor,
 		cardDragActor: cardDragStoryActor,
-		onCardDrop: noop,
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },
 			{ folder: inProgress, entries: [entryInFolder(inProgress, 'Task 3')] },
@@ -73,7 +73,7 @@ const meta: Meta<typeof KanbanBoard> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof KanbanBoard>;
+type Story = StoryObj<typeof KanbanBoardStory>;
 
 export const Default: Story = {};
 
