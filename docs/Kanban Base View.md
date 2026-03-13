@@ -382,7 +382,20 @@ Maybe there is another option I'm not considering?
 - [x] Add delete to context menu
 - [x] Add open to context menu
 - [x] Add open in new tab to context menu
-- [x] Add new button at the bottom of every column (inline input, Enter adds card and stays open for next)
+- [x] Add new button at the bottom of every column (inline input, Enter adds
+      card and stays open for next)
+
+#### Remove Column Menu Item
+
+In the Column context menu, add an option to remove the column. If the column is
+empty just delete the column and folder. If there are at least one card, show a
+modal to select which column to move tickets to with a button to confirm or
+cancel.
+
+- [ ] Define modal with column select UI, confirm, and cancel buttons
+- [ ] Add menu action to remove column
+- [ ] Link add menu action to modal
+- [ ] Ensure column cannot be removed while collapsed
 
 #### General Cleanup
 

@@ -1,9 +1,11 @@
 import type { Signal } from '@preact/signals'
 import { useComputed } from '@preact/signals'
 import { useXState } from 'hooks/xstate'
+import type { SendFrom } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
 import { Menu } from 'obsidian'
 import { useEffect } from 'preact/hooks'
+import type { SnapshotFrom } from 'xstate'
 import { BoardIcons } from 'types/icons'
 import { columnMachine } from '../../machines/columnMachine'
 import { useApp } from './AppContext'
@@ -72,6 +74,164 @@ function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
 	)
 }
 
+interface KanbanColumnHeaderProps {
+	folderName: string
+	iconsSignal: Signal<BoardIcons>
+	snapshot: SnapshotFrom<typeof columnMachine>
+	send: SendFrom<typeof columnMachine>
+	onDragStart: () => void
+	onRenameColumn: (oldName: string, newName: string) => Promise<void>
+}
+
+function KanbanColumnHeader({
+	folderName,
+	iconsSignal,
+	snapshot,
+	send,
+	onDragStart,
+	onRenameColumn,
+}: KanbanColumnHeaderProps) {
+	const handleMenuClick = (evt: MouseEvent) => {
+		const menu = new Menu()
+		if (!snapshot.context.isCollapsed) {
+			menu.addItem(item => {
+				item.setTitle('Rename')
+					.setIcon('pencil')
+					.onClick(() => {
+						send({ type: 'RENAME' })
+					})
+			})
+		}
+		menu.addItem(item => {
+			const collapsed = snapshot.context.isCollapsed
+			item.setTitle(collapsed ? 'Expand' : 'Collapse')
+				.setIcon(collapsed ? 'chevron-down' : 'chevron-up')
+				.onClick(() => {
+					send({ type: 'TOGGLE_COLLAPSE' })
+				})
+		})
+		menu.addItem(item => {
+			item.setTitle('Remove icon')
+				.setIcon('x')
+				.onClick(() => {
+					const updated = { ...iconsSignal.value }
+					delete updated[folderName]
+					iconsSignal.value = updated
+				})
+		})
+		menu.showAtMouseEvent(evt)
+	}
+
+	const handleConfirm = () => {
+		const newName = snapshot.context.draft.trim()
+		send({ type: 'CONFIRM' })
+		if (newName && newName !== folderName) {
+			void onRenameColumn(folderName, newName)
+		}
+	}
+
+	const handleRenameKeyDown = (e: KeyboardEvent) => {
+		if (e.key === 'Enter') handleConfirm()
+		if (e.key === 'Escape') send({ type: 'CANCEL' })
+	}
+
+	return (
+		<div class="kanban-base-column-header">
+			<KanbanColumnDragHandle onDragStart={onDragStart} />
+			<IconButton
+				folderName={folderName}
+				iconsSignal={iconsSignal}
+				disabled={snapshot.context.isCollapsed}
+			/>
+			{snapshot.value === 'editing' ? (
+				<div class="kanban-base-column-rename">
+					<input
+						class="kanban-base-column-rename-input"
+						value={snapshot.context.draft}
+						onInput={e =>
+							send({
+								type: 'SET_DRAFT',
+								draft: (e.target as HTMLInputElement).value,
+							})
+						}
+						onKeyDown={handleRenameKeyDown}
+						autoFocus
+					/>
+					<div class="kanban-base-column-rename-actions">
+						<button
+							class="kanban-base-column-rename-confirm"
+							onClick={handleConfirm}
+						>
+							Save
+						</button>
+						<button
+							class="kanban-base-column-rename-cancel"
+							onClick={() => send({ type: 'CANCEL' })}
+						>
+							Cancel
+						</button>
+					</div>
+				</div>
+			) : (
+				<h2>{snapshot.context.name}</h2>
+			)}
+			<button
+				class="kanban-base-column-menu-btn clickable-icon"
+				aria-label="Column options"
+				onClick={handleMenuClick}
+			>
+				<ObsidianIcon iconId="lucide-more-horizontal" />
+			</button>
+		</div>
+	)
+}
+
+interface KanbanColumnFooterProps {
+	snapshot: SnapshotFrom<typeof columnMachine>
+	send: SendFrom<typeof columnMachine>
+	onAddCard: (name: string) => Promise<void>
+}
+
+function KanbanColumnFooter({ snapshot, send, onAddCard }: KanbanColumnFooterProps) {
+	const handleAddCardKeyDown = async (e: KeyboardEvent) => {
+		if (e.key === 'Enter') {
+			const name = snapshot.context.newCardName.trim()
+			if (name) await onAddCard(name)
+			send({ type: 'CONFIRM_ADD_CARD' })
+		}
+		if (e.key === 'Escape') send({ type: 'CANCEL_ADD_CARD' })
+	}
+
+	return (
+		<div className="kanban-base-column__footer">
+			{snapshot.value === 'addingCard' ? (
+				<input
+					className="kanban-base-column__add-card-input"
+					placeholder="Card name"
+					value={snapshot.context.newCardName}
+					ref={el => { if (el) el.focus() }}
+					onInput={e =>
+						send({
+							type: 'SET_NEW_CARD_NAME',
+							name: (e.target as HTMLInputElement).value,
+						})
+					}
+					onKeyDown={e => { void handleAddCardKeyDown(e) }}
+					onBlur={() => send({ type: 'CANCEL_ADD_CARD' })}
+				/>
+			) : (
+				<button
+					className="kanban-base-column__add-button"
+					onClick={() => send({ type: 'START_ADD_CARD' })}
+				>
+					<ObsidianIcon iconId="lucide-plus-circle" />
+					Add Card
+				</button>
+			)}
+		</div>
+	)
+}
+
 interface KanbanColumnProps {
 	column: IKanbanColumn
 	cardProperties: BasesPropertyId[]
@@ -125,59 +285,6 @@ export function KanbanColumn({
 		})
 	}, [snapshot.context.isCollapsed])
 
-	const handleMenuClick = (evt: MouseEvent) => {
-		const menu = new Menu()
-		if (!snapshot.context.isCollapsed) {
-			menu.addItem(item => {
-				item.setTitle('Rename')
-					.setIcon('pencil')
-					.onClick(() => {
-						send({ type: 'RENAME' })
-					})
-			})
-		}
-		menu.addItem(item => {
-			const collapsed = snapshot.context.isCollapsed
-			item.setTitle(collapsed ? 'Expand' : 'Collapse')
-				.setIcon(collapsed ? 'chevron-down' : 'chevron-up')
-				.onClick(() => {
-					send({ type: 'TOGGLE_COLLAPSE' })
-				})
-		})
-		menu.addItem(item => {
-			item.setTitle('Remove icon')
-				.setIcon('x')
-				.onClick(() => {
-					const updated = { ...iconsSignal.value }
-					delete updated[column.folder.name]
-					iconsSignal.value = updated
-				})
-		})
-		menu.showAtMouseEvent(evt)
-	}
-
-	const handleConfirm = () => {
-		const newName = snapshot.context.draft.trim()
-		send({ type: 'CONFIRM' })
-		if (newName && newName !== column.folder.name) {
-			void onRenameColumn(column.folder.name, newName)
-		}
-	}
-
-	const handleAddCardKeyDown = async (e: KeyboardEvent) => {
-		if (e.key === 'Enter') {
-			const name = snapshot.context.newCardName.trim()
-			if (name) await onAddCard(name)
-			send({ type: 'CONFIRM_ADD_CARD' })
-		}
-		if (e.key === 'Escape') send({ type: 'CANCEL_ADD_CARD' })
-	}
-
-	const handleRenameKeyDown = (e: KeyboardEvent) => {
-		if (e.key === 'Enter') handleConfirm()
-		if (e.key === 'Escape') send({ type: 'CANCEL' })
-	}
-
 	const dragClasses = [
 		'kanban-base-column',
 		snapshot.context.isCollapsed ? 'kanban-base-column--collapsed' : '',
@@ -212,56 +319,14 @@ export function KanbanColumn({
 			}}
 		>
 			<div class="kanban-base-column-container">
-				<div class="kanban-base-column-header">
-					<KanbanColumnDragHandle
-						onDragStart={() => onDragStart(dragIndex)}
-					/>
-					<IconButton
-						folderName={column.folder.name}
-						iconsSignal={iconsSignal}
-						disabled={snapshot.context.isCollapsed}
-					/>
-					{snapshot.value === 'editing' ? (
-						<div class="kanban-base-column-rename">
-							<input
-								class="kanban-base-column-rename-input"
-								value={snapshot.context.draft}
-								onInput={e =>
-									send({
-										type: 'SET_DRAFT',
-										draft: (e.target as HTMLInputElement)
-											.value,
-									})
-								}
-								onKeyDown={handleRenameKeyDown}
-								autoFocus
-							/>
-							<div class="kanban-base-column-rename-actions">
-								<button
-									class="kanban-base-column-rename-confirm"
-									onClick={handleConfirm}
-								>
-									Save
-								</button>
-								<button
-									class="kanban-base-column-rename-cancel"
-									onClick={() => send({ type: 'CANCEL' })}
-								>
-									Cancel
-								</button>
-							</div>
-						</div>
-					) : (
-						<h2>{snapshot.context.name}</h2>
-					)}
-					<button
-						class="kanban-base-column-menu-btn clickable-icon"
-						aria-label="Column options"
-						onClick={handleMenuClick}
-					>
-						<ObsidianIcon iconId="lucide-more-horizontal" />
-					</button>
-				</div>
+				<KanbanColumnHeader
+					folderName={column.folder.name}
+					iconsSignal={iconsSignal}
+					snapshot={snapshot}
+					send={send}
+					onDragStart={() => onDragStart(dragIndex)}
+					onRenameColumn={onRenameColumn}
+				/>
 				{!snapshot.context.isCollapsed && (
 					<div class="kanban-base-column-body">
 						{column.entries.map(entry => (
@@ -273,32 +338,11 @@ export function KanbanColumn({
 								onDragCancel={onCardDragCancel}
 							/>
 						))}
-						<div className="kanban-base-column__footer">
-							{snapshot.value === 'addingCard' ? (
-								<input
-									className="kanban-base-column__add-card-input"
-									placeholder="Card name"
-									value={snapshot.context.newCardName}
-									ref={el => { if (el) el.focus() }}
-									onInput={e =>
-										send({
-											type: 'SET_NEW_CARD_NAME',
-											name: (e.target as HTMLInputElement).value,
-										})
-									}
-									onKeyDown={e => { void handleAddCardKeyDown(e) }}
-									onBlur={() => send({ type: 'CANCEL_ADD_CARD' })}
-								/>
-							) : (
-								<button
-									className="kanban-base-column__add-button"
-									onClick={() => send({ type: 'START_ADD_CARD' })}
-								>
-									<ObsidianIcon iconId="lucide-plus-circle" />
-									Add Card
-								</button>
-							)}
-						</div>
+						<KanbanColumnFooter
+							snapshot={snapshot}
+							send={send}
+							onAddCard={onAddCard}
+						/>
 					</div>
 				)}
 			</div>
