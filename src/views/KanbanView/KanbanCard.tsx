@@ -2,6 +2,7 @@ import type { BasesEntry, BasesPropertyId } from 'obsidian'
 import { Keymap, Menu } from 'obsidian'
 import { useState } from 'preact/hooks'
 import { useApp } from './AppContext'
+import { InlineForm } from './InlineForm'
 import { ObsidianIcon } from './ObsidianIcon'
 
 export function KanbanCard({
@@ -96,29 +97,16 @@ export function KanbanCard({
 			<div class="kanban-base-card-content">
 				{isRenaming ? (
 					<>
-						<input
-							class="kanban-base-card-rename-input"
+						<InlineForm
 							value={draft}
-							onInput={e =>
-								setDraft((e.target as HTMLInputElement).value)
-							}
-							onKeyDown={handleRenameKeyDown}
-							autoFocus
+							onSubmit={(_e: SubmitEvent) => {
+								handleRenameConfirm()
+							}}
+							onInput={e => setDraft(e.currentTarget.value)}
+							onCancel={() => {
+								setIsRenaming(false)
+							}}
 						/>
-						<div class="kanban-base-card-rename-actions">
-							<button
-								class="kanban-base-card-rename-confirm"
-								onClick={() => void handleRenameConfirm()}
-							>
-								Save
-							</button>
-							<button
-								class="kanban-base-card-rename-cancel"
-								onClick={() => setIsRenaming(false)}
-							>
-								Cancel
-							</button>
-						</div>
 					</>
 				) : (
 					<div class="kanban-base-card-title">

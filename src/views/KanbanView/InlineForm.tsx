@@ -34,6 +34,12 @@ export function InlineForm({
 		onSubmit(e)
 	}
 
+	function handleClickCancel(e: MouseEvent) {
+		e.preventDefault()
+		e.stopPropagation()
+		onCancel()
+	}
+
 	return (
 		<form
 			class="kanban-base-inline-form"
@@ -55,7 +61,7 @@ export function InlineForm({
 			<button
 				class="kanban-base-inline-form__cancel"
 				title="Cancel"
-				onClick={() => onCancel()}
+				onClick={handleClickCancel}
 				type="button"
 			>
 				<ObsidianIcon iconId="lucide-x" />
