@@ -21,7 +21,7 @@ export function KanbanCard({
 	const [isRenaming, setIsRenaming] = useState(false)
 	const [draft, setDraft] = useState('')
 
-	const handleClick = (e: MouseEvent) => {
+	function handleClick(e: MouseEvent) {
 		if (isRenaming) {
 			e.preventDefault()
 			e.stopPropagation()
@@ -31,7 +31,7 @@ export function KanbanCard({
 		void leaf.openFile(entry.file)
 	}
 
-	const handleMenuClick = (e: MouseEvent) => {
+	function handleMenuClick(e: MouseEvent) {
 		e.stopPropagation()
 		const menu = new Menu()
 		menu.addItem(item => {
@@ -114,7 +114,7 @@ export function KanbanCard({
 						<InlineForm
 							value={draft}
 							onSubmit={(_e: SubmitEvent) => {
-								handleRenameConfirm()
+								void handleRenameConfirm()
 							}}
 							onInput={e => setDraft(e.currentTarget.value)}
 							onCancel={() => {

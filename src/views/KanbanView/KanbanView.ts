@@ -329,7 +329,7 @@ export class KanbanView extends BasesView {
 			}
 		}
 
-		await this.app.vault.delete(folder, true)
+		await this.app.fileManager.trashFile(folder)
 		// next onDataUpdated MERGE_COLUMNS drops the record automatically
 	}
 
