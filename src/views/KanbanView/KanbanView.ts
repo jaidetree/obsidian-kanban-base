@@ -1,15 +1,13 @@
 import type { BasesEntry } from 'obsidian'
 import { BasesView, TFile, TFolder, type QueryController } from 'obsidian'
 import { h, render } from 'preact'
-import type { BoardColumnStates } from 'types/columns'
-import type { BoardIcons } from 'types/icons'
 import { createActor, type Actor } from 'xstate'
 import { KANBAN_ID } from '.'
 import { KanbanBoard } from './KanbanBoard'
 import { AppContext } from './AppContext'
 import { KanbanViewContext } from './KanbanViewContext'
 import { cardDragMachine } from '../../machines/cardDragMachine'
-import { columnOrderMachine } from '../../machines/columnOrderMachine'
+import { boardMachine, type ColumnRecord } from '../../machines/boardMachine'
 
 export interface IKanbanColumn {
 	folder: TFolder
@@ -120,13 +118,29 @@ export class KanbanView extends BasesView {
 	private readonly containerEl: HTMLElement
 	private firstColumnFolder: TFolder | null = null
 	private columnRootFolder: TFolder | null = null
-	private columnOrderActor: Actor<typeof columnOrderMachine> | null = null
+	private boardActor: Actor<typeof boardMachine> | null = null
 	private cardDragActor: Actor<typeof cardDragMachine> | null = null
-	private lastExternalColumns: string[] | null = null
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
 		super(controller)
 		this.containerEl = containerEl
+	}
+
+	private parseBoardState(): ColumnRecord[] {
+		try {
+			const raw = this.config.get('boardState')
+			if (!raw || typeof raw !== 'string') return []
+			const parsed = JSON.parse(raw) as unknown
+			if (!Array.isArray(parsed)) return []
+			return parsed.filter(
+				(item): item is ColumnRecord =>
+					typeof item === 'object' &&
+					item !== null &&
+					typeof (item as Record<string, unknown>).name === 'string',
+			)
+		} catch {
+			return []
+		}
 	}
 
 	onDataUpdated(): void {
@@ -153,72 +167,71 @@ export class KanbanView extends BasesView {
 			}
 		}
 
-		let columns: IKanbanColumn[]
 		if (!this.cardDragActor) {
 			this.cardDragActor = createActor(cardDragMachine)
 			this.cardDragActor.start()
 		}
 
-		if (!this.columnOrderActor) {
-			// First call: initialise actor with order from saved config
-			columns = applyColumnOrder(rawColumns, this.parseColumnOrder())
-			const colNames = columns.map(c => c.folder.name)
-			this.columnOrderActor = createActor(columnOrderMachine, {
-				input: { columns: colNames },
-			})
-			let prevCols: string[] | null = null
-			this.columnOrderActor.subscribe((snapshot) => {
-				const cols = snapshot.context.columns
-				if (
-					prevCols !== null &&
-					cols !== prevCols &&
-					cols !== this.lastExternalColumns
-				) {
-					this.config.set('columnOrder', JSON.stringify(cols))
+		const folderNames = rawColumns.map(c => c.folder.name)
+
+		if (!this.boardActor) {
+			// First call: initialise actor from saved boardState
+			const saved = this.parseBoardState()
+			const savedByName = new Map(saved.map(r => [r.name, r]))
+			const savedNames = saved.map(r => r.name)
+
+			// Order raw columns by saved names, append unknowns
+			const orderedNames = [
+				...savedNames.filter(n => folderNames.includes(n)),
+				...folderNames.filter(n => !savedByName.has(n)),
+			]
+
+			const initialRecords: ColumnRecord[] = orderedNames.map(name => {
+				const rec = savedByName.get(name)
+				return {
+					name,
+					icon: rec?.icon ?? null,
+					isCollapsed: rec?.isCollapsed ?? false,
 				}
-				prevCols = cols
 			})
-			this.columnOrderActor.start()
+
+			this.boardActor = createActor(boardMachine, {
+				input: { columns: initialRecords },
+			})
+
+			let prevColumns: ColumnRecord[] | null = null
+			this.boardActor.subscribe(snapshot => {
+				const cols = snapshot.context.columns
+				if (prevColumns !== null && cols !== prevColumns) {
+					this.config.set('boardState', JSON.stringify(cols))
+				}
+				prevColumns = cols
+			})
+
+			this.boardActor.start()
 		} else {
-			// Subsequent calls: preserve machine order, merge in any new/removed columns
-			const machineOrder = this.columnOrderActor.getSnapshot().context.columns
-			columns = applyColumnOrder(rawColumns, machineOrder)
-			const colNames = columns.map(c => c.folder.name)
-			this.lastExternalColumns = colNames
-			this.columnOrderActor.send({ type: 'SET_COLUMNS', columns: colNames })
+			// Subsequent calls: merge file-system state into actor
+			this.boardActor.send({ type: 'MERGE_COLUMNS', folderNames })
 		}
 
-		this.firstColumnFolder = columns[0]?.folder ?? null
-
-		const columnIconsRaw =
-			(this.config.get('columnIcons') as string | null) ?? '{}'
-		let columnIcons: BoardIcons
-		try {
-			columnIcons = JSON.parse(columnIconsRaw) as BoardIcons
-		} catch {
-			columnIcons = {}
-		}
-
-		const columnStatesRaw =
-			(this.config.get('columnStates') as string | null) ?? '{}'
-		let columnStates: BoardColumnStates
-		try {
-			columnStates = JSON.parse(columnStatesRaw) as BoardColumnStates
-		} catch {
-			columnStates = {}
-		}
+		// Derive first column folder for createFileForView
+		const displayRecords =
+			this.boardActor.getSnapshot().context.displayColumns
+		const firstRecord = displayRecords[0]
+		this.firstColumnFolder = firstRecord
+			? (rawColumns.find(c => c.folder.name === firstRecord.name)?.folder ??
+				null)
+			: null
 
 		render(
 			h(KanbanViewContext.Provider, { value: this },
 				h(AppContext.Provider, { value: this.app },
 					h(KanbanBoard, {
-						columns,
+						columns: rawColumns,
 						cardProperties,
 						cardSize,
-						columnIcons,
-						columnStates,
 						columnRootSet: !!columnRootPath,
-						columnOrderActor: this.columnOrderActor,
+						boardActor: this.boardActor,
 						cardDragActor: this.cardDragActor,
 					}),
 				),
@@ -241,21 +254,13 @@ export class KanbanView extends BasesView {
 	}
 
 	onunload(): void {
-		this.columnOrderActor?.stop()
+		this.boardActor?.stop()
 		this.cardDragActor?.stop()
 		render(null, this.containerEl)
 	}
 
 	setColumnRoot(folderPath: string): void {
 		this.config.set('columnRoot', folderPath)
-	}
-
-	updateIcons(icons: BoardIcons): void {
-		this.config.set('columnIcons', JSON.stringify(icons))
-	}
-
-	updateColumnStates(states: BoardColumnStates): void {
-		this.config.set('columnStates', JSON.stringify(states))
 	}
 
 	async dropCard(
@@ -271,20 +276,6 @@ export class KanbanView extends BasesView {
 			) ?? null
 		if (!targetFolder) return
 		await this.app.vault.rename(file, targetFolder.path + '/' + file.name)
-	}
-
-	private parseColumnOrder(): string[] {
-		try {
-			const raw = this.config.get('columnOrder')
-			if (!raw || typeof raw !== 'string') return []
-			const parsed = JSON.parse(raw) as unknown
-			if (!Array.isArray(parsed)) return []
-			return parsed.filter(
-				(item): item is string => typeof item === 'string',
-			)
-		} catch {
-			return []
-		}
 	}
 
 	async renameColumn(
@@ -305,45 +296,7 @@ export class KanbanView extends BasesView {
 		const parentPath = parent && !parent.isRoot() ? parent.path + '/' : ''
 		await this.app.vault.rename(folder, `${parentPath}${trimmed}`)
 
-		// Migrate column order in config
-		const currentOrder = this.parseColumnOrder()
-		if (currentOrder.length > 0) {
-			const newOrder = currentOrder.map(n =>
-				n === oldName ? trimmed : n,
-			)
-			this.config.set('columnOrder', JSON.stringify(newOrder))
-		}
-
-		// Migrate column order in the in-memory actor so the next
-		// onDataUpdated render preserves position
-		if (this.columnOrderActor) {
-			const machineOrder = this.columnOrderActor.getSnapshot().context.columns
-			const updatedOrder = machineOrder.map(n => n === oldName ? trimmed : n)
-			this.lastExternalColumns = updatedOrder
-			this.columnOrderActor.send({ type: 'SET_COLUMNS', columns: updatedOrder })
-		}
-
-		// Migrate column icons and states to new key
-		this.migrateColumnKey('columnIcons', oldName, trimmed)
-		this.migrateColumnKey('columnStates', oldName, trimmed)
-	}
-
-	private migrateColumnKey(
-		configKey: string,
-		oldName: string,
-		newName: string,
-	): void {
-		try {
-			const raw = (this.config.get(configKey) as string | null) ?? '{}'
-			const data = JSON.parse(raw) as Record<string, unknown>
-			if (oldName in data) {
-				data[newName] = data[oldName]
-				delete data[oldName]
-				this.config.set(configKey, JSON.stringify(data))
-			}
-		} catch {
-			// ignore malformed config
-		}
+		this.boardActor?.send({ type: 'RENAME_COLUMN', oldName, newName: trimmed })
 	}
 
 	async removeColumn(
@@ -377,25 +330,7 @@ export class KanbanView extends BasesView {
 		}
 
 		await this.app.vault.delete(folder, true)
-
-		const order = this.parseColumnOrder().filter(n => n !== folderName)
-		this.config.set('columnOrder', JSON.stringify(order))
-
-		this.deleteColumnKey('columnIcons', folderName)
-		this.deleteColumnKey('columnStates', folderName)
-	}
-
-	private deleteColumnKey(configKey: string, folderName: string): void {
-		try {
-			const raw = (this.config.get(configKey) as string | null) ?? '{}'
-			const data = JSON.parse(raw) as Record<string, unknown>
-			if (folderName in data) {
-				delete data[folderName]
-				this.config.set(configKey, JSON.stringify(data))
-			}
-		} catch {
-			// ignore malformed config
-		}
+		// next onDataUpdated MERGE_COLUMNS drops the record automatically
 	}
 
 	async addCard(
@@ -427,16 +362,7 @@ export class KanbanView extends BasesView {
 			: ''
 		const folderPath = rootPath ? `${rootPath}/${trimmed}` : trimmed
 
-		// Seed the column order from existing columns, then append the new name
-		const existingOrder = this.parseColumnOrder()
-		const existingNames = deriveColumnsFromRoot(
-			this.columnRootFolder,
-			this.data.data,
-		).map(c => c.folder.name)
-		const base = existingOrder.length > 0 ? existingOrder : existingNames
-		const newOrder = [...base.filter(n => n !== trimmed), trimmed]
-		this.config.set('columnOrder', JSON.stringify(newOrder))
-
 		await this.app.vault.createFolder(folderPath)
+		// next onDataUpdated MERGE_COLUMNS appends the new record automatically
 	}
 }

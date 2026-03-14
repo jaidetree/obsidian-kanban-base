@@ -78,12 +78,12 @@ describe('columnMachine', () => {
 		actor.stop()
 	})
 
-	it('START_ADD_CARD transitions to addingCard', () => {
+	it('ADD_CARD transitions to addingCard', () => {
 		const actor = createActor(columnMachine, {
 			input: { name: 'Todo', isCollapsed: false },
 		})
 		actor.start()
-		actor.send({ type: 'START_ADD_CARD' })
+		actor.send({ type: 'ADD_CARD' })
 		expect(actor.getSnapshot().value).toBe('addingCard')
 		actor.stop()
 	})
@@ -93,47 +93,47 @@ describe('columnMachine', () => {
 			input: { name: 'Todo', isCollapsed: false },
 		})
 		actor.start()
-		actor.send({ type: 'START_ADD_CARD' })
+		actor.send({ type: 'ADD_CARD' })
 		actor.send({ type: 'SET_NEW_CARD_NAME', name: 'My Task' })
 		expect(actor.getSnapshot().context.newCardName).toBe('My Task')
 		actor.stop()
 	})
 
-	it('CONFIRM_ADD_CARD transitions to idle and resets newCardName', () => {
+	it('CONFIRM in addingCard stays in addingCard and resets newCardName', () => {
 		const actor = createActor(columnMachine, {
 			input: { name: 'Todo', isCollapsed: false },
 		})
 		actor.start()
-		actor.send({ type: 'START_ADD_CARD' })
+		actor.send({ type: 'ADD_CARD' })
 		actor.send({ type: 'SET_NEW_CARD_NAME', name: 'My Task' })
-		actor.send({ type: 'CONFIRM_ADD_CARD' })
+		actor.send({ type: 'CONFIRM' })
+		const snap = actor.getSnapshot()
+		expect(snap.value).toBe('addingCard')
+		expect(snap.context.newCardName).toBe('')
+		actor.stop()
+	})
+
+	it('CANCEL in addingCard transitions to idle and resets newCardName', () => {
+		const actor = createActor(columnMachine, {
+			input: { name: 'Todo', isCollapsed: false },
+		})
+		actor.start()
+		actor.send({ type: 'ADD_CARD' })
+		actor.send({ type: 'SET_NEW_CARD_NAME', name: 'My Task' })
+		actor.send({ type: 'CANCEL' })
 		const snap = actor.getSnapshot()
 		expect(snap.value).toBe('idle')
 		expect(snap.context.newCardName).toBe('')
 		actor.stop()
 	})
 
-	it('CANCEL_ADD_CARD transitions to idle and resets newCardName', () => {
-		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
-		})
-		actor.start()
-		actor.send({ type: 'START_ADD_CARD' })
-		actor.send({ type: 'SET_NEW_CARD_NAME', name: 'My Task' })
-		actor.send({ type: 'CANCEL_ADD_CARD' })
-		const snap = actor.getSnapshot()
-		expect(snap.value).toBe('idle')
-		expect(snap.context.newCardName).toBe('')
-		actor.stop()
-	})
-
-	it('START_ADD_CARD is ignored in editing state', () => {
+	it('ADD_CARD is ignored in editing state', () => {
 		const actor = createActor(columnMachine, {
 			input: { name: 'Todo', isCollapsed: false },
 		})
 		actor.start()
 		actor.send({ type: 'RENAME' })
-		actor.send({ type: 'START_ADD_CARD' })
+		actor.send({ type: 'ADD_CARD' })
 		expect(actor.getSnapshot().value).toBe('editing')
 		actor.stop()
 	})
@@ -148,12 +148,12 @@ describe('columnMachine', () => {
 		actor.stop()
 	})
 
-	it('START_ADD_CARD is ignored when isCollapsed is true', () => {
+	it('ADD_CARD is ignored when isCollapsed is true', () => {
 		const actor = createActor(columnMachine, {
 			input: { name: 'Todo', isCollapsed: true },
 		})
 		actor.start()
-		actor.send({ type: 'START_ADD_CARD' })
+		actor.send({ type: 'ADD_CARD' })
 		expect(actor.getSnapshot().value).toBe('idle')
 		actor.stop()
 	})

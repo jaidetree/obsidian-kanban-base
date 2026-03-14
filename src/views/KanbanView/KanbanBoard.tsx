@@ -1,23 +1,20 @@
-import { useSignal, useSignalEffect } from '@preact/signals'
 import { useActorRef, useActorState } from 'hooks/xstate'
 import type { BasesPropertyId, TFolder } from 'obsidian'
 import type { CSSProperties } from 'preact'
 import { useState } from 'preact/hooks'
-import type { BoardColumnStates } from 'types/columns'
-import type { BoardIcons } from 'types/icons'
 import { type Actor } from 'xstate'
+import { boardMachine } from '../../machines/boardMachine'
 import { cardDragMachine } from '../../machines/cardDragMachine'
-import { columnOrderMachine } from '../../machines/columnOrderMachine'
+import { useApp } from './AppContext'
 import { FolderSuggestModal } from './FolderSuggestModal'
 import { InlineForm, InlineFormProps } from './InlineForm'
 import { KanbanColumn } from './KanbanColumn'
 import type { IKanbanColumn } from './KanbanView'
 import { useKanbanView } from './KanbanViewContext'
 
-interface EmptyBoardProps {}
-
-function EmptyBoard({}: EmptyBoardProps) {
+function EmptyBoard() {
 	const view = useKanbanView()
+	const app = useApp()
 
 	return (
 		<div class="kanban-base-no-root">
@@ -62,10 +59,8 @@ export interface KanbanBoardProps {
 	columns: IKanbanColumn[]
 	cardProperties: string[]
 	cardSize: number
-	columnIcons: BoardIcons
-	columnStates: BoardColumnStates
 	columnRootSet: boolean
-	columnOrderActor: Actor<typeof columnOrderMachine>
+	boardActor: Actor<typeof boardMachine>
 	cardDragActor: Actor<typeof cardDragMachine>
 }
 
@@ -73,20 +68,15 @@ export function KanbanBoard({
 	columns,
 	cardProperties,
 	cardSize,
-	columnIcons,
-	columnStates,
 	columnRootSet,
-	columnOrderActor,
+	boardActor,
 	cardDragActor,
 }: KanbanBoardProps) {
 	const view = useKanbanView()
-
-	const iconsSignal = useSignal(columnIcons)
-	const columnStatesSignal = useSignal(columnStates)
 	const [adding, setAdding] = useState(false)
 
-	const actorRef = useActorRef(columnOrderActor)
-	const [dragSnapshot, dragSend] = useActorState(actorRef)
+	const boardActorRef = useActorRef(boardActor)
+	const [boardSnapshot, boardSend] = useActorState(boardActorRef)
 
 	const cardDragActorRef = useActorRef(cardDragActor)
 	const [cardDragSnapshot, cardDragSend] = useActorState(cardDragActorRef)
@@ -104,42 +94,24 @@ export function KanbanBoard({
 	}
 
 	const {
-		displayColumns: displayNames,
+		displayColumns,
 		dragIndex,
 		dropIndex,
-	} = dragSnapshot.context
+	} = boardSnapshot.context
 
-	// Map names → actual column data; append any columns not yet in machine context
-	const known = new Set(displayNames)
-	const previewColumns: IKanbanColumn[] = [
-		...displayNames
-			.map(name => columns.find(c => c.folder.name === name))
-			.filter((c): c is IKanbanColumn => c !== undefined),
-		...columns.filter(c => !known.has(c.folder.name)),
-	]
+	const previewColumns = displayColumns
+		.map(record => ({
+			record,
+			column: columns.find(c => c.folder.name === record.name),
+		}))
+		.filter((x): x is { record: typeof x.record; column: IKanbanColumn } =>
+			x.column !== undefined,
+		)
 
 	async function handleConfirmNewColumn(newColumnName: string) {
 		if (!newColumnName) return
 		await view.addColumn(newColumnName)
 		setAdding(false)
-	}
-
-	useSignalEffect(() => {
-		view.updateIcons(iconsSignal.value)
-	})
-
-	useSignalEffect(() => {
-		view.updateColumnStates(columnStatesSignal.value)
-	})
-
-	const handleStateChange = (
-		folderName: string,
-		state: { isCollapsed: boolean },
-	) => {
-		columnStatesSignal.value = {
-			...columnStatesSignal.value,
-			[folderName]: state,
-		}
 	}
 
 	return (
@@ -151,32 +123,38 @@ export function KanbanBoard({
 				} as CSSProperties
 			}
 		>
-			{previewColumns.map((column, idx) => (
+			{previewColumns.map(({ record, column }, idx) => (
 				<KanbanColumn
 					key={column.folder.path}
 					column={column}
 					cardProperties={cardProperties as BasesPropertyId[]}
-					iconsSignal={iconsSignal}
-					isCollapsed={
-						columnStatesSignal.value[column.folder.name]
-							?.isCollapsed ?? false
+					icon={record.icon}
+					onIconChange={icon =>
+						boardSend({ type: 'SET_ICON', name: record.name, icon })
 					}
-					onStateChange={handleStateChange}
+					isCollapsed={record.isCollapsed}
+					onCollapse={isCollapsed =>
+						boardSend({
+							type: 'SET_COLLAPSE',
+							name: record.name,
+							isCollapsed,
+						})
+					}
 					otherColumnNames={previewColumns
-						.filter(c => c.folder.name !== column.folder.name)
-						.map(c => c.folder.name)}
+						.filter(x => x.record.name !== record.name)
+						.map(x => x.record.name)}
 					dragIndex={idx}
 					onDragStart={index =>
-						dragSend({ type: 'DRAG_START', index })
+						boardSend({ type: 'DRAG_START', index })
 					}
-					onDragOver={index => dragSend({ type: 'DRAG_OVER', index })}
-					onDrop={() => dragSend({ type: 'DROP' })}
-					onDragCancel={() => dragSend({ type: 'CANCEL' })}
+					onDragOver={index => boardSend({ type: 'DRAG_OVER', index })}
+					onDrop={() => boardSend({ type: 'DROP' })}
+					onDragCancel={() => boardSend({ type: 'CANCEL' })}
 					isDragging={
-						dragSnapshot.matches('dragging') && dragIndex === idx
+						boardSnapshot.matches('dragging') && dragIndex === idx
 					}
 					isDragTarget={
-						dragSnapshot.matches('dragging') && dropIndex === idx
+						boardSnapshot.matches('dragging') && dropIndex === idx
 					}
 					onCardDragStart={filePath =>
 						cardDragSend({
@@ -205,7 +183,7 @@ export function KanbanBoard({
 			) : adding ? (
 				<NewColumn
 					onSubmit={(newColumnString: string) => {
-						handleConfirmNewColumn(newColumnString)
+						void handleConfirmNewColumn(newColumnString)
 					}}
 					onCancel={() => {
 						setAdding(false)

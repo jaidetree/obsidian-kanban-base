@@ -18,7 +18,8 @@ function RemoveColumnModalForm({
 }: RemoveColumnModalFormProps) {
 	function handleSubmit(e: TargetedSubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
-		onConfirm(e.currentTarget.targetFolder.value)
+		const form = e.currentTarget as HTMLFormElement & { targetFolder: HTMLSelectElement }
+		onConfirm(form.targetFolder.value)
 		modal.close()
 	}
 

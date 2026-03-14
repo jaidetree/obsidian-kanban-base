@@ -1,11 +1,9 @@
-import type { Signal } from '@preact/signals'
-import { useComputed } from '@preact/signals'
 import type { SendFrom } from 'hooks/xstate'
 import { useXState } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
 import { Menu } from 'obsidian'
 import { useEffect } from 'preact/hooks'
-import { BoardIcons } from 'types/icons'
+import type { Icon } from 'types/icons'
 import type { SnapshotFrom } from 'xstate'
 import { columnMachine } from '../../machines/columnMachine'
 import { useApp } from './AppContext'
@@ -20,26 +18,19 @@ import { RemoveColumnModal } from './RemoveColumnModal'
 const DEFAULT_ICON = 'lucide-circle'
 
 interface IconButtonProps {
-	folderName: string
-	iconsSignal: Signal<BoardIcons>
+	icon: Icon | null
+	onIconChange: (icon: Icon | null) => void
 	disabled?: boolean
 }
 
-function IconButton({ folderName, iconsSignal, disabled }: IconButtonProps) {
+function IconButton({ icon, onIconChange, disabled }: IconButtonProps) {
 	const app = useApp()
-	const chosenIcon = useComputed(() => iconsSignal.value[folderName])
-	const displayIcon = useComputed(
-		() => chosenIcon.value?.value ?? DEFAULT_ICON,
-	)
-
-	const isDefault = chosenIcon.value === undefined
+	const displayIcon = icon?.value ?? DEFAULT_ICON
+	const isDefault = icon === null
 
 	const handleClick = () => {
 		if (disabled) return
-		const modal = new IconSuggestModal(app, icon => {
-			iconsSignal.value = { ...iconsSignal.value, [folderName]: icon }
-		})
-		modal.open()
+		new IconSuggestModal(app, selectedIcon => onIconChange(selectedIcon)).open()
 	}
 
 	return (
@@ -49,11 +40,11 @@ function IconButton({ folderName, iconsSignal, disabled }: IconButtonProps) {
 			disabled={disabled}
 			aria-label="Change column icon"
 		>
-			{chosenIcon.value?.prefix === 'Emoji' ? (
+			{icon?.prefix === 'Emoji' ? (
 				displayIcon
-			) : chosenIcon ? (
-				<ObsidianIcon iconId={displayIcon.value} />
-			) : null}
+			) : (
+				<ObsidianIcon iconId={displayIcon} />
+			)}
 		</button>
 	)
 }
@@ -117,7 +108,8 @@ function KanbanColumnRenameInput({
 
 interface KanbanColumnHeaderProps {
 	folderName: string
-	iconsSignal: Signal<BoardIcons>
+	icon: Icon | null
+	onIconChange: (icon: Icon | null) => void
 	snapshot: SnapshotFrom<typeof columnMachine>
 	send: SendFrom<typeof columnMachine>
 	onDragStart: () => void
@@ -126,7 +118,8 @@ interface KanbanColumnHeaderProps {
 
 function KanbanColumnHeader({
 	folderName,
-	iconsSignal,
+	icon,
+	onIconChange,
 	snapshot,
 	send,
 	onDragStart,
@@ -146,9 +139,7 @@ function KanbanColumnHeader({
 			item.setTitle('Remove icon')
 				.setIcon('lucide-x')
 				.onClick(() => {
-					const updated = { ...iconsSignal.value }
-					delete updated[folderName]
-					iconsSignal.value = updated
+					onIconChange(null)
 				})
 		})
 		if (!snapshot.context.isCollapsed) {
@@ -172,8 +163,8 @@ function KanbanColumnHeader({
 		<div class="kanban-base-column-header">
 			<KanbanColumnDragHandle onDragStart={onDragStart} />
 			<IconButton
-				folderName={folderName}
-				iconsSignal={iconsSignal}
+				icon={icon}
+				onIconChange={onIconChange}
 				disabled={snapshot.context.isCollapsed}
 			/>
 			{snapshot.value === 'editing' ? (
@@ -221,7 +212,7 @@ function KanbanColumnFooter({
 				<InlineForm
 					placeholder="Card name"
 					value={snapshot.context.newCardName}
-					onSubmit={handleSubmit}
+					onSubmit={e => { void handleSubmit(e) }}
 					onInput={e => {
 						send({
 							type: 'SET_NEW_CARD_NAME',
@@ -248,9 +239,10 @@ function KanbanColumnFooter({
 interface KanbanColumnProps {
 	column: IKanbanColumn
 	cardProperties: BasesPropertyId[]
-	iconsSignal: Signal<BoardIcons>
+	icon: Icon | null
+	onIconChange: (icon: Icon | null) => void
 	isCollapsed: boolean
-	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void
+	onCollapse: (isCollapsed: boolean) => void
 	otherColumnNames: string[]
 	dragIndex: number
 	onDragStart: (index: number) => void
@@ -269,9 +261,10 @@ interface KanbanColumnProps {
 export function KanbanColumn({
 	column,
 	cardProperties,
-	iconsSignal,
+	icon,
+	onIconChange,
 	isCollapsed,
-	onStateChange,
+	onCollapse,
 	otherColumnNames,
 	dragIndex,
 	onDragStart,
@@ -294,9 +287,7 @@ export function KanbanColumn({
 	})
 
 	useEffect(() => {
-		onStateChange(column.folder.name, {
-			isCollapsed: snapshot.context.isCollapsed,
-		})
+		onCollapse(snapshot.context.isCollapsed)
 	}, [snapshot.context.isCollapsed])
 
 	const handleRemoveColumn = () => {
@@ -308,7 +299,7 @@ export function KanbanColumn({
 				column.folder.name,
 				otherColumnNames,
 				targetName => {
-					view.removeColumn(column.folder.name, targetName)
+					void view.removeColumn(column.folder.name, targetName)
 				},
 			).open()
 		}
@@ -350,7 +341,8 @@ export function KanbanColumn({
 			<div class="kanban-base-column-container">
 				<KanbanColumnHeader
 					folderName={column.folder.name}
-					iconsSignal={iconsSignal}
+					icon={icon}
+					onIconChange={onIconChange}
 					snapshot={snapshot}
 					send={send}
 					onDragStart={() => onDragStart(dragIndex)}

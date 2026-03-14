@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/preact-vite';
-import { useSignal } from '@preact/signals';
 import { userEvent, within } from 'storybook/test';
 import type { BasesPropertyId, TFolder } from 'obsidian';
 import { aFile } from '../../__mocks__/aFile';
 import { aBasesEntry } from '../../__mocks__/aBasesEntry';
 import { createMockApp } from '../../__mocks__/create-mock-app';
 import { createMockKanbanViewActions } from '../../__mocks__/create-mock-kanban-view-actions';
-import type { BoardIcons } from '../../types/icons';
+import type { Icon } from '../../types/icons';
 import { AppContext } from './AppContext';
 import { KanbanViewContext } from './KanbanViewContext';
 import type { IKanbanColumn } from './KanbanView';
@@ -32,13 +31,12 @@ function entryInFolder(folder: TFolder, basename: string, fm: Record<string, unk
 const root = mockFolder('Project');
 const todo = mockFolder('Todo', root);
 
-// Bridges serializable Storybook args to the Signal<BoardIcons> prop KanbanColumn expects
 interface StoryProps {
 	column: IKanbanColumn;
 	cardProperties: string[];
-	columnIcons: BoardIcons;
+	icon: Icon | null;
 	isCollapsed: boolean;
-	onStateChange: (folderName: string, state: { isCollapsed: boolean }) => void;
+	onCollapse: (isCollapsed: boolean) => void;
 	otherColumnNames: string[];
 	dragIndex?: number;
 	isDragging?: boolean;
@@ -46,15 +44,14 @@ interface StoryProps {
 	isCardDragTarget?: boolean;
 }
 
-function KanbanColumnStory({ columnIcons, cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, isCardDragTarget = false, ...rest }: StoryProps) {
-	const iconsSignal = useSignal(columnIcons);
+function KanbanColumnStory({ cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, isCardDragTarget = false, ...rest }: StoryProps) {
 	return (
 		<KanbanViewContext.Provider value={createMockKanbanViewActions()}>
 			<AppContext.Provider value={createMockApp()}>
 				<KanbanColumn
 					{...rest}
 					cardProperties={cardProperties as BasesPropertyId[]}
-					iconsSignal={iconsSignal}
+					onIconChange={() => {}}
 					dragIndex={dragIndex}
 					onDragStart={() => {}}
 					onDragOver={() => {}}
@@ -87,9 +84,9 @@ const meta: Meta<typeof KanbanColumnStory> = {
 			],
 		},
 		cardProperties: [],
-		columnIcons: {},
+		icon: null,
 		isCollapsed: false,
-		onStateChange: () => {},
+		onCollapse: () => {},
 		otherColumnNames: ['In Progress', 'Done'],
 	},
 };
@@ -127,9 +124,7 @@ export const Collapsed: Story = {
 
 export const WithChosenIcon: Story = {
 	args: {
-		columnIcons: {
-			Todo: { name: 'check', value: 'check', prefix: 'Li' },
-		},
+		icon: { name: 'check', value: 'check', prefix: 'Li' },
 	},
 };
 

@@ -9,13 +9,19 @@ import { AppContext } from './AppContext';
 import { KanbanViewContext } from './KanbanViewContext';
 import type { TFolder } from 'obsidian';
 import { createActor } from 'xstate';
-import { columnOrderMachine } from '../../machines/columnOrderMachine';
+import { boardMachine } from '../../machines/boardMachine';
 import { cardDragMachine } from '../../machines/cardDragMachine';
 
-const storyActor = createActor(columnOrderMachine, {
-	input: { columns: ['Todo', 'In Progress', 'Done'] },
+const storyBoardActor = createActor(boardMachine, {
+	input: {
+		columns: [
+			{ name: 'Todo', icon: null, isCollapsed: false },
+			{ name: 'In Progress', icon: null, isCollapsed: false },
+			{ name: 'Done', icon: null, isCollapsed: false },
+		],
+	},
 });
-storyActor.start();
+storyBoardActor.start();
 
 const cardDragStoryActor = createActor(cardDragMachine);
 cardDragStoryActor.start();
@@ -59,10 +65,8 @@ const meta: Meta<typeof KanbanBoardStory> = {
 	args: {
 		cardProperties: [],
 		cardSize: 220,
-		columnIcons: {},
-		columnStates: {},
 		columnRootSet: true,
-		columnOrderActor: storyActor,
+		boardActor: storyBoardActor,
 		cardDragActor: cardDragStoryActor,
 		columns: [
 			{ folder: todo, entries: [entryInFolder(todo, 'Task 1'), entryInFolder(todo, 'Task 2')] },

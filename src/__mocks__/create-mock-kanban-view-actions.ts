@@ -6,8 +6,6 @@ export function createMockKanbanViewActions(
 	return {
 		addColumn: async () => {},
 		setColumnRoot: () => {},
-		updateIcons: () => {},
-		updateColumnStates: () => {},
 		renameColumn: async () => {},
 		removeColumn: async () => {},
 		addCard: async () => {},
