@@ -126,6 +126,42 @@ export class KanbanView extends BasesView {
 		this.containerEl = containerEl
 	}
 
+	onload(): void {
+		this.registerEvent(
+			this.app.vault.on('create', file => {
+				if (file instanceof TFolder && this.isDirectChild(file)) {
+					this.onDataUpdated()
+				}
+			}),
+		)
+		this.registerEvent(
+			this.app.vault.on('delete', file => {
+				if (file instanceof TFolder && this.isDirectChild(file)) {
+					this.onDataUpdated()
+				}
+			}),
+		)
+		this.registerEvent(
+			this.app.vault.on('rename', (file, oldPath) => {
+				if (file instanceof TFolder) {
+					const newIsChild = this.isDirectChild(file)
+					const oldParentPath = oldPath.substring(0, oldPath.lastIndexOf('/'))
+					const oldIsChild = this.columnRootFolder?.path === oldParentPath
+					if (newIsChild || oldIsChild) {
+						this.onDataUpdated()
+					}
+				}
+			}),
+		)
+	}
+
+	private isDirectChild(folder: TFolder): boolean {
+		return (
+			this.columnRootFolder !== null &&
+			folder.parent?.path === this.columnRootFolder.path
+		)
+	}
+
 	private parseBoardState(): ColumnRecord[] {
 		try {
 			const raw = this.config.get('boardState')

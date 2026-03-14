@@ -409,8 +409,8 @@ cancel.
 - [x] Improve Add column button styles
 - [x] Move add column logic into state machine
 - [x] Move column state machines into machines/ directory
-- [ ] Retain order and icon when renaming columns
-- [ ] Pick up new folders when added to target directory
+- [x] Retain order and icon when renaming columns
+- [x] Pick up new folders when added to target directory
 
 ### Phase VIII: Properties
 
