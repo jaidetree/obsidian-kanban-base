@@ -129,10 +129,12 @@ export function KanbanCard({
 				)}
 				{cardProperties.map(propId => {
 					const value = entry.getValue(propId)
-					if (!value?.isTruthy()) return null
+
+					if (value === null) return null
+
 					return (
 						<div key={propId} class="kanban-base-card-prop">
-							{value.toString()}
+							{value && value.toString()}
 						</div>
 					)
 				})}

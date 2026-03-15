@@ -385,3 +385,10 @@
 .kanban-base-remove-column-modal .kanban-base-remove-column-modal__confirm {
 	color: var(--text-error);
 }
+
+.kanban-base-card-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 4px;
+}

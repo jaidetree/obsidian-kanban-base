@@ -21,7 +21,7 @@ export type {
   ViewOption,
 } from 'obsidian';
 
-export { MockBooleanValue as BooleanValue, MockListValue as ListValue, MockNullValue as NullValue, MockNumberValue as NumberValue, MockStringValue as StringValue } from './aValue';
+export { MockBooleanValue as BooleanValue, MockListValue as ListValue, MockNullValue as NullValue, MockNumberValue as NumberValue, MockStringValue as StringValue, MockTagValue as TagValue } from './aValue';
 export type { BooleanValue as BooleanValueType, ListValue as ListValueType, NullValue as NullValueType, NumberValue as NumberValueType, StringValue as StringValueType } from 'obsidian';
 
 export { MockTFile as TFile } from './aFile';

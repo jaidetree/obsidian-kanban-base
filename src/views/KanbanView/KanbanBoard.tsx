@@ -57,7 +57,7 @@ function NewColumn({ onCancel, onSubmit }: NewColumnProps) {
 
 export interface KanbanBoardProps {
 	columns: IKanbanColumn[]
-	cardProperties: string[]
+	cardProperties: BasesPropertyId[]
 	cardSize: number
 	columnRootSet: boolean
 	boardActor: Actor<typeof boardMachine>
@@ -93,19 +93,16 @@ export function KanbanBoard({
 		cardDragSend({ type: 'DROP' })
 	}
 
-	const {
-		displayColumns,
-		dragIndex,
-		dropIndex,
-	} = boardSnapshot.context
+	const { displayColumns, dragIndex, dropIndex } = boardSnapshot.context
 
 	const previewColumns = displayColumns
 		.map(record => ({
 			record,
 			column: columns.find(c => c.folder.name === record.name),
 		}))
-		.filter((x): x is { record: typeof x.record; column: IKanbanColumn } =>
-			x.column !== undefined,
+		.filter(
+			(x): x is { record: typeof x.record; column: IKanbanColumn } =>
+				x.column !== undefined,
 		)
 
 	async function handleConfirmNewColumn(newColumnName: string) {
@@ -127,7 +124,7 @@ export function KanbanBoard({
 				<KanbanColumn
 					key={column.folder.path}
 					column={column}
-					cardProperties={cardProperties as BasesPropertyId[]}
+					cardProperties={cardProperties}
 					icon={record.icon}
 					onIconChange={icon =>
 						boardSend({ type: 'SET_ICON', name: record.name, icon })
@@ -147,7 +144,9 @@ export function KanbanBoard({
 					onDragStart={index =>
 						boardSend({ type: 'DRAG_START', index })
 					}
-					onDragOver={index => boardSend({ type: 'DRAG_OVER', index })}
+					onDragOver={index =>
+						boardSend({ type: 'DRAG_OVER', index })
+					}
 					onDrop={() => boardSend({ type: 'DROP' })}
 					onDragCancel={() => boardSend({ type: 'CANCEL' })}
 					isDragging={

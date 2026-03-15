@@ -116,6 +116,20 @@ export const WithProperties: Story = {
 	},
 };
 
+export const WithTags: Story = {
+	args: {
+		cardProperties: ['note.tags', 'note.priority'],
+		column: {
+			folder: todo,
+			entries: [
+				entryInFolder(todo, 'Tagged task', { tags: ['project', 'urgent'], priority: 'High' }),
+				entryInFolder(todo, 'One tag', { tags: ['project'] }),
+				entryInFolder(todo, 'No tags task', { priority: 'Low' }),
+			],
+		},
+	},
+};
+
 export const Collapsed: Story = {
 	args: {
 		isCollapsed: true,

@@ -1,13 +1,13 @@
-import type { BasesEntry } from 'obsidian'
+import type { BasesEntry, BasesPropertyId } from 'obsidian'
 import { BasesView, TFile, TFolder, type QueryController } from 'obsidian'
 import { h, render } from 'preact'
 import { createActor, type Actor } from 'xstate'
 import { KANBAN_ID } from '.'
-import { KanbanBoard } from './KanbanBoard'
-import { AppContext } from './AppContext'
-import { KanbanViewContext } from './KanbanViewContext'
-import { cardDragMachine } from '../../machines/cardDragMachine'
 import { boardMachine, type ColumnRecord } from '../../machines/boardMachine'
+import { cardDragMachine } from '../../machines/cardDragMachine'
+import { AppContext } from './AppContext'
+import { KanbanBoard } from './KanbanBoard'
+import { KanbanViewContext } from './KanbanViewContext'
 
 export interface IKanbanColumn {
 	folder: TFolder
@@ -145,8 +145,12 @@ export class KanbanView extends BasesView {
 			this.app.vault.on('rename', (file, oldPath) => {
 				if (file instanceof TFolder) {
 					const newIsChild = this.isDirectChild(file)
-					const oldParentPath = oldPath.substring(0, oldPath.lastIndexOf('/'))
-					const oldIsChild = this.columnRootFolder?.path === oldParentPath
+					const oldParentPath = oldPath.substring(
+						0,
+						oldPath.lastIndexOf('/'),
+					)
+					const oldIsChild =
+						this.columnRootFolder?.path === oldParentPath
 					if (newIsChild || oldIsChild) {
 						this.onDataUpdated()
 					}
@@ -180,20 +184,23 @@ export class KanbanView extends BasesView {
 	}
 
 	onDataUpdated(): void {
-		const cardProperties =
-			(this.config.get('cardProperties') as string[] | null) ?? []
+		const cardProperties: BasesPropertyId[] = this.config.getOrder() ?? []
 		const cardSize = (this.config.get('cardSize') as number | null) ?? 220
 
 		// Resolve columnRoot from config
-		const columnRootPath = this.config.get('columnRoot') as string | undefined
+		const columnRootPath = this.config.get('columnRoot') as
+			| string
+			| undefined
+
 		let rawColumns: IKanbanColumn[]
+
 		if (!columnRootPath) {
 			this.columnRootFolder = null
 			rawColumns = []
 		} else {
 			const resolved = this.app.vault.getFolderByPath(columnRootPath)
 			if (!resolved) {
-				// Folder was deleted — clear stale config and show prompt
+				// Folder was deleted — clear stale config and show promptt
 				this.config.set('columnRoot', '')
 				this.columnRootFolder = null
 				rawColumns = []
@@ -255,13 +262,17 @@ export class KanbanView extends BasesView {
 			this.boardActor.getSnapshot().context.displayColumns
 		const firstRecord = displayRecords[0]
 		this.firstColumnFolder = firstRecord
-			? (rawColumns.find(c => c.folder.name === firstRecord.name)?.folder ??
-				null)
+			? (rawColumns.find(c => c.folder.name === firstRecord.name)
+					?.folder ?? null)
 			: null
 
 		render(
-			h(KanbanViewContext.Provider, { value: this },
-				h(AppContext.Provider, { value: this.app },
+			h(
+				KanbanViewContext.Provider,
+				{ value: this },
+				h(
+					AppContext.Provider,
+					{ value: this.app },
 					h(KanbanBoard, {
 						columns: rawColumns,
 						cardProperties,
@@ -299,32 +310,30 @@ export class KanbanView extends BasesView {
 		this.config.set('columnRoot', folderPath)
 	}
 
-	async dropCard(
-		filePath: string,
-		targetFolderName: string,
-	): Promise<void> {
+	async dropCard(filePath: string, targetFolderName: string): Promise<void> {
 		const file = this.app.vault.getAbstractFileByPath(filePath)
 		if (!(file instanceof TFile)) return
 		const targetFolder =
 			this.columnRootFolder?.children.find(
 				(c): c is TFolder =>
-					'children' in c && !('extension' in c) && c.name === targetFolderName,
+					'children' in c &&
+					!('extension' in c) &&
+					c.name === targetFolderName,
 			) ?? null
 		if (!targetFolder) return
 		await this.app.vault.rename(file, targetFolder.path + '/' + file.name)
 	}
 
-	async renameColumn(
-		oldName: string,
-		newName: string,
-	): Promise<void> {
+	async renameColumn(oldName: string, newName: string): Promise<void> {
 		const trimmed = newName.trim()
 		if (!trimmed || trimmed === oldName) return
 
 		const folder =
 			this.columnRootFolder?.children.find(
 				(c): c is TFolder =>
-					'children' in c && !('extension' in c) && c.name === oldName,
+					'children' in c &&
+					!('extension' in c) &&
+					c.name === oldName,
 			) ?? null
 		if (!folder) return
 
@@ -332,7 +341,11 @@ export class KanbanView extends BasesView {
 		const parentPath = parent && !parent.isRoot() ? parent.path + '/' : ''
 		await this.app.vault.rename(folder, `${parentPath}${trimmed}`)
 
-		this.boardActor?.send({ type: 'RENAME_COLUMN', oldName, newName: trimmed })
+		this.boardActor?.send({
+			type: 'RENAME_COLUMN',
+			oldName,
+			newName: trimmed,
+		})
 	}
 
 	async removeColumn(
@@ -342,7 +355,9 @@ export class KanbanView extends BasesView {
 		const folder =
 			this.columnRootFolder?.children.find(
 				(c): c is TFolder =>
-					'children' in c && !('extension' in c) && c.name === folderName,
+					'children' in c &&
+					!('extension' in c) &&
+					c.name === folderName,
 			) ?? null
 		if (!folder) return
 
@@ -369,14 +384,13 @@ export class KanbanView extends BasesView {
 		// next onDataUpdated MERGE_COLUMNS drops the record automatically
 	}
 
-	async addCard(
-		folderName: string,
-		name: string,
-	): Promise<void> {
+	async addCard(folderName: string, name: string): Promise<void> {
 		const folder =
 			this.columnRootFolder?.children.find(
 				(c): c is TFolder =>
-					'children' in c && !('extension' in c) && c.name === folderName,
+					'children' in c &&
+					!('extension' in c) &&
+					c.name === folderName,
 			) ?? null
 		if (!folder) return
 		const base = `${folder.path}/${name}`

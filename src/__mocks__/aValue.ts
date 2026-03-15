@@ -53,6 +53,18 @@ export class MockStringValue implements StringValue {
   looseEquals(other: Value): boolean { return this.value === other.toString(); }
 }
 
+export class MockTagValue {
+  static type = 'tag';
+  constructor(public value: string) {}
+  toString(): string { return this.value; }
+  isTruthy(): boolean { return this.value !== ''; }
+  equals(other: MockTagValue): boolean { return this.value === other.value; }
+  looseEquals(other: Value): boolean { return this.value === other.toString(); }
+  renderTo(el: HTMLElement): void { el.textContent = this.value; }
+}
+
+export const aTagValue = (tag: string): MockTagValue => new MockTagValue(tag);
+
 export const aValue = (primitive: unknown): Value => {
   if (typeof primitive === 'string') return new MockStringValue(primitive);
   if (typeof primitive === 'number') return new MockNumberValue(primitive);
