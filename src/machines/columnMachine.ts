@@ -5,7 +5,6 @@ export const columnMachine = setup({
 		context: {
 			name: string
 			draft: string
-			isCollapsed: boolean
 			newCardName: string
 		}
 		events:
@@ -13,13 +12,9 @@ export const columnMachine = setup({
 			| { type: 'SET_DRAFT'; draft: string }
 			| { type: 'CONFIRM' }
 			| { type: 'CANCEL' }
-			| { type: 'TOGGLE_COLLAPSE' }
 			| { type: 'ADD_CARD' }
 			| { type: 'SET_NEW_CARD_NAME'; name: string }
-		input: { name: string; isCollapsed: boolean }
-	},
-	guards: {
-		notCollapsed: ({ context }) => !context.isCollapsed,
+		input: { name: string }
 	},
 }).createMachine({
 	id: 'column',
@@ -27,19 +22,13 @@ export const columnMachine = setup({
 	context: ({ input }) => ({
 		name: input.name,
 		draft: input.name,
-		isCollapsed: input.isCollapsed,
 		newCardName: '',
 	}),
 	states: {
 		idle: {
 			on: {
-				RENAME: { target: 'editing', guard: 'notCollapsed' },
-				TOGGLE_COLLAPSE: {
-					actions: assign({
-						isCollapsed: ({ context }) => !context.isCollapsed,
-					}),
-				},
-				ADD_CARD: { target: 'addingCard', guard: 'notCollapsed' },
+				RENAME: { target: 'editing' },
+				ADD_CARD: { target: 'addingCard' },
 			},
 		},
 		editing: {

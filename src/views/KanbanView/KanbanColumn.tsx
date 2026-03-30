@@ -2,7 +2,6 @@ import type { SendFrom } from 'hooks/xstate'
 import { useXState } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
 import { Menu } from 'obsidian'
-import { useEffect } from 'preact/hooks'
 import type { Icon } from 'types/icons'
 import type { SnapshotFrom } from 'xstate'
 import { columnMachine } from '../../machines/columnMachine'
@@ -110,6 +109,8 @@ interface KanbanColumnHeaderProps {
 	folderName: string
 	icon: Icon | null
 	onIconChange: (icon: Icon | null) => void
+	isCollapsed: boolean
+	onToggleCollapse: () => void
 	snapshot: SnapshotFrom<typeof columnMachine>
 	send: SendFrom<typeof columnMachine>
 	onDragStart: () => void
@@ -120,6 +121,8 @@ function KanbanColumnHeader({
 	folderName,
 	icon,
 	onIconChange,
+	isCollapsed,
+	onToggleCollapse,
 	snapshot,
 	send,
 	onDragStart,
@@ -128,12 +131,9 @@ function KanbanColumnHeader({
 	const handleMenuClick = (evt: MouseEvent) => {
 		const menu = new Menu()
 		menu.addItem(item => {
-			const collapsed = snapshot.context.isCollapsed
-			item.setTitle(collapsed ? 'Expand' : 'Collapse')
-				.setIcon(collapsed ? 'chevron-down' : 'chevron-up')
-				.onClick(() => {
-					send({ type: 'TOGGLE_COLLAPSE' })
-				})
+			item.setTitle(isCollapsed ? 'Expand' : 'Collapse')
+				.setIcon(isCollapsed ? 'chevron-down' : 'chevron-up')
+				.onClick(onToggleCollapse)
 		})
 		menu.addItem(item => {
 			item.setTitle('Remove icon')
@@ -142,7 +142,7 @@ function KanbanColumnHeader({
 					onIconChange(null)
 				})
 		})
-		if (!snapshot.context.isCollapsed) {
+		if (!isCollapsed) {
 			menu.addItem(item => {
 				item.setTitle('Rename folder')
 					.setIcon('lucide-pencil')
@@ -165,7 +165,7 @@ function KanbanColumnHeader({
 			<IconButton
 				icon={icon}
 				onIconChange={onIconChange}
-				disabled={snapshot.context.isCollapsed}
+				disabled={isCollapsed}
 			/>
 			{snapshot.value === 'editing' ? (
 				<KanbanColumnRenameInput
@@ -283,12 +283,8 @@ export function KanbanColumn({
 	const view = useKanbanView()
 
 	const [snapshot, send] = useXState(columnMachine, {
-		input: { name: column.folder.name, isCollapsed },
+		input: { name: column.folder.name },
 	})
-
-	useEffect(() => {
-		onCollapse(snapshot.context.isCollapsed)
-	}, [snapshot.context.isCollapsed])
 
 	const handleRemoveColumn = () => {
 		if (column.entries.length === 0) {
@@ -307,7 +303,7 @@ export function KanbanColumn({
 
 	const dragClasses = [
 		'kanban-base-column',
-		snapshot.context.isCollapsed ? 'kanban-base-column--collapsed' : '',
+		isCollapsed ? 'kanban-base-column--collapsed' : '',
 		isDragging ? 'kanban-base-column--dragging' : '',
 		isDragTarget ? 'kanban-base-column--drop-target' : '',
 		isCardDragTarget ? 'kanban-base-column--card-drop-target' : '',
@@ -343,12 +339,14 @@ export function KanbanColumn({
 					folderName={column.folder.name}
 					icon={icon}
 					onIconChange={onIconChange}
+					isCollapsed={isCollapsed}
+					onToggleCollapse={() => onCollapse(!isCollapsed)}
 					snapshot={snapshot}
 					send={send}
 					onDragStart={() => onDragStart(dragIndex)}
 					onRemoveColumn={handleRemoveColumn}
 				/>
-				{!snapshot.context.isCollapsed && (
+				{!isCollapsed && (
 					<div class="kanban-base-column-body">
 						{column.entries.map(entry => (
 							<KanbanCard

@@ -120,6 +120,7 @@ export class KanbanView extends BasesView {
 	private columnRootFolder: TFolder | null = null
 	private boardActor: Actor<typeof boardMachine> | null = null
 	private cardDragActor: Actor<typeof cardDragMachine> | null = null
+	private isSyncingFromConfig = false
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
 		super(controller)
@@ -242,19 +243,18 @@ export class KanbanView extends BasesView {
 				input: { columns: initialRecords },
 			})
 
-			let prevColumns: ColumnRecord[] | null = null
-			this.boardActor.subscribe(snapshot => {
-				const cols = snapshot.context.columns
-				if (prevColumns !== null && cols !== prevColumns) {
-					this.config.set('boardState', JSON.stringify(cols))
-				}
-				prevColumns = cols
-			})
-
 			this.boardActor.start()
+
+			// Subscribe after start so the initial snapshot is not delivered
+			this.boardActor.subscribe(snapshot => {
+				if (this.isSyncingFromConfig) return
+				this.config.set('boardState', JSON.stringify(snapshot.context.columns))
+			})
 		} else {
 			// Subsequent calls: merge file-system state into actor
+			this.isSyncingFromConfig = true
 			this.boardActor.send({ type: 'MERGE_COLUMNS', folderNames })
+			this.isSyncingFromConfig = false
 		}
 
 		// Derive first column folder for createFileForView

@@ -5,21 +5,20 @@ import { columnMachine } from './columnMachine'
 describe('columnMachine', () => {
 	it('starts in idle state with correct context defaults', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		const snap = actor.getSnapshot()
 		expect(snap.value).toBe('idle')
 		expect(snap.context.name).toBe('Todo')
 		expect(snap.context.draft).toBe('Todo')
-		expect(snap.context.isCollapsed).toBe(false)
 		expect(snap.context.newCardName).toBe('')
 		actor.stop()
 	})
 
 	it('RENAME transitions to editing', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'RENAME' })
@@ -29,7 +28,7 @@ describe('columnMachine', () => {
 
 	it('SET_DRAFT updates draft in editing state', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'RENAME' })
@@ -40,7 +39,7 @@ describe('columnMachine', () => {
 
 	it('CONFIRM transitions to idle and updates name', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'RENAME' })
@@ -54,7 +53,7 @@ describe('columnMachine', () => {
 
 	it('CANCEL transitions to idle and restores draft to name', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'RENAME' })
@@ -66,21 +65,9 @@ describe('columnMachine', () => {
 		actor.stop()
 	})
 
-	it('TOGGLE_COLLAPSE flips isCollapsed', () => {
-		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
-		})
-		actor.start()
-		actor.send({ type: 'TOGGLE_COLLAPSE' })
-		expect(actor.getSnapshot().context.isCollapsed).toBe(true)
-		actor.send({ type: 'TOGGLE_COLLAPSE' })
-		expect(actor.getSnapshot().context.isCollapsed).toBe(false)
-		actor.stop()
-	})
-
 	it('ADD_CARD transitions to addingCard', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'ADD_CARD' })
@@ -90,7 +77,7 @@ describe('columnMachine', () => {
 
 	it('SET_NEW_CARD_NAME updates newCardName in addingCard state', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'ADD_CARD' })
@@ -101,7 +88,7 @@ describe('columnMachine', () => {
 
 	it('CONFIRM in addingCard stays in addingCard and resets newCardName', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'ADD_CARD' })
@@ -115,7 +102,7 @@ describe('columnMachine', () => {
 
 	it('CANCEL in addingCard transitions to idle and resets newCardName', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'ADD_CARD' })
@@ -129,7 +116,7 @@ describe('columnMachine', () => {
 
 	it('ADD_CARD is ignored in editing state', () => {
 		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: false },
+			input: { name: 'Todo' },
 		})
 		actor.start()
 		actor.send({ type: 'RENAME' })
@@ -138,23 +125,4 @@ describe('columnMachine', () => {
 		actor.stop()
 	})
 
-	it('RENAME is ignored when isCollapsed is true', () => {
-		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: true },
-		})
-		actor.start()
-		actor.send({ type: 'RENAME' })
-		expect(actor.getSnapshot().value).toBe('idle')
-		actor.stop()
-	})
-
-	it('ADD_CARD is ignored when isCollapsed is true', () => {
-		const actor = createActor(columnMachine, {
-			input: { name: 'Todo', isCollapsed: true },
-		})
-		actor.start()
-		actor.send({ type: 'ADD_CARD' })
-		expect(actor.getSnapshot().value).toBe('idle')
-		actor.stop()
-	})
 })

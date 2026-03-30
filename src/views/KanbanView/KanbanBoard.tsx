@@ -130,13 +130,13 @@ export function KanbanBoard({
 						boardSend({ type: 'SET_ICON', name: record.name, icon })
 					}
 					isCollapsed={record.isCollapsed}
-					onCollapse={isCollapsed =>
+					onCollapse={isCollapsed => {
 						boardSend({
 							type: 'SET_COLLAPSE',
 							name: record.name,
 							isCollapsed,
 						})
-					}
+					}}
 					otherColumnNames={previewColumns
 						.filter(x => x.record.name !== record.name)
 						.map(x => x.record.name)}
