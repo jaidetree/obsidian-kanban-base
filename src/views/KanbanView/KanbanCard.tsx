@@ -4,6 +4,7 @@ import { TargetedDragEvent } from 'preact'
 import { useState } from 'preact/hooks'
 import { useApp } from './AppContext'
 import { InlineForm } from './InlineForm'
+import { KanbanCardProperty } from './KanbanCardProperty'
 import { ObsidianIcon } from './ObsidianIcon'
 
 export function KanbanCard({
@@ -132,10 +133,10 @@ export function KanbanCard({
 
 					if (value === null) return null
 
+					return null
+
 					return (
-						<div key={propId} class="kanban-base-card-prop">
-							{value && value.toString()}
-						</div>
+						<KanbanCardProperty propId={propId} propValue={value} />
 					)
 				})}
 			</div>
