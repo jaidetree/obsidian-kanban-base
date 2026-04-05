@@ -386,9 +386,15 @@
 	color: var(--text-error);
 }
 
-.kanban-base-card-tags {
+.kanban-base-card__tags {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 4px;
-	margin-top: 4px;
+	gap: 0.25rem;
+	padding-left: 0;
+	margin-top: 0.25rem;
+	list-style: none;
+}
+.kanban-base-card__tag {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
 }

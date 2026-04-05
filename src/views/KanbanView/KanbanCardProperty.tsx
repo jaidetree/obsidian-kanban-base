@@ -21,8 +21,7 @@ function PropertyValue({ propValue }: { propValue: Value }) {
 	}
 
 	if (propValue instanceof TagValue) {
-		console.log(TagValue, propValue)
-		return <li>{propValue.toString()}</li>
+		return <li class="kanban-base-card__tag">{propValue.toString()}</li>
 	}
 
 	console.error(propValue)
@@ -32,6 +31,7 @@ function PropertyValue({ propValue }: { propValue: Value }) {
 }
 
 function ListProperty({ propValue }: { propValue: ListValue }) {
+	console.error('ListProperty', propValue)
 	const items: Value[] = []
 
 	for (let i = 0; i < propValue.length(); i += 1) {
@@ -41,7 +41,7 @@ function ListProperty({ propValue }: { propValue: ListValue }) {
 	}
 
 	return (
-		<ul>
+		<ul className="kanban-base-card__tags">
 			{items.map(itemValue => (
 				<PropertyValue propValue={itemValue} />
 			))}

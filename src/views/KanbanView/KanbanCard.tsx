@@ -133,8 +133,6 @@ export function KanbanCard({
 
 					if (value === null) return null
 
-					return null
-
 					return (
 						<KanbanCardProperty propId={propId} propValue={value} />
 					)
