@@ -1,4 +1,4 @@
-import type { BooleanValue, ListValue, NullValue, NumberValue, StringValue, Value } from "obsidian";
+import type { BooleanValue, LinkValue, ListValue, NullValue, NumberValue, StringValue, Value } from "obsidian";
 
 export class MockBooleanValue implements BooleanValue {
   static type = 'boolean';
@@ -49,6 +49,16 @@ export class MockStringValue implements StringValue {
   toString(): string { return this.value; }
   renderTo(el: HTMLElement) { el.textContent = this.value; }
   equals(other: MockStringValue): boolean { return this.value === other.value; }
+  isTruthy(): boolean { return this.value !== ''; }
+  looseEquals(other: Value): boolean { return this.value === other.toString(); }
+}
+
+export class MockLinkValue implements LinkValue {
+  static type = 'link';
+  constructor(public value: string) {}
+  toString(): string { return this.value; }
+  renderTo(el: HTMLElement) { el.textContent = this.value; }
+  equals(other: MockLinkValue): boolean { return this.value === other.value; }
   isTruthy(): boolean { return this.value !== ''; }
   looseEquals(other: Value): boolean { return this.value === other.toString(); }
 }

@@ -1,5 +1,6 @@
 import {
 	BasesPropertyId,
+	BooleanValue,
 	LinkValue,
 	ListValue,
 	NullValue,
@@ -9,41 +10,43 @@ import {
 	Value,
 } from 'obsidian'
 
-function parseLink(value: string) {}
-
-function LinkPropertyValue({ propValue }: { propValue: LinkValue }) {
-	return <li>{propValue.toString()}</li>
-}
-
 function PropertyValue({ propValue }: { propValue: Value }) {
 	if (propValue instanceof LinkValue) {
-		return <LinkPropertyValue propValue={propValue} />
+		return <li>{propValue.toString()}</li>
 	}
 
 	if (propValue instanceof TagValue) {
 		return <li class="kanban-base-card__tag">{propValue.toString()}</li>
 	}
 
-	console.error(propValue)
+	if (propValue instanceof StringValue) {
+		return <li>{propValue.toString()}</li>
+	}
+
+	if (propValue instanceof NumberValue) {
+		return <li>{propValue.toString()}</li>
+	}
+
+	if (propValue instanceof NullValue) {
+		return null
+	}
+
 	throw new Error(
 		`Could not display list property value for value ${propValue}`,
 	)
 }
 
 function ListProperty({ propValue }: { propValue: ListValue }) {
-	console.error('ListProperty', propValue)
 	const items: Value[] = []
 
 	for (let i = 0; i < propValue.length(); i += 1) {
-		const value = propValue.get(i)
-
-		items.push(value)
+		items.push(propValue.get(i))
 	}
 
 	return (
 		<ul className="kanban-base-card__tags">
-			{items.map(itemValue => (
-				<PropertyValue propValue={itemValue} />
+			{items.map((itemValue, i) => (
+				<PropertyValue key={i} propValue={itemValue} />
 			))}
 		</ul>
 	)
@@ -58,31 +61,49 @@ export function KanbanCardProperty({
 	propId,
 	propValue,
 }: KanbanCardPropertyProps) {
-	console.log({ propId, propValue })
-
 	switch (propId) {
 		default: {
 			if (propValue instanceof ListValue) {
 				return <ListProperty propValue={propValue} />
 			}
 
+			if (propValue instanceof TagValue) {
+				return <span class="kanban-base-card__tag">{propValue.toString()}</span>
+			}
+
 			if (propValue instanceof LinkValue) {
-				console.log('LinkView', propValue)
-				return null
+				return (
+					<span className="kanban-base-card__property-link">
+						{propValue.toString()}
+					</span>
+				)
 			}
 
 			if (propValue instanceof StringValue) {
-				console.log('StringValue', propValue)
-				return null
+				return (
+					<span className="kanban-base-card__property-text">
+						{propValue.toString()}
+					</span>
+				)
 			}
 
 			if (propValue instanceof NumberValue) {
-				console.log('NumberValue', propValue)
-				return null
+				return (
+					<span className="kanban-base-card__property-number">
+						{propValue.toString()}
+					</span>
+				)
+			}
+
+			if (propValue instanceof BooleanValue) {
+				return (
+					<span className="kanban-base-card__property-boolean">
+						{propValue.toString()}
+					</span>
+				)
 			}
 
 			if (propValue instanceof NullValue) {
-				console.log('NullValue', propValue)
 				return null
 			}
 
