@@ -392,9 +392,16 @@
 	gap: 0.25rem;
 	padding-left: 0;
 	margin-top: 0.25rem;
+	margin-bottom: 0.25rem;
 	list-style: none;
 }
 .kanban-base-card__tag {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.kanban-base-card__property {
+	display: block;
 	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
 }

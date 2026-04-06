@@ -12,7 +12,7 @@ import {
 
 function PropertyValue({ propValue }: { propValue: Value }) {
 	if (propValue instanceof LinkValue) {
-		return <li>{propValue.toString()}</li>
+		return <li class="kanban-base-card__item">{propValue.toString()}</li>
 	}
 
 	if (propValue instanceof TagValue) {
@@ -20,11 +20,11 @@ function PropertyValue({ propValue }: { propValue: Value }) {
 	}
 
 	if (propValue instanceof StringValue) {
-		return <li>{propValue.toString()}</li>
+		return <li class="kanban-base-card__item">{propValue.toString()}</li>
 	}
 
 	if (propValue instanceof NumberValue) {
-		return <li>{propValue.toString()}</li>
+		return <li class="kanban-base-card__item">{propValue.toString()}</li>
 	}
 
 	if (propValue instanceof NullValue) {
@@ -68,12 +68,16 @@ export function KanbanCardProperty({
 			}
 
 			if (propValue instanceof TagValue) {
-				return <span class="kanban-base-card__tag">{propValue.toString()}</span>
+				return (
+					<span class="kanban-base-card__property kanban-base-card__tag">
+						{propValue.toString()}
+					</span>
+				)
 			}
 
 			if (propValue instanceof LinkValue) {
 				return (
-					<span className="kanban-base-card__property-link">
+					<span className="kanban-base-card__property link">
 						{propValue.toString()}
 					</span>
 				)
@@ -81,7 +85,7 @@ export function KanbanCardProperty({
 
 			if (propValue instanceof StringValue) {
 				return (
-					<span className="kanban-base-card__property-text">
+					<span className="kanban-base-card__property text">
 						{propValue.toString()}
 					</span>
 				)
@@ -89,7 +93,7 @@ export function KanbanCardProperty({
 
 			if (propValue instanceof NumberValue) {
 				return (
-					<span className="kanban-base-card__property-number">
+					<span className="kanban-base-card__property number">
 						{propValue.toString()}
 					</span>
 				)
@@ -97,7 +101,7 @@ export function KanbanCardProperty({
 
 			if (propValue instanceof BooleanValue) {
 				return (
-					<span className="kanban-base-card__property-boolean">
+					<span className="kanban-base-card__property boolean">
 						{propValue.toString()}
 					</span>
 				)
