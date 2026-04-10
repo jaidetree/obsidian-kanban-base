@@ -428,7 +428,7 @@ existing settings or theme where applicable.
 #### Part II: Support Remaining Property Types
 
 - [x] Support a list of links
-- [ ] Support date fields
+- [x] Support date fields
 - [x] Support remaining types
 
 ### Phase IX: Group By Version
