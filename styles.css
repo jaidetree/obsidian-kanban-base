@@ -401,7 +401,13 @@
 }
 
 .kanban-base-card__property {
-	display: block;
+	display: flex;
+	gap: 0.25rem;
 	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
+}
+.kanban-base-card__property-label {
+	display: inline-block;
+	font-weight: 600;
+	color: inherit;
 }

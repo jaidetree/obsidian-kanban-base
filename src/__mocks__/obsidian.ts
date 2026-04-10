@@ -21,8 +21,8 @@ export type {
   ViewOption,
 } from 'obsidian';
 
-export { MockBooleanValue as BooleanValue, MockLinkValue as LinkValue, MockListValue as ListValue, MockNullValue as NullValue, MockNumberValue as NumberValue, MockStringValue as StringValue, MockTagValue as TagValue } from './aValue';
-export type { BooleanValue as BooleanValueType, LinkValue as LinkValueType, ListValue as ListValueType, NullValue as NullValueType, NumberValue as NumberValueType, StringValue as StringValueType } from 'obsidian';
+export { MockBooleanValue as BooleanValue, MockDateValue as DateValue, MockLinkValue as LinkValue, MockListValue as ListValue, MockNullValue as NullValue, MockNumberValue as NumberValue, MockStringValue as StringValue, MockTagValue as TagValue } from './aValue';
+export type { BooleanValue as BooleanValueType, DateValue as DateValueType, LinkValue as LinkValueType, ListValue as ListValueType, NullValue as NullValueType, NumberValue as NumberValueType, StringValue as StringValueType } from 'obsidian';
 
 export { MockTFile as TFile } from './aFile';
 export type { TFile as TFileType } from 'obsidian';
@@ -63,6 +63,11 @@ export class BasesView {
 export type { BasesView as BasesViewType } from 'obsidian';
 
 export const normalizePath = (path: string): string => path.replace(/\\/g, '/');
+
+export const parsePropertyId = (propertyId: string) => {
+  const dot = propertyId.indexOf('.');
+  return { type: propertyId.slice(0, dot), name: propertyId.slice(dot + 1) };
+};
 
 export const Keymap = {
   isModEvent: (evt: MouseEvent | KeyboardEvent): boolean =>

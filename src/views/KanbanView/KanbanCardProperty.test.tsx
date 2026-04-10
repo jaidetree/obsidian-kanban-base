@@ -3,6 +3,7 @@ import { render } from '@testing-library/preact'
 import { KanbanCardProperty } from './KanbanCardProperty'
 import {
 	MockBooleanValue,
+	MockDateValue,
 	MockLinkValue,
 	MockListValue,
 	MockNullValue,
@@ -12,67 +13,89 @@ import {
 } from '../../__mocks__/aValue'
 import type { BasesPropertyId } from 'obsidian'
 
-const propId = 'note.title' as BasesPropertyId
+function makeId(name: string): BasesPropertyId {
+	return `note.${name}` as BasesPropertyId
+}
+
+function labelOf(container: Element): string | null {
+	return container.querySelector('.kanban-base-card__property-label')?.textContent ?? null
+}
 
 describe('KanbanCardProperty', () => {
-	it('renders a string value', () => {
-		const { getByText } = render(
-			<KanbanCardProperty propId={propId} propValue={new MockStringValue('hello world')} />,
+	it('renders a string value with its label', () => {
+		const { container, getByText } = render(
+			<KanbanCardProperty propId={makeId('status')} propValue={new MockStringValue('active')} />,
 		)
-		expect(getByText('hello world')).toBeTruthy()
+		expect(getByText('active')).toBeTruthy()
+		expect(labelOf(container)).toBe('status')
 	})
 
-	it('renders a number value', () => {
-		const { getByText } = render(
-			<KanbanCardProperty propId={propId} propValue={new MockNumberValue(42)} />,
+	it('formats hyphenated property names as labels', () => {
+		const { container } = render(
+			<KanbanCardProperty propId={makeId('due-date')} propValue={new MockStringValue('soon')} />,
+		)
+		expect(labelOf(container)).toBe('due date')
+	})
+
+	it('renders a number value with its label', () => {
+		const { container, getByText } = render(
+			<KanbanCardProperty propId={makeId('priority')} propValue={new MockNumberValue(42)} />,
 		)
 		expect(getByText('42')).toBeTruthy()
+		expect(labelOf(container)).toBe('priority')
 	})
 
-	it('renders a boolean true value', () => {
-		const { getByText } = render(
-			<KanbanCardProperty propId={propId} propValue={new MockBooleanValue(true)} />,
+	it('renders a boolean value with its label', () => {
+		const { container, getByText } = render(
+			<KanbanCardProperty propId={makeId('done')} propValue={new MockBooleanValue(true)} />,
 		)
 		expect(getByText('true')).toBeTruthy()
+		expect(labelOf(container)).toBe('done')
 	})
 
-	it('renders a boolean false value', () => {
-		const { getByText } = render(
-			<KanbanCardProperty propId={propId} propValue={new MockBooleanValue(false)} />,
-		)
-		expect(getByText('false')).toBeTruthy()
-	})
-
-	it('renders a link value', () => {
-		const { getByText } = render(
-			<KanbanCardProperty propId={propId} propValue={new MockLinkValue('My Note')} />,
+	it('renders a link value with its label', () => {
+		const { container, getByText } = render(
+			<KanbanCardProperty propId={makeId('related')} propValue={new MockLinkValue('My Note')} />,
 		)
 		expect(getByText('My Note')).toBeTruthy()
+		expect(labelOf(container)).toBe('related')
 	})
 
-	it('renders a tag value', () => {
-		const { getByText } = render(
-			<KanbanCardProperty propId={propId} propValue={new MockTagValue('#todo')} />,
+	it('renders a tag value with its label', () => {
+		const { container } = render(
+			<KanbanCardProperty propId={makeId('category')} propValue={new MockTagValue('#todo')} />,
 		)
-		const el = getByText('#todo')
-		expect(el.className).toBe('kanban-base-card__tag')
+		expect(labelOf(container)).toBe('category')
+		expect(container.querySelector('.kanban-base-card__tag')?.textContent).toBe('#todo')
+	})
+
+	it('renders a date value using relative format with its label', () => {
+		const { container, getByText } = render(
+			<KanbanCardProperty
+				propId={makeId('due')}
+				propValue={new MockDateValue('2026-04-01', 'yesterday')}
+			/>,
+		)
+		expect(getByText('yesterday')).toBeTruthy()
+		expect(labelOf(container)).toBe('due')
 	})
 
 	it('renders nothing for a null value', () => {
 		const { container } = render(
-			<KanbanCardProperty propId={propId} propValue={new MockNullValue()} />,
+			<KanbanCardProperty propId={makeId('title')} propValue={new MockNullValue()} />,
 		)
 		expect(container.firstChild).toBeNull()
 	})
 
 	describe('list values', () => {
-		it('renders a list of tags', () => {
+		it('renders a list without a label', () => {
 			const { container } = render(
 				<KanbanCardProperty
-					propId={propId}
+					propId={makeId('tags')}
 					propValue={new MockListValue([new MockTagValue('#todo'), new MockTagValue('#urgent')])}
 				/>,
 			)
+			expect(labelOf(container)).toBeNull()
 			const tags = container.querySelectorAll('.kanban-base-card__tag')
 			expect(tags).toHaveLength(2)
 			expect(tags[0]!.textContent).toBe('#todo')
@@ -82,7 +105,7 @@ describe('KanbanCardProperty', () => {
 		it('renders a list of strings as list items', () => {
 			const { getByText } = render(
 				<KanbanCardProperty
-					propId={propId}
+					propId={makeId('items')}
 					propValue={new MockListValue([new MockStringValue('alpha'), new MockStringValue('beta')])}
 				/>,
 			)
@@ -93,7 +116,7 @@ describe('KanbanCardProperty', () => {
 		it('renders a list of numbers', () => {
 			const { getByText } = render(
 				<KanbanCardProperty
-					propId={propId}
+					propId={makeId('scores')}
 					propValue={new MockListValue([new MockNumberValue(1), new MockNumberValue(2)])}
 				/>,
 			)
@@ -104,7 +127,7 @@ describe('KanbanCardProperty', () => {
 		it('renders a list of links', () => {
 			const { getByText } = render(
 				<KanbanCardProperty
-					propId={propId}
+					propId={makeId('refs')}
 					propValue={new MockListValue([new MockLinkValue('Note A'), new MockLinkValue('Note B')])}
 				/>,
 			)
@@ -112,10 +135,26 @@ describe('KanbanCardProperty', () => {
 			expect(getByText('Note B')).toBeTruthy()
 		})
 
+		it('renders a list of dates using relative format', () => {
+			const { container } = render(
+				<KanbanCardProperty
+					propId={makeId('dates')}
+					propValue={new MockListValue([
+						new MockDateValue('2026-04-01', 'yesterday'),
+						new MockDateValue('2026-04-07', 'tomorrow'),
+					])}
+				/>,
+			)
+			const items = container.querySelectorAll('li')
+			expect(items).toHaveLength(2)
+			expect(items[0]!.textContent).toBe('yesterday')
+			expect(items[1]!.textContent).toBe('tomorrow')
+		})
+
 		it('skips null items in a list', () => {
 			const { container } = render(
 				<KanbanCardProperty
-					propId={propId}
+					propId={makeId('mixed')}
 					propValue={new MockListValue([new MockNullValue(), new MockStringValue('visible')])}
 				/>,
 			)

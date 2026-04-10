@@ -421,14 +421,14 @@ a list of tags when selected from the Base UI by rendering the associated tags
 with each card. Tags should render leveraging default styles from users'
 existing settings or theme where applicable.
 
-- [ ] Research and plan implementation to access selected properties from the
+- [x] Research and plan implementation to access selected properties from the
       Bases UI
-- [ ] Display the selected tags on each card
+- [x] Display the selected tags on each card
 
 #### Part II: Support Remaining Property Types
 
-- [ ] Support a list of links
+- [x] Support a list of links
 - [ ] Support date fields
-- [ ] Support remaining types
+- [x] Support remaining types
 
 ### Phase IX: Group By Version

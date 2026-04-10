@@ -1,4 +1,4 @@
-import type { BooleanValue, LinkValue, ListValue, NullValue, NumberValue, StringValue, Value } from "obsidian";
+import type { BooleanValue, DateValue, LinkValue, ListValue, NullValue, NumberValue, StringValue, Value } from "obsidian";
 
 export class MockBooleanValue implements BooleanValue {
   static type = 'boolean';
@@ -51,6 +51,17 @@ export class MockStringValue implements StringValue {
   equals(other: MockStringValue): boolean { return this.value === other.value; }
   isTruthy(): boolean { return this.value !== ''; }
   looseEquals(other: Value): boolean { return this.value === other.toString(); }
+}
+
+export class MockDateValue implements DateValue {
+  constructor(public iso: string, public relativeStr = 'today') {}
+  toString(): string { return this.iso; }
+  dateOnly(): MockDateValue { return new MockDateValue(this.iso.split('T')[0]!); }
+  relative(): string { return this.relativeStr; }
+  isTruthy(): boolean { return true; }
+  equals(other: MockDateValue): boolean { return this.iso === other.iso; }
+  looseEquals(other: MockDateValue): boolean { return this.iso === other.iso; }
+  renderTo(el: HTMLElement): void { el.textContent = this.iso; }
 }
 
 export class MockLinkValue implements LinkValue {

@@ -1,6 +1,7 @@
 import {
 	BasesPropertyId,
 	BooleanValue,
+	DateValue,
 	LinkValue,
 	ListValue,
 	NullValue,
@@ -8,7 +9,13 @@ import {
 	StringValue,
 	TagValue,
 	Value,
+	parsePropertyId,
 } from 'obsidian'
+
+function propertyLabel(propId: BasesPropertyId): string {
+	const { name } = parsePropertyId(propId)
+	return name.replace(/[-_]/g, ' ')
+}
 
 function PropertyValue({ propValue }: { propValue: Value }) {
 	if (propValue instanceof LinkValue) {
@@ -21,6 +28,10 @@ function PropertyValue({ propValue }: { propValue: Value }) {
 
 	if (propValue instanceof StringValue) {
 		return <li class="kanban-base-card__item">{propValue.toString()}</li>
+	}
+
+	if (propValue instanceof DateValue) {
+		return <li class="kanban-base-card__item">{propValue.relative()}</li>
 	}
 
 	if (propValue instanceof NumberValue) {
@@ -67,48 +78,64 @@ export function KanbanCardProperty({
 				return <ListProperty propValue={propValue} />
 			}
 
+			if (propValue instanceof NullValue) {
+				return null
+			}
+
+			const label = propertyLabel(propId)
+
 			if (propValue instanceof TagValue) {
 				return (
-					<span class="kanban-base-card__property kanban-base-card__tag">
-						{propValue.toString()}
-					</span>
+					<div class="kanban-base-card__property">
+						<span class="kanban-base-card__property-label">{label}</span>
+						<span class="kanban-base-card__tag">{propValue.toString()}</span>
+					</div>
 				)
 			}
 
 			if (propValue instanceof LinkValue) {
 				return (
-					<span className="kanban-base-card__property link">
-						{propValue.toString()}
-					</span>
+					<div class="kanban-base-card__property">
+						<span class="kanban-base-card__property-label">{label}</span>
+						<span class="kanban-base-card__property-value link">{propValue.toString()}</span>
+					</div>
+				)
+			}
+
+			if (propValue instanceof DateValue) {
+				return (
+					<div class="kanban-base-card__property">
+						<span class="kanban-base-card__property-label">{label}</span>
+						<span class="kanban-base-card__property-value date">{propValue.relative()}</span>
+					</div>
 				)
 			}
 
 			if (propValue instanceof StringValue) {
 				return (
-					<span className="kanban-base-card__property text">
-						{propValue.toString()}
-					</span>
+					<div class="kanban-base-card__property">
+						<span class="kanban-base-card__property-label">{label}</span>
+						<span class="kanban-base-card__property-value text">{propValue.toString()}</span>
+					</div>
 				)
 			}
 
 			if (propValue instanceof NumberValue) {
 				return (
-					<span className="kanban-base-card__property number">
-						{propValue.toString()}
-					</span>
+					<div class="kanban-base-card__property">
+						<span class="kanban-base-card__property-label">{label}</span>
+						<span class="kanban-base-card__property-value number">{propValue.toString()}</span>
+					</div>
 				)
 			}
 
 			if (propValue instanceof BooleanValue) {
 				return (
-					<span className="kanban-base-card__property boolean">
-						{propValue.toString()}
-					</span>
+					<div class="kanban-base-card__property">
+						<span class="kanban-base-card__property-label">{label}</span>
+						<span class="kanban-base-card__property-value boolean">{propValue.toString()}</span>
+					</div>
 				)
-			}
-
-			if (propValue instanceof NullValue) {
-				return null
 			}
 
 			throw new Error(
