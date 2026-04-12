@@ -43,7 +43,7 @@ function PropertyValue({ propValue }: { propValue: Value }) {
 	}
 
 	throw new Error(
-		`Could not display list property value for value ${propValue}`,
+		`Could not display list property value for value ${String(propValue)}`,
 	)
 }
 

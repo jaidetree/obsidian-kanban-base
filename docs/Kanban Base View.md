@@ -431,4 +431,223 @@ existing settings or theme where applicable.
 - [x] Support date fields
 - [x] Support remaining types
 
-### Phase IX: Group By Version
+### Phase IX: Property-Based Kanban View
+
+Introduce a second kanban view type — **Kanban** (`kanbanPropertyView`) — that
+uses a single-value text property (e.g. `status`) as the column source, driven
+by the Bases UI's native group-by selector. The existing folder-based view is
+renamed to **Kanban Folders** in the view-type selector. Shared UI components
+and machines are extracted into a common base so both views reuse as much code
+as possible.
+
+**Supported field types:** `text` and `status` (both are single-value string
+fields in Obsidian). Multi-value fields (`tags`, `multitext`) are explicitly out
+of scope — using them as the group-by field displays a friendly error.
+
+---
+
+#### Part I: Rename & Refactor Existing View
+
+- [ ] Rename the existing view's display label to **"Kanban Folders"** in the
+      `registerBasesView()` call — keep the internal ID `kanbanBase` unchanged to
+      avoid any config migration burden
+- [ ] Identify all components, machines, hooks, and utilities that are
+      view-agnostic and move them to a shared location (e.g.
+      `src/views/KanbanBase/`): `KanbanColumn`, `KanbanCard`, `InlineForm`,
+      `IconSuggestModal`, `RemoveColumnModal`, `columnMachine`, `iconMachine`,
+      `cardDragMachine`, `columnOrderMachine`, drag-handle styles, card styles,
+      column header styles (`FolderSuggestModal` stays with the folder view — it
+      is folder-specific)
+- [ ] Introduce a shared `KanbanView` base class (or shared context/props type)
+      that both `KanbanFolderView` and `KanbanPropertyView` extend — it owns the
+      board-level state: column order, column icons, column collapse states, card
+      properties display list, card size
+
+---
+
+#### Part II: Register New View Type
+
+- [ ] Register **"Kanban"** (`kanbanPropertyView`) via `registerBasesView()`
+      alongside the existing view
+- [ ] Declare view `options` for `kanbanPropertyView`:
+
+| Key                  | Type                  | Description                                                           |
+| -------------------- | --------------------- | --------------------------------------------------------------------- |
+| `cardProperties`     | `multitext`           | Properties displayed on each card (reused from folder view)           |
+| `columnOrder`        | `text` (JSON, hidden) | Serialised array of column value strings in display order             |
+| `columnIcons`        | `text` (JSON, hidden) | Map of column value → icon name                                       |
+| `columnStates`       | `text` (JSON, hidden) | Map of column value → `{ collapsed: boolean }`                        |
+| `userDefinedColumns` | `text` (JSON, hidden) | Ordered list of all user-created column values; persists indefinitely until explicitly deleted |
+| `defaultColumn`      | `text` (hidden)       | Column value targeted by the built-in "+" button; managed via a custom dropdown in the settings panel since column options are dynamic |
+| `showEmptyColumns`   | `toggle`              | Whether to show columns with no cards (default `true`)                |
+| `showUncategorized`  | `toggle`              | Whether to show the "Uncategorized" column (default `true`)           |
+| `cardSize`           | `slider`              | Column width (reused from folder view; default 220, min 50, max 800)  |
+
+  No `groupByProperty` option — the group-by field is configured through the
+  standard Bases UI group-by selector.
+
+---
+
+#### Part III: Property Picker & Column Derivation
+
+- [x] **Research spike — `BasesConfigFileView.groupBy` runtime shape**: ✅
+      **Result**: `(this.config as any).groupBy` is an object `{ property: string,
+      direction: "ASC" | "DESC" }`. Example: `{ property: "note.Status", direction:
+      "ASC" }`. The property ID uses Obsidian's `note.<key>` prefix format — strip
+      the `note.` prefix to get the raw frontmatter key (e.g. `"Status"`). This
+      is accessible at runtime; no fallback to `PropertyOption` is needed.
+      `groupedData` returns one `BasesEntryGroup` per distinct string value (all
+      with `hasKey: true` and a `StringValue` key), plus one final group with
+      `hasKey: false` for uncategorized cards (those with no value for the
+      group-by property).
+- [ ] Column source: consume `BasesQueryResult.groupedData` — each
+      `BasesEntryGroup` becomes one column, keyed by its `Value`. The group-by
+      property name is read from `(this.config as any).groupBy?.property` and the
+      frontmatter key is derived by stripping the `note.` prefix. The group-by
+      field is set by the user in the standard Bases UI; no custom property picker
+      is needed in the view options.
+- [ ] **Unsupported field type error**: inspect the key type of the first group
+      with `hasKey() === true`. If its key is anything other than a `StringValue`
+      (i.e. the field is a number, date, boolean, link, or multi-value list),
+      render a full-board error state instead of the column layout:
+      > "This property type is not supported by the Kanban view. Please select a
+      > text or status property as the group-by field. If you'd like support for
+      > this type, [open a GitHub issue](#)."
+- [ ] **No group-by configured**: if all groups have `hasKey() === false` (i.e.
+      `groupBy` is absent or its `property` is unset), show an empty-board prompt
+      instructing the user to set a group-by field in the Bases UI. Note:
+      distinguish this from the normal uncategorized group — when a group-by IS
+      set, the uncategorized group also has `hasKey() === false` but the other
+      groups have `hasKey() === true`; when no group-by is set, every group has
+      `hasKey() === false`.
+- [ ] Implement `deriveColumnsFromGroupedData(groups, userDefinedColumns)`:
+  - Collect column values from the non-null group keys (each is a `StringValue`)
+  - Merge in `userDefinedColumns` (preserves user-defined columns that have no
+    cards yet)
+  - Deduplicate and order by `columnOrder`; append unknowns at the end
+  - `userDefinedColumns` entries persist until the user explicitly deletes the
+    column — empty workflow columns (e.g. "Done") survive across sessions
+- [ ] Cards in the null-key group (`NullValue`) appear in the **"Uncategorized"**
+      column when `showUncategorized` is `true`, otherwise hidden
+- [ ] Empty columns (no matching cards) shown or hidden based on `showEmptyColumns`
+
+---
+
+#### Part IV: Card Movement (Writing Property Values)
+
+- [ ] Create `cardPropertyDragMachine` (`src/machines/cardPropertyDragMachine.ts`)
+      — a new XState machine mirroring `cardDragMachine`'s states
+      (`idle → dragging`) and events (`DRAG_START`, `DRAG_OVER`, `DROP`,
+      `CANCEL`) but with property-write semantics on `DROP` instead of
+      `app.vault.rename()`. Context: `{ filePath, sourceColumn, targetColumn,
+      groupByProperty }` where columns are string property values (or `null` for
+      Uncategorized) and `groupByProperty` is the raw frontmatter key derived by
+      stripping the `note.` prefix from `(this.config as any).groupBy.property`
+      (e.g. `"note.Status"` → `"Status"`) — passed in at `DRAG_START`.
+  - **Regular column → regular column**: write the target column's string value
+    to `groupByProperty` in the note's frontmatter, replacing the previous value
+  - **Uncategorized → regular column**: write the target column's string value
+    to `groupByProperty` (property was previously absent or empty)
+  - **Regular column → Uncategorized column**: delete the `groupByProperty` key
+    from the note's frontmatter entirely
+  - **Uncategorized → Uncategorized**: no-op
+  - Note: gating whether the Uncategorized column accepts drops (based on
+    `showUncategorized` / `showEmptyColumns`) is handled in the render layer by
+    not rendering it as a drop target — the machine itself does not enforce this
+- [ ] Property writes use `app.fileManager.processFrontMatter()` to update the
+      note's frontmatter without clobbering other fields
+- [ ] After a property write, the base query re-runs reactively and the board
+      updates (same pattern as the folder view's vault rename)
+
+---
+
+#### Part V: Column Management
+
+**Creating cards**
+- [ ] Each column has an inline "add card" button at the bottom (same as the
+      folder view). When the user confirms a card name, a new note is created and
+      the group-by property is written to its frontmatter with the column's string
+      value. The card appears in the column reactively once the base query
+      re-runs.
+- [ ] Cards created in the **Uncategorized column** are created with no property
+      value set — the group-by property key is omitted from frontmatter entirely,
+      leaving the card uncategorized.
+- [ ] The built-in Obsidian "+" button creates a new note in the column specified
+      by `defaultColumn` (pre-populating its property value). If `defaultColumn`
+      is unset, the first column in display order is used. If the first column is
+      Uncategorized, the note is created with no property value. The view settings
+      panel exposes a **"Default column"** dropdown listing all current column
+      names (including Uncategorized) so the user can change this.
+
+**Creating columns**
+- [ ] The "Add column" button prompts for a column name (value string). The new
+      value is appended to `userDefinedColumns` in the view config and immediately
+      appears as an (initially empty) column on the board. No file changes occur
+      at creation time — the value becomes available as a property value when a
+      card is dragged into or created within the column
+- [ ] A randomly selected default icon is assigned to the new column (same logic
+      as the folder view)
+
+**Renaming columns**
+- [ ] Renaming a column writes the new string value to the group-by property on
+      every card in that column via `app.fileManager.processFrontMatter()`, then
+      updates the column's key in `columnOrder`, `columnIcons`, `columnStates`,
+      and `userDefinedColumns`. Obsidian's property option suggestions are derived
+      dynamically from values present on notes, so no separate registry update is
+      needed.
+- [ ] If the renamed column is the current `defaultColumn`, update `defaultColumn`
+      to the new name.
+
+**Removing columns**
+- [ ] If the column is empty, remove it from `columnOrder`, `columnIcons`,
+      `columnStates`, and `userDefinedColumns` — the user explicitly chose to
+      delete it
+- [ ] If the column has cards, show a modal to choose a target column to move
+      them to (same pattern as the folder view's remove-column modal) — moving
+      here means writing the target column's string value to the group-by property
+      on each affected card via `app.fileManager.processFrontMatter()`.
+- [ ] If the removed column is the current `defaultColumn`, clear `defaultColumn`
+      so it falls back to the first column in display order.
+
+**Ordering & icons**
+- [ ] Column drag-to-reorder and icon assignment work identically to the folder
+      view, persisted via `columnOrder` and `columnIcons`
+
+**Collapse / expand**
+- [ ] Column collapse/expand works identically to the folder view, persisted via
+      `columnStates`
+
+**Card context menu**
+- [ ] Each card's ellipsis context menu (rename, delete, open, open in new tab)
+      is inherited unchanged from Phase VII — cards are still notes and all note
+      operations apply regardless of which kanban view type is active.
+
+---
+
+#### Part VI: Tests & Stories
+
+- [x] **Research spike**: ✅ `groupBy.property` is accessible at runtime (see Part III findings).
+- [ ] Vitest unit tests for `deriveColumnsFromGroupedData` covering: groups from
+      string-value keys, merge of `userDefinedColumns`, empty columns, null-key
+      (Uncategorized) group, unsupported key type detection
+- [ ] Vitest unit tests for `cardPropertyDragMachine` covering: regular→regular
+      (value replaced), Uncategorized→regular (value written), regular→Uncategorized
+      (property key deleted), Uncategorized→Uncategorized (no-op), cancel returns
+      to idle with no write
+- [ ] Vitest unit tests for rename-column logic: value updated across all
+      affected cards, `defaultColumn` updated when renamed column was the default
+- [ ] Vitest unit tests for remove-column logic: `defaultColumn` cleared when
+      removed column was the default
+- [ ] Storybook stories for: no group-by configured (prompt state), unsupported
+      field type (error state), board with status columns, Uncategorized column
+      visible, empty columns shown/hidden
+- [ ] Manual end-to-end tests: drag card between status columns (verify frontmatter
+      updated), drag card to Uncategorized (verify property key removed), drag
+      from Uncategorized to column (verify property written), create card in column
+      (verify frontmatter pre-populated), create card in Uncategorized (verify
+      property key absent), use "+" button with default column set (verify correct
+      column targeted), create column before any cards then create a card in it,
+      verify user-defined column persists when emptied, rename column (verify
+      frontmatter updated across all affected cards), remove non-empty column,
+      set group-by to an unsupported type (verify friendly error shown)
+
