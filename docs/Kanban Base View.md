@@ -448,17 +448,17 @@ of scope — using them as the group-by field displays a friendly error.
 
 #### Part I: Rename & Refactor Existing View
 
-- [ ] Rename the existing view's display label to **"Kanban Folders"** in the
+- [x] Rename the existing view's display label to **"Kanban Folders"** in the
       `registerBasesView()` call — keep the internal ID `kanbanBase` unchanged to
       avoid any config migration burden
-- [ ] Identify all components, machines, hooks, and utilities that are
+- [x] Identify all components, machines, hooks, and utilities that are
       view-agnostic and move them to a shared location (e.g.
       `src/views/KanbanBase/`): `KanbanColumn`, `KanbanCard`, `InlineForm`,
       `IconSuggestModal`, `RemoveColumnModal`, `columnMachine`, `iconMachine`,
       `cardDragMachine`, `columnOrderMachine`, drag-handle styles, card styles,
       column header styles (`FolderSuggestModal` stays with the folder view — it
       is folder-specific)
-- [ ] Introduce a shared `KanbanView` base class (or shared context/props type)
+- [x] Introduce a shared `KanbanView` base class (or shared context/props type)
       that both `KanbanFolderView` and `KanbanPropertyView` extend — it owns the
       board-level state: column order, column icons, column collapse states, card
       properties display list, card size
