@@ -1,5 +1,6 @@
 import { Plugin, requireApiVersion } from 'obsidian'
 import { KANBAN_FACTORY, KANBAN_ID, KANBAN_OPTIONS } from './views/KanbanFolderView'
+import { KANBAN_PROPERTY_FACTORY, KANBAN_PROPERTY_ID, KANBAN_PROPERTY_OPTIONS } from './views/KanbanPropertyView'
 
 export default class KanbanBasePlugin extends Plugin {
 	async onload() {
@@ -9,6 +10,12 @@ export default class KanbanBasePlugin extends Plugin {
 				icon: 'lucide-kanban-square',
 				factory: KANBAN_FACTORY,
 				options: KANBAN_OPTIONS,
+			})
+			this.registerBasesView(KANBAN_PROPERTY_ID, {
+				name: 'Kanban',
+				icon: 'lucide-kanban-square',
+				factory: KANBAN_PROPERTY_FACTORY,
+				options: KANBAN_PROPERTY_OPTIONS,
 			})
 		}
 		// Hot reload: if an existing KanbanView is already mounted (i.e. this is

@@ -467,13 +467,12 @@ of scope — using them as the group-by field displays a friendly error.
 
 #### Part II: Register New View Type
 
-- [ ] Register **"Kanban"** (`kanbanPropertyView`) via `registerBasesView()`
+- [x] Register **"Kanban"** (`kanbanPropertyView`) via `registerBasesView()`
       alongside the existing view
-- [ ] Declare view `options` for `kanbanPropertyView`:
+- [x] Declare view `options` for `kanbanPropertyView`:
 
 | Key                  | Type                  | Description                                                           |
 | -------------------- | --------------------- | --------------------------------------------------------------------- |
-| `cardProperties`     | `multitext`           | Properties displayed on each card (reused from folder view)           |
 | `columnOrder`        | `text` (JSON, hidden) | Serialised array of column value strings in display order             |
 | `columnIcons`        | `text` (JSON, hidden) | Map of column value → icon name                                       |
 | `columnStates`       | `text` (JSON, hidden) | Map of column value → `{ collapsed: boolean }`                        |
@@ -482,6 +481,9 @@ of scope — using them as the group-by field displays a friendly error.
 | `showEmptyColumns`   | `toggle`              | Whether to show columns with no cards (default `true`)                |
 | `showUncategorized`  | `toggle`              | Whether to show the "Uncategorized" column (default `true`)           |
 | `cardSize`           | `slider`              | Column width (reused from folder view; default 220, min 50, max 800)  |
+
+  Note: `cardProperties` was removed from both views — card property display is
+  handled by the native Bases UI property selector (`this.config.getOrder()`).
 
   No `groupByProperty` option — the group-by field is configured through the
   standard Bases UI group-by selector.
