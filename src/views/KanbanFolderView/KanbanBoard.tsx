@@ -1,16 +1,18 @@
 import { useActorRef, useActorState } from 'hooks/xstate'
-import type { BasesPropertyId, TFolder } from 'obsidian'
+import type { TFolder } from 'obsidian'
 import type { CSSProperties } from 'preact'
 import { useState } from 'preact/hooks'
 import { type Actor } from 'xstate'
 import { boardMachine } from '../../machines/boardMachine'
 import { cardDragMachine } from '../../machines/cardDragMachine'
-import { useApp } from './AppContext'
+import { useApp } from '../KanbanBase/AppContext'
+import { InlineForm, InlineFormProps } from '../KanbanBase/InlineForm'
+import { KanbanColumn } from '../KanbanBase/KanbanColumn'
+import { useKanbanView } from '../KanbanBase/KanbanViewContext'
+import type { IKanbanColumn } from '../KanbanBase/types'
 import { FolderSuggestModal } from './FolderSuggestModal'
-import { InlineForm, InlineFormProps } from './InlineForm'
-import { KanbanColumn } from './KanbanColumn'
-import type { IKanbanColumn } from './KanbanView'
-import { useKanbanView } from './KanbanViewContext'
+
+import type { BasesPropertyId } from 'obsidian'
 
 function EmptyBoard() {
 	const view = useKanbanView()
@@ -81,14 +83,14 @@ export function KanbanBoard({
 	const cardDragActorRef = useActorRef(cardDragActor)
 	const [cardDragSnapshot, cardDragSend] = useActorState(cardDragActorRef)
 
-	const handleCardDrop = (folderName: string) => {
+	const handleCardDrop = (columnName: string) => {
 		const snap = cardDragActorRef.current.getSnapshot()
 		if (
 			snap.value === 'dragging' &&
 			snap.context.dragFile !== null &&
-			snap.context.sourceColumn !== folderName
+			snap.context.sourceColumn !== columnName
 		) {
-			void view.dropCard(snap.context.dragFile, folderName)
+			void view.dropCard(snap.context.dragFile, columnName)
 		}
 		cardDragSend({ type: 'DROP' })
 	}
@@ -98,7 +100,7 @@ export function KanbanBoard({
 	const previewColumns = displayColumns
 		.map(record => ({
 			record,
-			column: columns.find(c => c.folder.name === record.name),
+			column: columns.find(c => c.name === record.name),
 		}))
 		.filter(
 			(x): x is { record: typeof x.record; column: IKanbanColumn } =>
@@ -122,7 +124,7 @@ export function KanbanBoard({
 		>
 			{previewColumns.map(({ record, column }, idx) => (
 				<KanbanColumn
-					key={column.folder.path}
+					key={column.name}
 					column={column}
 					cardProperties={cardProperties}
 					icon={record.icon}
@@ -159,21 +161,20 @@ export function KanbanBoard({
 						cardDragSend({
 							type: 'DRAG_START',
 							filePath,
-							sourceColumn: column.folder.name,
+							sourceColumn: column.name,
 						})
 					}
 					onCardDragOver={() =>
 						cardDragSend({
 							type: 'DRAG_OVER',
-							targetColumn: column.folder.name,
+							targetColumn: column.name,
 						})
 					}
-					onCardDrop={() => handleCardDrop(column.folder.name)}
+					onCardDrop={() => handleCardDrop(column.name)}
 					onCardDragCancel={() => cardDragSend({ type: 'CANCEL' })}
 					isCardDragTarget={
 						cardDragSnapshot.matches('dragging') &&
-						cardDragSnapshot.context.targetColumn ===
-							column.folder.name
+						cardDragSnapshot.context.targetColumn === column.name
 					}
 				/>
 			))}

@@ -1,10 +1,10 @@
 import type { BasesViewFactory, ViewOption } from 'obsidian';
-import { KanbanView } from './KanbanView';
+import { KanbanFolderView } from './KanbanFolderView';
 
 export const KANBAN_ID = 'kanban-base';
 
 export const KANBAN_FACTORY: BasesViewFactory = (controller, containerEl) =>
-	new KanbanView(controller, containerEl);
+	new KanbanFolderView(controller, containerEl);
 
 export const KANBAN_OPTIONS = (): ViewOption[] => [
 	{

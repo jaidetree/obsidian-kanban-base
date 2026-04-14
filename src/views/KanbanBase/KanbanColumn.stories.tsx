@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact-vite';
 import { userEvent, within } from 'storybook/test';
-import type { BasesPropertyId, TFolder } from 'obsidian';
+import type { BasesPropertyId } from 'obsidian';
 import { aFile } from '../../__mocks__/aFile';
 import { aBasesEntry } from '../../__mocks__/aBasesEntry';
 import { createMockApp } from '../../__mocks__/create-mock-app';
@@ -8,28 +8,15 @@ import { createMockKanbanViewActions } from '../../__mocks__/create-mock-kanban-
 import type { Icon } from '../../types/icons';
 import { AppContext } from './AppContext';
 import { KanbanViewContext } from './KanbanViewContext';
-import type { IKanbanColumn } from './KanbanView';
+import type { IKanbanColumn } from './types';
 import { KanbanColumn } from './KanbanColumn';
 
-function mockFolder(name: string, parent: TFolder | null = null): TFolder {
-	return {
-		name,
-		path: parent ? `${parent.path}/${name}` : name,
-		parent,
-		children: [],
-		isRoot: () => false,
-	} as unknown as TFolder;
-}
-
-function entryInFolder(folder: TFolder, basename: string, fm: Record<string, unknown> = {}) {
+function entryWithName(columnName: string, basename: string, fm: Record<string, unknown> = {}) {
 	return aBasesEntry(
-		{ file: aFile({ basename, path: `${folder.path}/${basename}.md`, parent: folder as never }) },
+		{ file: aFile({ basename, path: `${columnName}/${basename}.md` }) },
 		fm,
 	);
 }
-
-const root = mockFolder('Project');
-const todo = mockFolder('Todo', root);
 
 interface StoryProps {
 	column: IKanbanColumn;
@@ -76,11 +63,11 @@ const meta: Meta<typeof KanbanColumnStory> = {
 	tags: ['autodocs'],
 	args: {
 		column: {
-			folder: todo,
+			name: 'Todo',
 			entries: [
-				entryInFolder(todo, 'Task 1'),
-				entryInFolder(todo, 'Task 2'),
-				entryInFolder(todo, 'Task 3'),
+				entryWithName('Todo', 'Task 1'),
+				entryWithName('Todo', 'Task 2'),
+				entryWithName('Todo', 'Task 3'),
 			],
 		},
 		cardProperties: [],
@@ -98,7 +85,7 @@ export const Default: Story = {};
 
 export const Empty: Story = {
 	args: {
-		column: { folder: todo, entries: [] },
+		column: { name: 'Todo', entries: [] },
 	},
 };
 
@@ -106,11 +93,11 @@ export const WithProperties: Story = {
 	args: {
 		cardProperties: ['note.priority', 'note.status'],
 		column: {
-			folder: todo,
+			name: 'Todo',
 			entries: [
-				entryInFolder(todo, 'High priority task', { priority: 'High', status: 'Blocked' }),
-				entryInFolder(todo, 'Normal task', { priority: 'Low' }),
-				entryInFolder(todo, 'No properties task'),
+				entryWithName('Todo', 'High priority task', { priority: 'High', status: 'Blocked' }),
+				entryWithName('Todo', 'Normal task', { priority: 'Low' }),
+				entryWithName('Todo', 'No properties task'),
 			],
 		},
 	},
@@ -120,11 +107,11 @@ export const WithTags: Story = {
 	args: {
 		cardProperties: ['note.tags', 'note.priority'],
 		column: {
-			folder: todo,
+			name: 'Todo',
 			entries: [
-				entryInFolder(todo, 'Tagged task', { tags: ['project', 'urgent'], priority: 'High' }),
-				entryInFolder(todo, 'One tag', { tags: ['project'] }),
-				entryInFolder(todo, 'No tags task', { priority: 'Low' }),
+				entryWithName('Todo', 'Tagged task', { tags: ['project', 'urgent'], priority: 'High' }),
+				entryWithName('Todo', 'One tag', { tags: ['project'] }),
+				entryWithName('Todo', 'No tags task', { priority: 'Low' }),
 			],
 		},
 	},

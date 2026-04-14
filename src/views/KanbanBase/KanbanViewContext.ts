@@ -5,9 +5,9 @@ export interface IKanbanViewActions {
 	addColumn: (name: string) => Promise<void>
 	setColumnRoot: (folderPath: string) => void
 	renameColumn: (oldName: string, newName: string) => Promise<void>
-	removeColumn: (folderName: string, targetFolderName?: string) => Promise<void>
-	addCard: (folderName: string, name: string) => Promise<void>
-	dropCard: (filePath: string, targetFolderName: string) => Promise<void>
+	removeColumn: (columnName: string, targetColumnName?: string) => Promise<void>
+	addCard: (columnName: string, name: string) => Promise<void>
+	dropCard: (filePath: string, targetColumnName: string) => Promise<void>
 }
 
 export const KanbanViewContext = createContext<IKanbanViewActions | null>(null)

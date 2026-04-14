@@ -9,7 +9,7 @@ import { useApp } from './AppContext'
 import { IconSuggestModal } from './IconSuggestModal'
 import { InlineForm } from './InlineForm'
 import { KanbanCard } from './KanbanCard'
-import type { IKanbanColumn } from './KanbanView'
+import type { IKanbanColumn } from './types'
 import { useKanbanView } from './KanbanViewContext'
 import { ObsidianIcon } from './ObsidianIcon'
 import { RemoveColumnModal } from './RemoveColumnModal'
@@ -69,13 +69,13 @@ function KanbanColumnDragHandle({ onDragStart }: KanbanColumnDragHandleProps) {
 
 interface KanbanColumnRenameInputProps {
 	draft: string
-	folderName: string
+	columnName: string
 	send: SendFrom<typeof columnMachine>
 }
 
 function KanbanColumnRenameInput({
 	draft,
-	folderName,
+	columnName,
 	send,
 }: KanbanColumnRenameInputProps) {
 	const view = useKanbanView()
@@ -83,8 +83,8 @@ function KanbanColumnRenameInput({
 	function handleSubmit(_e: SubmitEvent) {
 		const newName = draft.trim()
 		send({ type: 'CONFIRM' })
-		if (newName && newName !== folderName) {
-			void view.renameColumn(folderName, newName)
+		if (newName && newName !== columnName) {
+			void view.renameColumn(columnName, newName)
 		}
 	}
 
@@ -106,7 +106,7 @@ function KanbanColumnRenameInput({
 }
 
 interface KanbanColumnHeaderProps {
-	folderName: string
+	columnName: string
 	icon: Icon | null
 	onIconChange: (icon: Icon | null) => void
 	isCollapsed: boolean
@@ -118,7 +118,7 @@ interface KanbanColumnHeaderProps {
 }
 
 function KanbanColumnHeader({
-	folderName,
+	columnName,
 	icon,
 	onIconChange,
 	isCollapsed,
@@ -144,14 +144,14 @@ function KanbanColumnHeader({
 		})
 		if (!isCollapsed) {
 			menu.addItem(item => {
-				item.setTitle('Rename folder')
+				item.setTitle('Rename column')
 					.setIcon('lucide-pencil')
 					.onClick(() => {
 						send({ type: 'RENAME' })
 					})
 			})
 			menu.addItem(item => {
-				item.setTitle('Remove folder')
+				item.setTitle('Remove column')
 					.setIcon('lucide-trash')
 					.onClick(onRemoveColumn)
 			})
@@ -170,7 +170,7 @@ function KanbanColumnHeader({
 			{snapshot.value === 'editing' ? (
 				<KanbanColumnRenameInput
 					draft={snapshot.context.draft}
-					folderName={folderName}
+					columnName={columnName}
 					send={send}
 				/>
 			) : (
@@ -190,19 +190,19 @@ function KanbanColumnHeader({
 interface KanbanColumnFooterProps {
 	snapshot: SnapshotFrom<typeof columnMachine>
 	send: SendFrom<typeof columnMachine>
-	folderName: string
+	columnName: string
 }
 
 function KanbanColumnFooter({
 	snapshot,
 	send,
-	folderName,
+	columnName,
 }: KanbanColumnFooterProps) {
 	const view = useKanbanView()
 
 	async function handleSubmit(_e: SubmitEvent) {
 		const name = snapshot.context.newCardName.trim()
-		if (name) await view.addCard(folderName, name)
+		if (name) await view.addCard(columnName, name)
 		send({ type: 'CONFIRM' })
 	}
 
@@ -283,19 +283,19 @@ export function KanbanColumn({
 	const view = useKanbanView()
 
 	const [snapshot, send] = useXState(columnMachine, {
-		input: { name: column.folder.name },
+		input: { name: column.name },
 	})
 
 	const handleRemoveColumn = () => {
 		if (column.entries.length === 0) {
-			void view.removeColumn(column.folder.name)
+			void view.removeColumn(column.name)
 		} else {
 			new RemoveColumnModal(
 				app,
-				column.folder.name,
+				column.name,
 				otherColumnNames,
 				targetName => {
-					void view.removeColumn(column.folder.name, targetName)
+					void view.removeColumn(column.name, targetName)
 				},
 			).open()
 		}
@@ -336,7 +336,7 @@ export function KanbanColumn({
 		>
 			<div class="kanban-base-column-container">
 				<KanbanColumnHeader
-					folderName={column.folder.name}
+					columnName={column.name}
 					icon={icon}
 					onIconChange={onIconChange}
 					isCollapsed={isCollapsed}
@@ -360,7 +360,7 @@ export function KanbanColumn({
 						<KanbanColumnFooter
 							snapshot={snapshot}
 							send={send}
-							folderName={column.folder.name}
+							columnName={column.name}
 						/>
 					</div>
 				)}

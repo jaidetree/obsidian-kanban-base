@@ -1,11 +1,11 @@
 import { Plugin, requireApiVersion } from 'obsidian'
-import { KANBAN_FACTORY, KANBAN_ID, KANBAN_OPTIONS } from './views/KanbanView'
+import { KANBAN_FACTORY, KANBAN_ID, KANBAN_OPTIONS } from './views/KanbanFolderView'
 
 export default class KanbanBasePlugin extends Plugin {
 	async onload() {
 		if (requireApiVersion('1.10.1')) {
 			this.registerBasesView(KANBAN_ID, {
-				name: 'Kanban',
+				name: 'Kanban Folders',
 				icon: 'lucide-kanban-square',
 				factory: KANBAN_FACTORY,
 				options: KANBAN_OPTIONS,

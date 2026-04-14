@@ -5,21 +5,21 @@ import { ObsidianIcon } from './ObsidianIcon'
 
 interface RemoveColumnModalFormProps {
 	modal: Modal
-	folderName: string
+	columnName: string
 	columnNames: string[]
 	onConfirm: (targetName: string) => void
 }
 
 function RemoveColumnModalForm({
 	modal,
-	folderName,
+	columnName,
 	columnNames,
 	onConfirm,
 }: RemoveColumnModalFormProps) {
 	function handleSubmit(e: TargetedSubmitEvent<HTMLFormElement>) {
 		e.preventDefault()
-		const form = e.currentTarget as HTMLFormElement & { targetFolder: HTMLSelectElement }
-		onConfirm(form.targetFolder.value)
+		const form = e.currentTarget as HTMLFormElement & { targetColumn: HTMLSelectElement }
+		onConfirm(form.targetColumn.value)
 		modal.close()
 	}
 
@@ -29,19 +29,19 @@ function RemoveColumnModalForm({
 			onSubmit={handleSubmit}
 		>
 			<p class="kanban-base-remove-column-modal__intro">
-				The column "{folderName}" still has some cards in it. Which
+				The column "{columnName}" still has some cards in it. Which
 				column should the items be moved to?
 			</p>
 			<label
 				for="kanban-base-remove-column-modal__select"
 				class="kanban-base-remove-column-modal__label"
 			>
-				Move cards from "{folderName}" to folder …
+				Move cards from "{columnName}" to column …
 			</label>
 			<select
 				id="kanban-base-remove-column-modal__select"
 				class="kanban-base-remove-column-modal__select"
-				name="targetFolder"
+				name="targetColumn"
 			>
 				{columnNames.map(column => (
 					<option value={column}>{column}</option>
@@ -50,7 +50,7 @@ function RemoveColumnModalForm({
 			<div class="kanban-base-remove-column-modal__actions">
 				<button class="kanban-base-remove-column-modal__confirm">
 					<ObsidianIcon iconId="lucide-trash" />
-					Remove Folder
+					Remove Column
 				</button>
 				<button
 					class="kanban-base-remove-column-modal__cancel"
@@ -68,7 +68,7 @@ function RemoveColumnModalForm({
 export class RemoveColumnModal extends Modal {
 	constructor(
 		app: App,
-		private readonly folderName: string,
+		private readonly columnName: string,
 		private readonly columnNames: string[],
 		private readonly onConfirm: (targetName: string) => void,
 	) {
@@ -77,11 +77,11 @@ export class RemoveColumnModal extends Modal {
 	}
 
 	onOpen() {
-		this.setTitle(`Remove Folder Column "${this.folderName}"`)
+		this.setTitle(`Remove Column "${this.columnName}"`)
 		render(
 			h(RemoveColumnModalForm, {
 				modal: this,
-				folderName: this.folderName,
+				columnName: this.columnName,
 				columnNames: this.columnNames,
 				onConfirm: this.onConfirm,
 			}),

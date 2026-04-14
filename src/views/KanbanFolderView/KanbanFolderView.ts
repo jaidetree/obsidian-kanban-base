@@ -5,14 +5,12 @@ import { createActor, type Actor } from 'xstate'
 import { KANBAN_ID } from '.'
 import { boardMachine, type ColumnRecord } from '../../machines/boardMachine'
 import { cardDragMachine } from '../../machines/cardDragMachine'
-import { AppContext } from './AppContext'
+import { AppContext } from '../KanbanBase/AppContext'
+import { KanbanViewContext } from '../KanbanBase/KanbanViewContext'
 import { KanbanBoard } from './KanbanBoard'
-import { KanbanViewContext } from './KanbanViewContext'
+import type { IKanbanFolderColumn } from './types'
 
-export interface IKanbanColumn {
-	folder: TFolder
-	entries: BasesEntry[]
-}
+export type { IKanbanFolderColumn }
 
 /**
  * Derive columns from a known root folder. All direct subfolders of `root`
@@ -22,7 +20,7 @@ export interface IKanbanColumn {
 export function deriveColumnsFromRoot(
 	root: TFolder,
 	entries: BasesEntry[],
-): IKanbanColumn[] {
+): IKanbanFolderColumn[] {
 	// Seed columns from all direct subfolder children, sorted alphabetically.
 	// Use duck-typing ('children' in c) rather than instanceof TFolder so this
 	// works in both production and test environments (where TFolder is a mock).
@@ -30,9 +28,9 @@ export function deriveColumnsFromRoot(
 		.filter((c): c is TFolder => 'children' in c && !('extension' in c))
 		.sort((a, b) => a.name.localeCompare(b.name))
 
-	const folderMap = new Map<string, IKanbanColumn>()
+	const folderMap = new Map<string, IKanbanFolderColumn>()
 	for (const folder of subfolders) {
-		folderMap.set(folder.path, { folder, entries: [] })
+		folderMap.set(folder.path, { name: folder.name, folder, entries: [] })
 	}
 
 	// Assign markdown entries to matching direct-child columns
@@ -52,7 +50,7 @@ export function deriveColumnsFromRoot(
  * parent folders. Only entries whose grandparent folder is the shared root are
  * included — entries nested deeper (subfolders) are excluded.
  */
-export function deriveColumns(entries: BasesEntry[]): IKanbanColumn[] {
+export function deriveColumns(entries: BasesEntry[]): IKanbanFolderColumn[] {
 	if (entries.length === 0) return []
 
 	// Only consider markdown files — ignore .base and other non-note files
@@ -62,14 +60,14 @@ export function deriveColumns(entries: BasesEntry[]): IKanbanColumn[] {
 	// Collect all immediate parent folders
 	const folderMap = new Map<
 		string,
-		{ folder: TFolder; entries: BasesEntry[] }
+		IKanbanFolderColumn
 	>()
 
 	for (const entry of mdEntries) {
 		const folder = entry.file.parent
 		if (!folder || folder.isRoot()) continue
 		if (!folderMap.has(folder.path)) {
-			folderMap.set(folder.path, { folder, entries: [] })
+			folderMap.set(folder.path, { name: folder.name, folder, entries: [] })
 		}
 		folderMap.get(folder.path)!.entries.push(entry)
 	}
@@ -83,37 +81,37 @@ export function deriveColumns(entries: BasesEntry[]): IKanbanColumn[] {
 	const root = shallowest.parent ?? null
 
 	// Only keep folders whose parent is the shared root (immediate children)
-	const columns: IKanbanColumn[] = []
-	for (const { folder, entries } of folderMap.values()) {
-		if (root === null || folder.parent?.path === root.path) {
-			columns.push({ folder, entries })
+	const columns: IKanbanFolderColumn[] = []
+	for (const col of folderMap.values()) {
+		if (root === null || col.folder.parent?.path === root.path) {
+			columns.push(col)
 		}
 	}
 
 	// Sort columns alphabetically by folder name (default order)
-	columns.sort((a, b) => a.folder.name.localeCompare(b.folder.name))
+	columns.sort((a, b) => a.name.localeCompare(b.name))
 
 	return columns
 }
 
 /**
- * Re-order columns according to a saved order array (folder names).
+ * Re-order columns according to a saved order array (column names).
  * Columns not present in the order are appended at the end in their
  * original (alphabetical) order.
  */
 export function applyColumnOrder(
-	columns: IKanbanColumn[],
+	columns: IKanbanFolderColumn[],
 	order: string[],
-): IKanbanColumn[] {
+): IKanbanFolderColumn[] {
 	if (order.length === 0) return columns
 	const ordered = order
-		.map(name => columns.find(c => c.folder.name === name))
-		.filter((c): c is IKanbanColumn => c !== undefined)
-	const unordered = columns.filter(c => !order.includes(c.folder.name))
+		.map(name => columns.find(c => c.name === name))
+		.filter((c): c is IKanbanFolderColumn => c !== undefined)
+	const unordered = columns.filter(c => !order.includes(c.name))
 	return [...ordered, ...unordered]
 }
 
-export class KanbanView extends BasesView {
+export class KanbanFolderView extends BasesView {
 	readonly type = KANBAN_ID
 	private readonly containerEl: HTMLElement
 	private firstColumnFolder: TFolder | null = null
@@ -193,7 +191,7 @@ export class KanbanView extends BasesView {
 			| string
 			| undefined
 
-		let rawColumns: IKanbanColumn[]
+		let rawColumns: IKanbanFolderColumn[]
 
 		if (!columnRootPath) {
 			this.columnRootFolder = null
@@ -201,7 +199,7 @@ export class KanbanView extends BasesView {
 		} else {
 			const resolved = this.app.vault.getFolderByPath(columnRootPath)
 			if (!resolved) {
-				// Folder was deleted — clear stale config and show promptt
+				// Folder was deleted — clear stale config and show prompt
 				this.config.set('columnRoot', '')
 				this.columnRootFolder = null
 				rawColumns = []
@@ -216,7 +214,7 @@ export class KanbanView extends BasesView {
 			this.cardDragActor.start()
 		}
 
-		const folderNames = rawColumns.map(c => c.folder.name)
+		const folderNames = rawColumns.map(c => c.name)
 
 		if (!this.boardActor) {
 			// First call: initialise actor from saved boardState
@@ -262,7 +260,7 @@ export class KanbanView extends BasesView {
 			this.boardActor.getSnapshot().context.displayColumns
 		const firstRecord = displayRecords[0]
 		this.firstColumnFolder = firstRecord
-			? (rawColumns.find(c => c.folder.name === firstRecord.name)
+			? (rawColumns.find(c => c.name === firstRecord.name)
 					?.folder ?? null)
 			: null
 
@@ -310,7 +308,7 @@ export class KanbanView extends BasesView {
 		this.config.set('columnRoot', folderPath)
 	}
 
-	async dropCard(filePath: string, targetFolderName: string): Promise<void> {
+	async dropCard(filePath: string, targetColumnName: string): Promise<void> {
 		const file = this.app.vault.getAbstractFileByPath(filePath)
 		if (!(file instanceof TFile)) return
 		const targetFolder =
@@ -318,7 +316,7 @@ export class KanbanView extends BasesView {
 				(c): c is TFolder =>
 					'children' in c &&
 					!('extension' in c) &&
-					c.name === targetFolderName,
+					c.name === targetColumnName,
 			) ?? null
 		if (!targetFolder) return
 		await this.app.vault.rename(file, targetFolder.path + '/' + file.name)
@@ -349,25 +347,25 @@ export class KanbanView extends BasesView {
 	}
 
 	async removeColumn(
-		folderName: string,
-		targetFolderName?: string,
+		columnName: string,
+		targetColumnName?: string,
 	): Promise<void> {
 		const folder =
 			this.columnRootFolder?.children.find(
 				(c): c is TFolder =>
 					'children' in c &&
 					!('extension' in c) &&
-					c.name === folderName,
+					c.name === columnName,
 			) ?? null
 		if (!folder) return
 
-		if (targetFolderName) {
+		if (targetColumnName) {
 			const targetFolder =
 				this.columnRootFolder?.children.find(
 					(c): c is TFolder =>
 						'children' in c &&
 						!('extension' in c) &&
-						c.name === targetFolderName,
+						c.name === targetColumnName,
 				) ?? null
 			if (!targetFolder) return
 			for (const child of [...folder.children]) {
@@ -384,13 +382,13 @@ export class KanbanView extends BasesView {
 		// next onDataUpdated MERGE_COLUMNS drops the record automatically
 	}
 
-	async addCard(folderName: string, name: string): Promise<void> {
+	async addCard(columnName: string, name: string): Promise<void> {
 		const folder =
 			this.columnRootFolder?.children.find(
 				(c): c is TFolder =>
 					'children' in c &&
 					!('extension' in c) &&
-					c.name === folderName,
+					c.name === columnName,
 			) ?? null
 		if (!folder) return
 		const base = `${folder.path}/${name}`

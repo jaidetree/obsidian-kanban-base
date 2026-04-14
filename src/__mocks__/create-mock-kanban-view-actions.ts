@@ -1,4 +1,4 @@
-import type { IKanbanViewActions } from '../views/KanbanView/KanbanViewContext'
+import type { IKanbanViewActions } from '../views/KanbanBase/KanbanViewContext'
 
 export function createMockKanbanViewActions(
 	overrides?: Partial<IKanbanViewActions>,
