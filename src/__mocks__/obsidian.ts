@@ -30,6 +30,9 @@ export type { TFile as TFileType } from 'obsidian';
 export { MockBasesEntry as BasesEntry } from './aBasesEntry';
 export type { BasesEntry as BasesEntryType } from 'obsidian';
 
+export { MockBasesEntryGroup as BasesEntryGroup } from './aBasesEntryGroup';
+export type { BasesEntryGroup as BasesEntryGroupType } from 'obsidian';
+
 import { createMockApp } from "./create-mock-app";
 
 export class Platform {

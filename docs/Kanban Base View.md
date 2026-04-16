@@ -502,36 +502,36 @@ of scope — using them as the group-by field displays a friendly error.
       with `hasKey: true` and a `StringValue` key), plus one final group with
       `hasKey: false` for uncategorized cards (those with no value for the
       group-by property).
-- [ ] Column source: consume `BasesQueryResult.groupedData` — each
+- [x] Column source: consume `BasesQueryResult.groupedData` — each
       `BasesEntryGroup` becomes one column, keyed by its `Value`. The group-by
       property name is read from `(this.config as any).groupBy?.property` and the
       frontmatter key is derived by stripping the `note.` prefix. The group-by
       field is set by the user in the standard Bases UI; no custom property picker
       is needed in the view options.
-- [ ] **Unsupported field type error**: inspect the key type of the first group
+      **Note**: group-by is detected from config (`groupBy?.property`), not data
+      shape — when group-by IS set but no notes have the property, `groupedData`
+      only contains the uncategorized group, which would otherwise look identical
+      to "no group-by". The `groupByConfigured` flag passed to
+      `deriveColumnsFromGroupedData` handles this case.
+- [x] **Unsupported field type error**: inspect the key type of the first group
       with `hasKey() === true`. If its key is anything other than a `StringValue`
       (i.e. the field is a number, date, boolean, link, or multi-value list),
       render a full-board error state instead of the column layout:
       > "This property type is not supported by the Kanban view. Please select a
-      > text or status property as the group-by field. If you'd like support for
-      > this type, [open a GitHub issue](#)."
-- [ ] **No group-by configured**: if all groups have `hasKey() === false` (i.e.
-      `groupBy` is absent or its `property` is unset), show an empty-board prompt
-      instructing the user to set a group-by field in the Bases UI. Note:
-      distinguish this from the normal uncategorized group — when a group-by IS
-      set, the uncategorized group also has `hasKey() === false` but the other
-      groups have `hasKey() === true`; when no group-by is set, every group has
-      `hasKey() === false`.
-- [ ] Implement `deriveColumnsFromGroupedData(groups, userDefinedColumns)`:
+      > text or status property as the group-by field."
+- [x] **No group-by configured**: if `(this.config as any).groupBy?.property` is
+      absent or unset, show an empty-board prompt instructing the user to set a
+      group-by field in the Bases UI.
+- [x] Implement `deriveColumnsFromGroupedData(groups, userDefinedColumns, groupByConfigured)`:
   - Collect column values from the non-null group keys (each is a `StringValue`)
   - Merge in `userDefinedColumns` (preserves user-defined columns that have no
     cards yet)
   - Deduplicate and order by `columnOrder`; append unknowns at the end
   - `userDefinedColumns` entries persist until the user explicitly deletes the
     column — empty workflow columns (e.g. "Done") survive across sessions
-- [ ] Cards in the null-key group (`NullValue`) appear in the **"Uncategorized"**
+- [x] Cards in the null-key group (`NullValue`) appear in the **"Uncategorized"**
       column when `showUncategorized` is `true`, otherwise hidden
-- [ ] Empty columns (no matching cards) shown or hidden based on `showEmptyColumns`
+- [x] Empty columns (no matching cards) shown or hidden based on `showEmptyColumns`
 
 ---
 
