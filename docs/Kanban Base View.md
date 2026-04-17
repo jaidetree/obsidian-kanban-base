@@ -537,7 +537,7 @@ of scope — using them as the group-by field displays a friendly error.
 
 #### Part IV: Card Movement (Writing Property Values)
 
-- [ ] Create `cardPropertyDragMachine` (`src/machines/cardPropertyDragMachine.ts`)
+- [x] Create `cardPropertyDragMachine` (`src/machines/cardPropertyDragMachine.ts`)
       — a new XState machine mirroring `cardDragMachine`'s states
       (`idle → dragging`) and events (`DRAG_START`, `DRAG_OVER`, `DROP`,
       `CANCEL`) but with property-write semantics on `DROP` instead of
@@ -556,9 +556,9 @@ of scope — using them as the group-by field displays a friendly error.
   - Note: gating whether the Uncategorized column accepts drops (based on
     `showUncategorized` / `showEmptyColumns`) is handled in the render layer by
     not rendering it as a drop target — the machine itself does not enforce this
-- [ ] Property writes use `app.fileManager.processFrontMatter()` to update the
+- [x] Property writes use `app.fileManager.processFrontMatter()` to update the
       note's frontmatter without clobbering other fields
-- [ ] After a property write, the base query re-runs reactively and the board
+- [x] After a property write, the base query re-runs reactively and the board
       updates (same pattern as the folder view's vault rename)
 
 ---
@@ -629,10 +629,10 @@ of scope — using them as the group-by field displays a friendly error.
 #### Part VI: Tests & Stories
 
 - [x] **Research spike**: ✅ `groupBy.property` is accessible at runtime (see Part III findings).
-- [ ] Vitest unit tests for `deriveColumnsFromGroupedData` covering: groups from
+- [x] Vitest unit tests for `deriveColumnsFromGroupedData` covering: groups from
       string-value keys, merge of `userDefinedColumns`, empty columns, null-key
       (Uncategorized) group, unsupported key type detection
-- [ ] Vitest unit tests for `cardPropertyDragMachine` covering: regular→regular
+- [x] Vitest unit tests for `cardPropertyDragMachine` covering: regular→regular
       (value replaced), Uncategorized→regular (value written), regular→Uncategorized
       (property key deleted), Uncategorized→Uncategorized (no-op), cancel returns
       to idle with no write
@@ -640,7 +640,7 @@ of scope — using them as the group-by field displays a friendly error.
       affected cards, `defaultColumn` updated when renamed column was the default
 - [ ] Vitest unit tests for remove-column logic: `defaultColumn` cleared when
       removed column was the default
-- [ ] Storybook stories for: no group-by configured (prompt state), unsupported
+- [x] Storybook stories for: no group-by configured (prompt state), unsupported
       field type (error state), board with status columns, Uncategorized column
       visible, empty columns shown/hidden
 - [ ] Manual end-to-end tests: drag card between status columns (verify frontmatter

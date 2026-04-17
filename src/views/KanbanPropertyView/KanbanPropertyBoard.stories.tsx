@@ -5,7 +5,7 @@ import { aFile } from '../../__mocks__/aFile'
 import { createMockApp } from '../../__mocks__/create-mock-app'
 import { createMockKanbanViewActions } from '../../__mocks__/create-mock-kanban-view-actions'
 import { boardMachine } from '../../machines/boardMachine'
-import { cardDragMachine } from '../../machines/cardDragMachine'
+import { cardPropertyDragMachine } from '../../machines/cardPropertyDragMachine'
 import { AppContext } from '../KanbanBase/AppContext'
 import { KanbanViewContext } from '../KanbanBase/KanbanViewContext'
 import {
@@ -27,7 +27,7 @@ const storyBoardActor = createActor(boardMachine, {
 })
 storyBoardActor.start()
 
-const cardDragStoryActor = createActor(cardDragMachine)
+const cardDragStoryActor = createActor(cardPropertyDragMachine)
 cardDragStoryActor.start()
 
 function entry(columnName: string, basename: string): ReturnType<typeof aBasesEntry> {
@@ -72,6 +72,7 @@ const meta: Meta<typeof KanbanPropertyBoardStory> = {
 		showUncategorized: true,
 		cardProperties: [],
 		cardSize: 220,
+		groupByProperty: 'Status',
 		boardActor: storyBoardActor,
 		cardDragActor: cardDragStoryActor,
 	},

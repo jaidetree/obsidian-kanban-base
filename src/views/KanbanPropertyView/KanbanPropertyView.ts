@@ -1,10 +1,10 @@
 import type { BasesPropertyId } from 'obsidian'
-import { BasesView, type QueryController } from 'obsidian'
+import { BasesView, TFile, type QueryController } from 'obsidian'
 import { h, render } from 'preact'
 import { createActor, type Actor } from 'xstate'
 import { KANBAN_PROPERTY_ID } from '.'
 import { boardMachine, type ColumnRecord } from '../../machines/boardMachine'
-import { cardDragMachine } from '../../machines/cardDragMachine'
+import { cardPropertyDragMachine } from '../../machines/cardPropertyDragMachine'
 import { AppContext } from '../KanbanBase/AppContext'
 import { KanbanViewContext } from '../KanbanBase/KanbanViewContext'
 import {
@@ -18,7 +18,7 @@ export class KanbanPropertyView extends BasesView {
 	readonly type = KANBAN_PROPERTY_ID
 	private readonly containerEl: HTMLElement
 	private boardActor: Actor<typeof boardMachine> | null = null
-	private cardDragActor: Actor<typeof cardDragMachine> | null = null
+	private cardDragActor: Actor<typeof cardPropertyDragMachine> | null = null
 	private isSyncingFromConfig = false
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
@@ -93,9 +93,14 @@ export class KanbanPropertyView extends BasesView {
 		const columnNames = rawColumns.map(c => c.name)
 
 		if (!this.cardDragActor) {
-			this.cardDragActor = createActor(cardDragMachine)
+			this.cardDragActor = createActor(cardPropertyDragMachine)
 			this.cardDragActor.start()
 		}
+
+		// Strip the "note." prefix that Bases adds to property IDs (e.g. "note.Status" → "Status")
+		const groupByPropertyKey = groupByProperty?.startsWith('note.')
+			? groupByProperty.slice(5)
+			: (groupByProperty ?? '')
 
 		if (!this.boardActor) {
 			// First board-mode call: initialise actor from saved boardState
@@ -152,6 +157,7 @@ export class KanbanPropertyView extends BasesView {
 						showUncategorized,
 						cardProperties,
 						cardSize,
+						groupByProperty: groupByPropertyKey,
 						boardActor: this.boardActor,
 						cardDragActor: this.cardDragActor,
 					}),
@@ -216,7 +222,20 @@ export class KanbanPropertyView extends BasesView {
 		// Part V stub
 	}
 
-	async dropCard(_filePath: string, _targetColumnName: string): Promise<void> {
-		// Part IV stub
+	async dropCard(filePath: string, targetColumnName: string): Promise<void> {
+		const groupByPropertyKey =
+			this.cardDragActor?.getSnapshot().context.groupByProperty ?? null
+		if (!groupByPropertyKey) return
+
+		const file = this.app.vault.getAbstractFileByPath(filePath)
+		if (!(file instanceof TFile)) return
+
+		await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+			if (targetColumnName === 'Uncategorized') {
+				delete fm[groupByPropertyKey]
+			} else {
+				fm[groupByPropertyKey] = targetColumnName
+			}
+		})
 	}
 }

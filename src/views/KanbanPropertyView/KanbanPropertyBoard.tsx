@@ -3,7 +3,7 @@ import type { BasesPropertyId } from 'obsidian'
 import type { CSSProperties } from 'preact'
 import type { Actor } from 'xstate'
 import { boardMachine } from '../../machines/boardMachine'
-import { cardDragMachine } from '../../machines/cardDragMachine'
+import { cardPropertyDragMachine } from '../../machines/cardPropertyDragMachine'
 import { KanbanColumn } from '../KanbanBase/KanbanColumn'
 import { useKanbanView } from '../KanbanBase/KanbanViewContext'
 import type { IKanbanPropertyColumn } from './types'
@@ -35,8 +35,9 @@ export interface KanbanPropertyBoardProps {
 	showUncategorized: boolean
 	cardProperties: BasesPropertyId[]
 	cardSize: number
+	groupByProperty: string
 	boardActor: Actor<typeof boardMachine>
-	cardDragActor: Actor<typeof cardDragMachine>
+	cardDragActor: Actor<typeof cardPropertyDragMachine>
 }
 
 export function KanbanPropertyBoard({
@@ -45,6 +46,7 @@ export function KanbanPropertyBoard({
 	showUncategorized,
 	cardProperties,
 	cardSize,
+	groupByProperty,
 	boardActor,
 	cardDragActor,
 }: KanbanPropertyBoardProps) {
@@ -124,6 +126,7 @@ export function KanbanPropertyBoard({
 							type: 'DRAG_START',
 							filePath,
 							sourceColumn: column.name,
+							groupByProperty,
 						})
 					}
 					onCardDragOver={() =>
