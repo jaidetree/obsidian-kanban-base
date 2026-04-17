@@ -20,6 +20,8 @@ export class KanbanPropertyView extends BasesView {
 	private boardActor: Actor<typeof boardMachine> | null = null
 	private cardDragActor: Actor<typeof cardPropertyDragMachine> | null = null
 	private isSyncingFromConfig = false
+	private groupByPropertyKey = ''
+	private cardFolderPath = ''
 
 	constructor(controller: QueryController, containerEl: HTMLElement) {
 		super(controller)
@@ -98,9 +100,12 @@ export class KanbanPropertyView extends BasesView {
 		}
 
 		// Strip the "note." prefix that Bases adds to property IDs (e.g. "note.Status" → "Status")
-		const groupByPropertyKey = groupByProperty?.startsWith('note.')
+		// Store on the instance so addCard / renameColumn / removeColumn can use it.
+		this.groupByPropertyKey = groupByProperty?.startsWith('note.')
 			? groupByProperty.slice(5)
 			: (groupByProperty ?? '')
+
+		this.cardFolderPath = (this.config.get('cardFolder') as string | null) ?? ''
 
 		if (!this.boardActor) {
 			// First board-mode call: initialise actor from saved boardState
@@ -157,7 +162,7 @@ export class KanbanPropertyView extends BasesView {
 						showUncategorized,
 						cardProperties,
 						cardSize,
-						groupByProperty: groupByPropertyKey,
+						groupByProperty: this.groupByPropertyKey,
 						boardActor: this.boardActor,
 						cardDragActor: this.cardDragActor,
 					}),
@@ -168,15 +173,27 @@ export class KanbanPropertyView extends BasesView {
 	}
 
 	async createFileForView(): Promise<void> {
-		// Part V will write the group-by property value; for now create at vault root.
-		const base = 'Untitled'
+		const displayColumns =
+			this.boardActor?.getSnapshot().context.displayColumns ?? []
+		const firstColumnName = displayColumns[0]?.name ?? null
+
+		const base = this.cardFolderPath
+			? `${this.cardFolderPath}/Untitled`
+			: 'Untitled'
 		let path = `${base}.md`
 		let i = 1
 		while (this.app.vault.getAbstractFileByPath(path)) {
 			path = `${base} ${i}.md`
 			i++
 		}
-		await this.app.vault.create(path, '')
+		const file = await this.app.vault.create(path, '')
+
+		if (firstColumnName && firstColumnName !== 'Uncategorized' && this.groupByPropertyKey) {
+			const key = this.groupByPropertyKey
+			await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+				fm[key] = firstColumnName
+			})
+		}
 	}
 
 	onunload(): void {
@@ -202,24 +219,93 @@ export class KanbanPropertyView extends BasesView {
 	}
 
 	async renameColumn(oldName: string, newName: string): Promise<void> {
-		// Part V: update property values on all cards in the column.
-		// For now just update the actor so the UI reflects the rename.
 		const trimmed = newName.trim()
 		if (!trimmed || trimmed === oldName) return
+
+		// Write the new value to every card in the column
+		if (this.groupByPropertyKey && oldName !== 'Uncategorized') {
+			const key = this.groupByPropertyKey
+			const group = this.data.groupedData.find(
+				g => g.hasKey() && g.key?.toString() === oldName,
+			)
+			if (group) {
+				for (const entry of group.entries) {
+					if (entry.file instanceof TFile) {
+						await this.app.fileManager.processFrontMatter(
+							entry.file,
+							(fm: Record<string, unknown>) => {
+								fm[key] = trimmed
+							},
+						)
+					}
+				}
+			}
+		}
+
+		// Update userDefinedColumns if this was a user-defined column
+		const current = this.parseUserDefinedColumns()
+		if (current.includes(oldName)) {
+			this.config.set(
+				'userDefinedColumns',
+				JSON.stringify(current.map(n => (n === oldName ? trimmed : n))),
+			)
+		}
+
 		this.boardActor?.send({ type: 'RENAME_COLUMN', oldName, newName: trimmed })
 	}
 
-	async removeColumn(columnName: string, _targetColumnName?: string): Promise<void> {
-		// Part V: move/delete cards. For now remove from userDefinedColumns only.
+	async removeColumn(columnName: string, targetColumnName?: string): Promise<void> {
+		// Move cards to target column if one was specified
+		if (targetColumnName !== undefined && this.groupByPropertyKey) {
+			const key = this.groupByPropertyKey
+			const group = this.data.groupedData.find(g =>
+				columnName === 'Uncategorized'
+					? !g.hasKey()
+					: g.hasKey() && g.key?.toString() === columnName,
+			)
+			if (group) {
+				for (const entry of group.entries) {
+					if (entry.file instanceof TFile) {
+						await this.app.fileManager.processFrontMatter(
+							entry.file,
+							(fm: Record<string, unknown>) => {
+								if (targetColumnName === 'Uncategorized') {
+									delete fm[key]
+								} else {
+									fm[key] = targetColumnName
+								}
+							},
+						)
+					}
+				}
+			}
+		}
+
 		const current = this.parseUserDefinedColumns()
 		this.config.set(
 			'userDefinedColumns',
 			JSON.stringify(current.filter(n => n !== columnName)),
 		)
+		// next onDataUpdated MERGE_COLUMNS drops the record from boardActor automatically
 	}
 
-	async addCard(_columnName: string, _name: string): Promise<void> {
-		// Part V stub
+	async addCard(columnName: string, name: string): Promise<void> {
+		const trimmed = name.trim()
+		if (!trimmed) return
+		const prefix = this.cardFolderPath ? `${this.cardFolderPath}/` : ''
+		let path = `${prefix}${trimmed}.md`
+		let i = 1
+		while (this.app.vault.getAbstractFileByPath(path)) {
+			path = `${prefix}${trimmed} ${i}.md`
+			i++
+		}
+		const file = await this.app.vault.create(path, '')
+		if (columnName !== 'Uncategorized' && this.groupByPropertyKey) {
+			const key = this.groupByPropertyKey
+			await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+				fm[key] = columnName
+			})
+		}
 	}
 
 	async dropCard(filePath: string, targetColumnName: string): Promise<void> {

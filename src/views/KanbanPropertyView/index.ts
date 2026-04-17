@@ -8,6 +8,12 @@ export const KANBAN_PROPERTY_FACTORY: BasesViewFactory = (controller, containerE
 
 export const KANBAN_PROPERTY_OPTIONS = (): ViewOption[] => [
 	{
+		type: 'folder',
+		key: 'cardFolder',
+		displayName: 'New card folder',
+		placeholder: 'Select a folder… (defaults to vault root)',
+	},
+	{
 		type: 'toggle',
 		key: 'showEmptyColumns',
 		displayName: 'Show empty columns',
