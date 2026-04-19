@@ -1,10 +1,10 @@
-import type { BasesViewFactory, ViewOption } from 'obsidian';
+import type { App, BasesViewFactory, ViewOption } from 'obsidian';
 import { KanbanPropertyView } from './KanbanPropertyView';
 
 export const KANBAN_PROPERTY_ID = 'kanban-property';
 
-export const KANBAN_PROPERTY_FACTORY: BasesViewFactory = (controller, containerEl) =>
-	new KanbanPropertyView(controller, containerEl);
+export const makeKanbanPropertyFactory = (app: App): BasesViewFactory =>
+	(controller, containerEl) => new KanbanPropertyView(controller, containerEl, app);
 
 export const KANBAN_PROPERTY_OPTIONS = (): ViewOption[] => [
 	{

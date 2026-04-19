@@ -16,19 +16,19 @@ Same root cause and fix as Issue 1.
 
 ---
 
-## Issue 3: "+" button does not write property to frontmatter
+## Issue 3: "+" button does not write property to frontmatter — KNOWN LIMITATION
 
 **Steps:** Click the Obsidian built-in "+" button with a named column as the first column.
-**Expected:** New note created with group-by property set to the first column's value (e.g. `Status: To Do`).
-**Actual:** A new note is created but the group-by property is not written to frontmatter.
+**Expected:** New note created with group-by property set to the first column's value and placed in the card folder.
+**Actual:** A new note is created but the group-by property is not written and it lands in the default folder.
+
+**Investigation:** `BasesView.createFileForView` is a utility we call, not a hook Bases invokes. A `vault.on('create')` listener in the constructor fires correctly and can write the property and move the file, but it also fires for any `Untitled` note created elsewhere in the vault — too broad to ship safely. No scoping mechanism exists to distinguish Bases-created files from user-created ones. The per-column "Add card" buttons are the recommended workflow.
 
 ---
 
-## Issue 4: No "Add column" button visible
+## ~~Issue 4: No "Add column" button visible~~ RESOLVED
 
-**Steps:** Open the Kanban property view with a valid group-by field configured.
-**Expected:** An "+ Add column" button appears after the last column.
-**Actual:** Button is not visible.
+Was not visible due to `npm run dev` not running. Button renders correctly once plugin is built.
 
 ---
 

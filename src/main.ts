@@ -1,6 +1,6 @@
 import { Plugin, requireApiVersion } from 'obsidian'
 import { KANBAN_FACTORY, KANBAN_ID, KANBAN_OPTIONS } from './views/KanbanFolderView'
-import { KANBAN_PROPERTY_FACTORY, KANBAN_PROPERTY_ID, KANBAN_PROPERTY_OPTIONS } from './views/KanbanPropertyView'
+import { makeKanbanPropertyFactory, KANBAN_PROPERTY_ID, KANBAN_PROPERTY_OPTIONS } from './views/KanbanPropertyView'
 
 export default class KanbanBasePlugin extends Plugin {
 	async onload() {
@@ -14,7 +14,7 @@ export default class KanbanBasePlugin extends Plugin {
 			this.registerBasesView(KANBAN_PROPERTY_ID, {
 				name: 'Kanban',
 				icon: 'lucide-kanban-square',
-				factory: KANBAN_PROPERTY_FACTORY,
+				factory: makeKanbanPropertyFactory(this.app),
 				options: KANBAN_PROPERTY_OPTIONS,
 			})
 		}

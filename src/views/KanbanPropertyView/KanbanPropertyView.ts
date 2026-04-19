@@ -1,4 +1,4 @@
-import type { BasesPropertyId } from 'obsidian'
+import type { App, BasesPropertyId } from 'obsidian'
 import { BasesView, TFile, type QueryController } from 'obsidian'
 import { h, render } from 'preact'
 import { createActor, type Actor } from 'xstate'
@@ -23,9 +23,14 @@ export class KanbanPropertyView extends BasesView {
 	private groupByPropertyKey = ''
 	private cardFolderPath = ''
 
-	constructor(controller: QueryController, containerEl: HTMLElement) {
+	constructor(
+		controller: QueryController,
+		containerEl: HTMLElement,
+		app: App,
+	) {
 		super(controller)
 		this.containerEl = containerEl
+		this.app = app
 	}
 
 	private parseBoardState(): ColumnRecord[] {
@@ -71,8 +76,8 @@ export class KanbanPropertyView extends BasesView {
 		// have that property value, groupedData only contains the uncategorized
 		// group (all hasKey() === false), which looks identical to "no group-by".
 		const groupByProperty = (
-			(this.config as unknown as { groupBy?: { property?: string } | null }).groupBy
-		)?.property
+			this.config as unknown as { groupBy?: { property?: string } | null }
+		).groupBy?.property
 		const groupByConfigured = !!groupByProperty
 
 		const result = deriveColumnsFromGroupedData(
@@ -105,7 +110,8 @@ export class KanbanPropertyView extends BasesView {
 			? groupByProperty.slice(5)
 			: (groupByProperty ?? '')
 
-		this.cardFolderPath = (this.config.get('cardFolder') as string | null) ?? ''
+		this.cardFolderPath =
+			(this.config.get('cardFolder') as string | null) ?? ''
 
 		if (!this.boardActor) {
 			// First board-mode call: initialise actor from saved boardState
@@ -145,7 +151,10 @@ export class KanbanPropertyView extends BasesView {
 		} else {
 			// Subsequent calls: merge live columns into existing actor
 			this.isSyncingFromConfig = true
-			this.boardActor.send({ type: 'MERGE_COLUMNS', folderNames: columnNames })
+			this.boardActor.send({
+				type: 'MERGE_COLUMNS',
+				folderNames: columnNames,
+			})
 			this.isSyncingFromConfig = false
 		}
 
@@ -177,22 +186,21 @@ export class KanbanPropertyView extends BasesView {
 			this.boardActor?.getSnapshot().context.displayColumns ?? []
 		const firstColumnName = displayColumns[0]?.name ?? null
 
-		const base = this.cardFolderPath
-			? `${this.cardFolderPath}/Untitled`
-			: 'Untitled'
-		let path = `${base}.md`
-		let i = 1
-		while (this.app.vault.getAbstractFileByPath(path)) {
-			path = `${base} ${i}.md`
-			i++
-		}
-		const file = await this.app.vault.create(path, '')
-
-		if (firstColumnName && firstColumnName !== 'Uncategorized' && this.groupByPropertyKey) {
+		if (
+			firstColumnName &&
+			firstColumnName !== 'Uncategorized' &&
+			this.groupByPropertyKey
+		) {
 			const key = this.groupByPropertyKey
-			await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
-				fm[key] = firstColumnName
-			})
+			const columnName = firstColumnName
+			await super.createFileForView(
+				undefined,
+				(fm: Record<string, unknown>) => {
+					fm[key] = columnName
+				},
+			)
+		} else {
+			await super.createFileForView()
 		}
 	}
 
@@ -210,7 +218,10 @@ export class KanbanPropertyView extends BasesView {
 		if (!trimmed) return
 		const current = this.parseUserDefinedColumns()
 		if (current.includes(trimmed)) return
-		this.config.set('userDefinedColumns', JSON.stringify([...current, trimmed]))
+		this.config.set(
+			'userDefinedColumns',
+			JSON.stringify([...current, trimmed]),
+		)
 		// boardMachine will append the column on the next MERGE_COLUMNS
 	}
 
@@ -251,10 +262,17 @@ export class KanbanPropertyView extends BasesView {
 			)
 		}
 
-		this.boardActor?.send({ type: 'RENAME_COLUMN', oldName, newName: trimmed })
+		this.boardActor?.send({
+			type: 'RENAME_COLUMN',
+			oldName,
+			newName: trimmed,
+		})
 	}
 
-	async removeColumn(columnName: string, targetColumnName?: string): Promise<void> {
+	async removeColumn(
+		columnName: string,
+		targetColumnName?: string,
+	): Promise<void> {
 		// Move cards to target column if one was specified
 		if (targetColumnName !== undefined && this.groupByPropertyKey) {
 			const key = this.groupByPropertyKey
@@ -302,9 +320,12 @@ export class KanbanPropertyView extends BasesView {
 		const file = await this.app.vault.create(path, '')
 		if (columnName !== 'Uncategorized' && this.groupByPropertyKey) {
 			const key = this.groupByPropertyKey
-			await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
-				fm[key] = columnName
-			})
+			await this.app.fileManager.processFrontMatter(
+				file,
+				(fm: Record<string, unknown>) => {
+					fm[key] = columnName
+				},
+			)
 		}
 	}
 
@@ -316,12 +337,15 @@ export class KanbanPropertyView extends BasesView {
 		const file = this.app.vault.getAbstractFileByPath(filePath)
 		if (!(file instanceof TFile)) return
 
-		await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
-			if (targetColumnName === 'Uncategorized') {
-				delete fm[groupByPropertyKey]
-			} else {
-				fm[groupByPropertyKey] = targetColumnName
-			}
-		})
+		await this.app.fileManager.processFrontMatter(
+			file,
+			(fm: Record<string, unknown>) => {
+				if (targetColumnName === 'Uncategorized') {
+					delete fm[groupByPropertyKey]
+				} else {
+					fm[groupByPropertyKey] = targetColumnName
+				}
+			},
+		)
 	}
 }

@@ -1,9 +1,11 @@
 import { useActorRef, useActorState } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
 import type { CSSProperties } from 'preact'
+import { useState } from 'preact/hooks'
 import type { Actor } from 'xstate'
 import { boardMachine } from '../../machines/boardMachine'
 import { cardPropertyDragMachine } from '../../machines/cardPropertyDragMachine'
+import { InlineForm } from '../KanbanBase/InlineForm'
 import { KanbanColumn } from '../KanbanBase/KanbanColumn'
 import { useKanbanView } from '../KanbanBase/KanbanViewContext'
 import type { IKanbanPropertyColumn } from './types'
@@ -29,6 +31,25 @@ export function UnsupportedTypeError() {
 	)
 }
 
+interface NewColumnProps {
+	onSubmit: (name: string) => void
+	onCancel: () => void
+}
+
+function NewColumn({ onSubmit, onCancel }: NewColumnProps) {
+	const [newName, setNewName] = useState('')
+	return (
+		<InlineForm
+			class="kanban-base-add-column"
+			placeholder="New column name"
+			value={newName}
+			onInput={e => setNewName(e.currentTarget.value)}
+			onCancel={onCancel}
+			onSubmit={_e => onSubmit(newName.trim())}
+		/>
+	)
+}
+
 export interface KanbanPropertyBoardProps {
 	columns: IKanbanPropertyColumn[]
 	showEmptyColumns: boolean
@@ -51,6 +72,7 @@ export function KanbanPropertyBoard({
 	cardDragActor,
 }: KanbanPropertyBoardProps) {
 	const view = useKanbanView()
+	const [addingColumn, setAddingColumn] = useState(false)
 
 	const boardActorRef = useActorRef(boardActor)
 	const [boardSnapshot, boardSend] = useActorState(boardActorRef)
@@ -140,6 +162,22 @@ export function KanbanPropertyBoard({
 					}
 				/>
 			))}
+			{addingColumn ? (
+				<NewColumn
+					onSubmit={name => {
+						if (name) void view.addColumn(name)
+						setAddingColumn(false)
+					}}
+					onCancel={() => setAddingColumn(false)}
+				/>
+			) : (
+				<button
+					class="kanban-base__add-column"
+					onClick={() => setAddingColumn(true)}
+				>
+					+ Add column
+				</button>
+			)}
 		</div>
 	)
 }

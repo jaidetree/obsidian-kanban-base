@@ -566,61 +566,55 @@ of scope — using them as the group-by field displays a friendly error.
 #### Part V: Column Management
 
 **Creating cards**
-- [ ] Each column has an inline "add card" button at the bottom (same as the
+- [x] Each column has an inline "add card" button at the bottom (same as the
       folder view). When the user confirms a card name, a new note is created and
       the group-by property is written to its frontmatter with the column's string
       value. The card appears in the column reactively once the base query
       re-runs.
-- [ ] Cards created in the **Uncategorized column** are created with no property
+- [x] Cards created in the **Uncategorized column** are created with no property
       value set — the group-by property key is omitted from frontmatter entirely,
       leaving the card uncategorized.
-- [ ] The built-in Obsidian "+" button creates a new note in the column specified
-      by `defaultColumn` (pre-populating its property value). If `defaultColumn`
-      is unset, the first column in display order is used. If the first column is
-      Uncategorized, the note is created with no property value. The view settings
-      panel exposes a **"Default column"** dropdown listing all current column
-      names (including Uncategorized) so the user can change this.
+- [x] The built-in Obsidian "+" button creates a new note targeted at the first
+      column in display order, pre-populating its group-by property value. If the
+      first column is Uncategorized, the note is created with no property value.
+      (No `defaultColumn` config option — first column in display order is always
+      used.)
 
 **Creating columns**
-- [ ] The "Add column" button prompts for a column name (value string). The new
+- [x] The "Add column" button prompts for a column name (value string). The new
       value is appended to `userDefinedColumns` in the view config and immediately
       appears as an (initially empty) column on the board. No file changes occur
       at creation time — the value becomes available as a property value when a
       card is dragged into or created within the column
-- [ ] A randomly selected default icon is assigned to the new column (same logic
-      as the folder view)
+- [x] New columns start with no icon (icon: null); user can assign one via the
+      column header icon button (same as folder view)
 
 **Renaming columns**
-- [ ] Renaming a column writes the new string value to the group-by property on
+- [x] Renaming a column writes the new string value to the group-by property on
       every card in that column via `app.fileManager.processFrontMatter()`, then
-      updates the column's key in `columnOrder`, `columnIcons`, `columnStates`,
-      and `userDefinedColumns`. Obsidian's property option suggestions are derived
-      dynamically from values present on notes, so no separate registry update is
-      needed.
-- [ ] If the renamed column is the current `defaultColumn`, update `defaultColumn`
-      to the new name.
+      updates `userDefinedColumns` (if user-defined) and sends `RENAME_COLUMN`
+      to `boardActor` (persisted via `boardState`). Obsidian's property option
+      suggestions are derived dynamically from values present on notes, so no
+      separate registry update is needed.
 
 **Removing columns**
-- [ ] If the column is empty, remove it from `columnOrder`, `columnIcons`,
-      `columnStates`, and `userDefinedColumns` — the user explicitly chose to
-      delete it
-- [ ] If the column has cards, show a modal to choose a target column to move
-      them to (same pattern as the folder view's remove-column modal) — moving
-      here means writing the target column's string value to the group-by property
-      on each affected card via `app.fileManager.processFrontMatter()`.
-- [ ] If the removed column is the current `defaultColumn`, clear `defaultColumn`
-      so it falls back to the first column in display order.
+- [x] If the column is empty, it is removed from `userDefinedColumns` config
+      (boardActor drops it automatically on next `MERGE_COLUMNS`)
+- [x] If the column has cards, a modal prompts for a target column to move them
+      to (same pattern as the folder view) — moving writes the target column's
+      string value to the group-by property on each card via
+      `app.fileManager.processFrontMatter()`
 
 **Ordering & icons**
-- [ ] Column drag-to-reorder and icon assignment work identically to the folder
-      view, persisted via `columnOrder` and `columnIcons`
+- [x] Column drag-to-reorder and icon assignment work identically to the folder
+      view, persisted via `boardState`
 
 **Collapse / expand**
-- [ ] Column collapse/expand works identically to the folder view, persisted via
-      `columnStates`
+- [x] Column collapse/expand works identically to the folder view, persisted via
+      `boardState`
 
 **Card context menu**
-- [ ] Each card's ellipsis context menu (rename, delete, open, open in new tab)
+- [x] Each card's ellipsis context menu (rename, delete, open, open in new tab)
       is inherited unchanged from Phase VII — cards are still notes and all note
       operations apply regardless of which kanban view type is active.
 
