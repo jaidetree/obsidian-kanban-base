@@ -32,22 +32,12 @@ Was not visible due to `npm run dev` not running. Button renders correctly once 
 
 ---
 
-## Issue 5: Renaming a column adds a duplicate with the old name
-
-**Steps:** Open column menu → Rename → enter a new name → confirm.
-**Expected:** Column is renamed in place (keeping its icon and position).
-**Actual:** A new column with the old name (no icon) is appended to the end of the board. The original column may also be renamed, resulting in a duplicate.
+## ~~Issue 5: Renaming a column adds a duplicate with the old name~~ RESOLVED
 
 ---
 
-## Issue 6: Could not test "Remove empty column"
-
-Blocked by Issue 4 — no way to create a user-defined column without the "Add column" button.
+## ~~Issue 6: Could not test "Remove empty column"~~ RESOLVED
 
 ---
 
-## Issue 7: Removing a non-empty column has no effect
-
-**Steps:** Open column menu → Remove → (modal may appear) → confirm.
-**Expected:** Column removed; cards moved to target column if one was selected.
-**Actual:** No visible change after confirming removal.
+## ~~Issue 7: Removing a non-empty column has no effect~~ RESOLVED
