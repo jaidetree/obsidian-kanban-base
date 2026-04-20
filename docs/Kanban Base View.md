@@ -630,9 +630,9 @@ of scope — using them as the group-by field displays a friendly error.
       (value replaced), Uncategorized→regular (value written), regular→Uncategorized
       (property key deleted), Uncategorized→Uncategorized (no-op), cancel returns
       to idle with no write
-- [ ] Vitest unit tests for rename-column logic: value updated across all
+- [x] Vitest unit tests for rename-column logic: value updated across all
       affected cards, `defaultColumn` updated when renamed column was the default
-- [ ] Vitest unit tests for remove-column logic: `defaultColumn` cleared when
+- [x] Vitest unit tests for remove-column logic: `defaultColumn` cleared when
       removed column was the default
 - [x] Storybook stories for: no group-by configured (prompt state), unsupported
       field type (error state), board with status columns, Uncategorized column
