@@ -7,6 +7,7 @@ import { boardMachine, type ColumnRecord } from '../../machines/boardMachine'
 import { cardDragMachine } from '../../machines/cardDragMachine'
 import { AppContext } from '../KanbanBase/AppContext'
 import { KanbanViewContext } from '../KanbanBase/KanbanViewContext'
+import { parseBoardState } from '../KanbanBase/parseBoardState'
 import { KanbanBoard } from './KanbanBoard'
 import type { IKanbanFolderColumn } from './types'
 
@@ -165,23 +166,6 @@ export class KanbanFolderView extends BasesView {
 		)
 	}
 
-	private parseBoardState(): ColumnRecord[] {
-		try {
-			const raw = this.config.get('boardState')
-			if (!raw || typeof raw !== 'string') return []
-			const parsed = JSON.parse(raw) as unknown
-			if (!Array.isArray(parsed)) return []
-			return parsed.filter(
-				(item): item is ColumnRecord =>
-					typeof item === 'object' &&
-					item !== null &&
-					typeof (item as Record<string, unknown>).name === 'string',
-			)
-		} catch {
-			return []
-		}
-	}
-
 	onDataUpdated(): void {
 		const cardProperties: BasesPropertyId[] = this.config.getOrder() ?? []
 		const cardSize = (this.config.get('cardSize') as number | null) ?? 220
@@ -218,7 +202,7 @@ export class KanbanFolderView extends BasesView {
 
 		if (!this.boardActor) {
 			// First call: initialise actor from saved boardState
-			const saved = this.parseBoardState()
+			const saved = parseBoardState(this.config)
 			const savedByName = new Map(saved.map(r => [r.name, r]))
 			const savedNames = saved.map(r => r.name)
 

@@ -7,6 +7,7 @@ import { boardMachine, type ColumnRecord } from '../../machines/boardMachine'
 import { cardPropertyDragMachine } from '../../machines/cardPropertyDragMachine'
 import { AppContext } from '../KanbanBase/AppContext'
 import { KanbanViewContext } from '../KanbanBase/KanbanViewContext'
+import { parseBoardState } from '../KanbanBase/parseBoardState'
 import {
 	KanbanPropertyBoard,
 	NoGroupByPrompt,
@@ -31,23 +32,6 @@ export class KanbanPropertyView extends BasesView {
 		super(controller)
 		this.containerEl = containerEl
 		this.app = app
-	}
-
-	private parseBoardState(): ColumnRecord[] {
-		try {
-			const raw = this.config.get('boardState')
-			if (!raw || typeof raw !== 'string') return []
-			const parsed = JSON.parse(raw) as unknown
-			if (!Array.isArray(parsed)) return []
-			return parsed.filter(
-				(item): item is ColumnRecord =>
-					typeof item === 'object' &&
-					item !== null &&
-					typeof (item as Record<string, unknown>).name === 'string',
-			)
-		} catch {
-			return []
-		}
 	}
 
 	private parseUserDefinedColumns(): string[] {
@@ -115,7 +99,7 @@ export class KanbanPropertyView extends BasesView {
 
 		if (!this.boardActor) {
 			// First board-mode call: initialise actor from saved boardState
-			const saved = this.parseBoardState()
+			const saved = parseBoardState(this.config)
 			const savedByName = new Map(saved.map(r => [r.name, r]))
 			const savedNames = saved.map(r => r.name)
 
@@ -330,8 +314,7 @@ export class KanbanPropertyView extends BasesView {
 	}
 
 	async dropCard(filePath: string, targetColumnName: string): Promise<void> {
-		const groupByPropertyKey =
-			this.cardDragActor?.getSnapshot().context.groupByProperty ?? null
+		const groupByPropertyKey = this.groupByPropertyKey
 		if (!groupByPropertyKey) return
 
 		const file = this.app.vault.getAbstractFileByPath(filePath)

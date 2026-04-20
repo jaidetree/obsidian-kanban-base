@@ -18,21 +18,6 @@ export default class KanbanBasePlugin extends Plugin {
 				options: KANBAN_PROPERTY_OPTIONS,
 			})
 		}
-		// Hot reload: if an existing KanbanView is already mounted (i.e. this is
-		// a hot reload, not a fresh start), trigger a full window reload so the
-		// new code takes effect cleanly without prototype patching.
-		this.app.workspace.iterateAllLeaves(leaf => {
-			if (leaf?.view?.getViewType?.() === 'bases') {
-				interface BasesViewInternal {
-					_children?: Array<{ view?: { type?: string } }>
-				}
-				const children = (leaf.view as unknown as BasesViewInternal)._children ?? []
-				const hasKanban = children.some(c => c.view?.type === KANBAN_ID)
-				if (hasKanban) {
-					// location.reload()
-				}
-			}
-		})
 	}
 
 	onunload() {}
