@@ -2,10 +2,10 @@
 
 - [x] **`normalizePath()`** — Normalize user-provided folder names through `normalizePath()` before passing to Vault APIs in the create-column modal.
 
-- [ ] **RTL support** — Audit CSS for directional properties (`margin-left`, `padding-right`, etc.) and replace with logical equivalents (`margin-inline-start`, `padding-inline-end`, etc.).
+- [x] **RTL support** — Margins are used for spacing, not text indentation. Flexbox handles column flow direction naturally. No logical property changes needed.
 
-- [ ] **Pop-out window handling** — Verify Preact renders target the correct document in pop-out windows. Check for any use of global `window`/`document` and replace with `activeWindow`/`activeDocument`.
+- [x] **Pop-out window handling** — N/A. All drag events are handled via Preact synthetic event props. No global `window`/`document` listeners. Preact renders into `containerEl` provided by Obsidian.
 
-- [ ] **TypeScript errors in TSX files** — `class` vs `className` type errors in `KanbanCardProperty.tsx`, `ObsidianIcon.tsx`, and `InlineForm.tsx`. Preact uses `class` but TypeScript is resolving React types. Fix the JSX type configuration.
+- [x] **TypeScript errors in TSX files** — Added `"types": []` to `tsconfig.json` to prevent `@types/react` from being auto-included, fixing IDE false positives where React's `className` types shadowed Preact's `class` types.
 
 - [ ] **Community plugin submission** — Open a PR against [obsidianmd/obsidian-releases](https://github.com/obsidianmd/obsidian-releases) adding an entry to `community-plugins.json`.
