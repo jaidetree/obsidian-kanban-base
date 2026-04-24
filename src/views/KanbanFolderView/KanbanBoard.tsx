@@ -64,6 +64,8 @@ export interface KanbanBoardProps {
 	columnRootSet: boolean
 	boardActor: Actor<typeof boardMachine>
 	cardDragActor: Actor<typeof cardDragMachine>
+	addCardTop: boolean
+	addCardBottom: boolean
 }
 
 export function KanbanBoard({
@@ -73,6 +75,8 @@ export function KanbanBoard({
 	columnRootSet,
 	boardActor,
 	cardDragActor,
+	addCardTop,
+	addCardBottom,
 }: KanbanBoardProps) {
 	const view = useKanbanView()
 	const [adding, setAdding] = useState(false)
@@ -176,6 +180,8 @@ export function KanbanBoard({
 						cardDragSnapshot.matches('dragging') &&
 						cardDragSnapshot.context.targetColumn === column.name
 					}
+					showAddTop={addCardTop}
+					showAddBottom={addCardBottom}
 				/>
 			))}
 			{!columnRootSet ? (

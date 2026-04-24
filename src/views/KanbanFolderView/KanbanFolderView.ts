@@ -169,6 +169,8 @@ export class KanbanFolderView extends BasesView {
 	onDataUpdated(): void {
 		const cardProperties: BasesPropertyId[] = this.config.getOrder() ?? []
 		const cardSize = (this.config.get('cardSize') as number | null) ?? 220
+		const addCardTop = (this.config.get('addCardTop') as boolean | null) ?? false
+		const addCardBottom = (this.config.get('addCardBottom') as boolean | null) ?? true
 
 		// Resolve columnRoot from config
 		const columnRootPath = this.config.get('columnRoot') as
@@ -262,6 +264,8 @@ export class KanbanFolderView extends BasesView {
 						columnRootSet: !!columnRootPath,
 						boardActor: this.boardActor,
 						cardDragActor: this.cardDragActor,
+						addCardTop,
+						addCardBottom,
 					}),
 				),
 			),

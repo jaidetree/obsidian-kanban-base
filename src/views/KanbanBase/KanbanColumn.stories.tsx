@@ -29,6 +29,8 @@ interface StoryProps {
 	isDragging?: boolean;
 	isDragTarget?: boolean;
 	isCardDragTarget?: boolean;
+	showAddTop?: boolean;
+	showAddBottom?: boolean;
 }
 
 function KanbanColumnStory({ cardProperties, dragIndex = 0, isDragging = false, isDragTarget = false, isCardDragTarget = false, ...rest }: StoryProps) {
@@ -151,5 +153,26 @@ export const AddingCard: Story = {
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement)
 		await userEvent.click(canvas.getByRole('button', { name: /add card/i }))
+	},
+};
+
+export const AddCardTopOnly: Story = {
+	args: {
+		showAddTop: true,
+		showAddBottom: false,
+	},
+};
+
+export const AddCardBothEnds: Story = {
+	args: {
+		showAddTop: true,
+		showAddBottom: true,
+	},
+};
+
+export const AddCardNone: Story = {
+	args: {
+		showAddTop: false,
+		showAddBottom: false,
 	},
 };

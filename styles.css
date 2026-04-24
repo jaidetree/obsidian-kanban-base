@@ -304,7 +304,7 @@
 .kanban-base-board:has(.kanban-base-no-root) {
 	justify-content: center;
 }
-.kanban-base-column__footer {
+.kanban-base-column__add-card {
 	margin-top: 0.25rem;
 }
 
@@ -334,7 +334,7 @@
 	padding: 0;
 }
 
-.kanban-base-column__footer .kanban-base-icon {
+.kanban-base-column__add-card .kanban-base-icon {
 	width: 0.825rem;
 	height: 0.825rem;
 }

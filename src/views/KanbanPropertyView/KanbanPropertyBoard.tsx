@@ -59,6 +59,8 @@ export interface KanbanPropertyBoardProps {
 	groupByProperty: string
 	boardActor: Actor<typeof boardMachine>
 	cardDragActor: Actor<typeof cardPropertyDragMachine>
+	addCardTop: boolean
+	addCardBottom: boolean
 }
 
 export function KanbanPropertyBoard({
@@ -70,6 +72,8 @@ export function KanbanPropertyBoard({
 	groupByProperty,
 	boardActor,
 	cardDragActor,
+	addCardTop,
+	addCardBottom,
 }: KanbanPropertyBoardProps) {
 	const view = useKanbanView()
 	const [addingColumn, setAddingColumn] = useState(false)
@@ -160,6 +164,8 @@ export function KanbanPropertyBoard({
 						cardDragSnapshot.matches('dragging') &&
 						cardDragSnapshot.context.targetColumn === column.name
 					}
+					showAddTop={addCardTop}
+					showAddBottom={addCardBottom}
 				/>
 			))}
 			{addingColumn ? (

@@ -187,17 +187,17 @@ function KanbanColumnHeader({
 	)
 }
 
-interface KanbanColumnFooterProps {
+interface KanbanColumnAddCardProps {
 	snapshot: SnapshotFrom<typeof columnMachine>
 	send: SendFrom<typeof columnMachine>
 	columnName: string
 }
 
-function KanbanColumnFooter({
+function KanbanColumnAddCard({
 	snapshot,
 	send,
 	columnName,
-}: KanbanColumnFooterProps) {
+}: KanbanColumnAddCardProps) {
 	const view = useKanbanView()
 
 	async function handleSubmit(_e: SubmitEvent) {
@@ -207,7 +207,7 @@ function KanbanColumnFooter({
 	}
 
 	return (
-		<div className="kanban-base-column__footer">
+		<div class="kanban-base-column__add-card">
 			{snapshot.value === 'addingCard' ? (
 				<InlineForm
 					placeholder="Card name"
@@ -225,7 +225,7 @@ function KanbanColumnFooter({
 				/>
 			) : (
 				<button
-					className="kanban-base-column__add"
+					class="kanban-base-column__add"
 					onClick={() => send({ type: 'ADD_CARD' })}
 				>
 					<ObsidianIcon iconId="lucide-plus-circle" />
@@ -256,6 +256,8 @@ interface KanbanColumnProps {
 	onCardDrop: () => void
 	onCardDragCancel: () => void
 	isCardDragTarget: boolean
+	showAddTop?: boolean
+	showAddBottom?: boolean
 }
 
 export function KanbanColumn({
@@ -278,11 +280,19 @@ export function KanbanColumn({
 	onCardDrop,
 	onCardDragCancel,
 	isCardDragTarget,
+	showAddTop = false,
+	showAddBottom = true,
 }: KanbanColumnProps) {
 	const app = useApp()
 	const view = useKanbanView()
 
+	// Primary machine: drives column rename (header) and top add-card (if shown)
 	const [snapshot, send] = useXState(columnMachine, {
+		input: { name: column.name },
+	})
+
+	// Independent machine for the bottom add-card so top and bottom don't share state
+	const [bottomSnapshot, bottomSend] = useXState(columnMachine, {
 		input: { name: column.name },
 	})
 
@@ -348,6 +358,13 @@ export function KanbanColumn({
 				/>
 				{!isCollapsed && (
 					<div class="kanban-base-column-body">
+						{showAddTop && (
+							<KanbanColumnAddCard
+								snapshot={snapshot}
+								send={send}
+								columnName={column.name}
+							/>
+						)}
 						{column.entries.map(entry => (
 							<KanbanCard
 								key={entry.file.path}
@@ -357,11 +374,13 @@ export function KanbanColumn({
 								onDragCancel={onCardDragCancel}
 							/>
 						))}
-						<KanbanColumnFooter
-							snapshot={snapshot}
-							send={send}
-							columnName={column.name}
-						/>
+						{showAddBottom && (
+							<KanbanColumnAddCard
+								snapshot={bottomSnapshot}
+								send={bottomSend}
+								columnName={column.name}
+							/>
+						)}
 					</div>
 				)}
 			</div>

@@ -53,6 +53,8 @@ export class KanbanPropertyView extends BasesView {
 			(this.config.get('showEmptyColumns') as boolean | null) ?? true
 		const showUncategorized =
 			(this.config.get('showUncategorized') as boolean | null) ?? true
+		const addCardTop = (this.config.get('addCardTop') as boolean | null) ?? false
+		const addCardBottom = (this.config.get('addCardBottom') as boolean | null) ?? true
 		const userDefinedColumns = this.parseUserDefinedColumns()
 
 		// Use the config as the primary signal for whether group-by is configured.
@@ -158,6 +160,8 @@ export class KanbanPropertyView extends BasesView {
 						groupByProperty: this.groupByPropertyKey,
 						boardActor: this.boardActor,
 						cardDragActor: this.cardDragActor,
+						addCardTop,
+						addCardBottom,
 					}),
 				),
 			),

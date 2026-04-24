@@ -23,6 +23,18 @@ export const KANBAN_OPTIONS = (): ViewOption[] => [
 		step: 10,
 	},
 	{
+		type: 'toggle',
+		key: 'addCardTop',
+		displayName: 'Add card button: top',
+		default: false,
+	},
+	{
+		type: 'toggle',
+		key: 'addCardBottom',
+		displayName: 'Add card button: bottom',
+		default: true,
+	},
+	{
 		type: 'text',
 		displayName: 'Column order',
 		key: 'columnOrder',
