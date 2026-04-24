@@ -3,9 +3,8 @@
 	"name": "Kanban Base",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "A Kanban base view based on folders",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Kanban views for Obsidian Bases, organized by folders or property values",
+	"author": "jaide",
+	"authorUrl": "https://github.com/jaidetree",
 	"isDesktopOnly": false
 }
