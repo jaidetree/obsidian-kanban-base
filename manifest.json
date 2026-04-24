@@ -2,8 +2,8 @@
 	"id": "kanban-base",
 	"name": "Kanban Base",
 	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Kanban views for Obsidian Bases, organized by folders or property values",
+	"minAppVersion": "1.10.1",
+	"description": "Add kanban views to Obsidian Bases, organized by folder structure or property values.",
 	"author": "jaide",
 	"authorUrl": "https://github.com/jaidetree",
 	"isDesktopOnly": false
