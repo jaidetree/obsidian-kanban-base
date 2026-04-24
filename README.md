@@ -13,7 +13,7 @@ Groups notes into columns by a text property value (e.g. a `status` field). Set
 the group-by field in the base to any text property and each unique value
 becomes a column. Changing a card's column updates that property on the note.
 
-![TODO: screenshot of Kanban property view](docs/screenshots/kanban-property.png)
+![screenshot of Kanban property view](docs/screenshots/kanban-property-view.jpg)
 
 ### Kanban Folders
 
@@ -22,7 +22,7 @@ subfolder of the base's root folder is a column. Moving a card between columns
 physically moves the file to that folder — Obsidian handles link updates
 automatically.
 
-![TODO: screenshot of Kanban folders view](docs/screenshots/kanban-folders.png)
+![screenshot of Kanban folders view](docs/screenshots/kanban-folder-view.jpg)
 
 ## How to install
 
