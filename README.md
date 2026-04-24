@@ -72,7 +72,7 @@ fit the direction of the project.
 ## AI Disclaimer
 
 Development was largely done with Claude. I'm a professional frontend engineer
-and have reviewed and tested everything.
+and have reviewed and tested this project during every phase of development.
 
 ## License
 
