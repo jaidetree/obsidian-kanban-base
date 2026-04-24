@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-kanban-base",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "A Kanban base view based on folders",
 	"main": "main.js",
 	"type": "module",
