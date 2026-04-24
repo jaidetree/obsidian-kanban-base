@@ -22,7 +22,7 @@ subfolder of the base's root folder is a column. Moving a card between columns
 physically moves the file to that folder — Obsidian handles link updates
 automatically.
 
-![screenshot of Kanban folders view](docs/screenshots/kanban-folder-view.jpg)
+![screenshot of Kanban folders view](docs/screenshots/kanban-folders-view.jpg)
 
 ## How to install
 
