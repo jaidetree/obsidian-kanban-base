@@ -1,5 +1,5 @@
 import type { BasesEntry, BasesPropertyId } from 'obsidian'
-import { BasesView, TFile, TFolder, type QueryController } from 'obsidian'
+import { BasesView, TFile, TFolder, normalizePath, type QueryController } from 'obsidian'
 import { h, render } from 'preact'
 import { createActor, type Actor } from 'xstate'
 import { KANBAN_ID } from '.'
@@ -379,7 +379,7 @@ export class KanbanFolderView extends BasesView {
 					c.name === columnName,
 			) ?? null
 		if (!folder) return
-		const base = `${folder.path}/${name}`
+		const base = normalizePath(`${folder.path}/${name}`)
 		let path = `${base}.md`
 		let i = 1
 		while (this.app.vault.getAbstractFileByPath(path)) {
@@ -396,7 +396,7 @@ export class KanbanFolderView extends BasesView {
 		const rootPath = !this.columnRootFolder.isRoot()
 			? this.columnRootFolder.path
 			: ''
-		const folderPath = rootPath ? `${rootPath}/${trimmed}` : trimmed
+		const folderPath = normalizePath(rootPath ? `${rootPath}/${trimmed}` : trimmed)
 
 		await this.app.vault.createFolder(folderPath)
 		// next onDataUpdated MERGE_COLUMNS appends the new record automatically
