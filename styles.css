@@ -7,8 +7,9 @@
 	align-items: flex-start;
 	gap: 8px;
 	padding: 8px;
-	height: 100%;
+	min-height: 100%;
 	overflow-x: auto;
+	overflow-y: auto;
 	box-sizing: border-box;
 }
 
@@ -310,7 +311,6 @@
 
 .kanban-base-inline-form {
 	display: flex;
-	flex: 1 0;
 	flex-flow: row nowrap;
 	gap: 0.25rem;
 }
@@ -332,6 +332,9 @@
 .kanban-base-inline-form__cancel {
 	width: 1.875rem;
 	padding: 0;
+}
+.kanban-base-column-header .kanban-base-inline-form {
+	flex: 1 0;
 }
 
 .kanban-base-column__add-card .kanban-base-icon {
