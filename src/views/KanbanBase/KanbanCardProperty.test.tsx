@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/preact'
-import { KanbanCardProperty } from './KanbanCardProperty'
+import { KanbanCardProperty, formatDate } from './KanbanCardProperty'
 import {
 	MockBooleanValue,
 	MockDateValue,
@@ -69,14 +69,15 @@ describe('KanbanCardProperty', () => {
 		expect(container.querySelector('.kanban-base-card__tag')?.textContent).toBe('#todo')
 	})
 
-	it('renders a date value using relative format with its label', () => {
+	it('renders a date value using locale format with its label', () => {
+		const dateValue = new MockDateValue('2026-04-01', 'yesterday')
 		const { container, getByText } = render(
 			<KanbanCardProperty
 				propId={makeId('due')}
-				propValue={new MockDateValue('2026-04-01', 'yesterday')}
+				propValue={dateValue}
 			/>,
 		)
-		expect(getByText('yesterday')).toBeTruthy()
+		expect(getByText(formatDate(dateValue))).toBeTruthy()
 		expect(labelOf(container)).toBe('due')
 	})
 
@@ -135,20 +136,19 @@ describe('KanbanCardProperty', () => {
 			expect(getByText('Note B')).toBeTruthy()
 		})
 
-		it('renders a list of dates using relative format', () => {
+		it('renders a list of dates using locale format', () => {
+			const date1 = new MockDateValue('2026-04-01', 'yesterday')
+			const date2 = new MockDateValue('2026-04-07', 'tomorrow')
 			const { container } = render(
 				<KanbanCardProperty
 					propId={makeId('dates')}
-					propValue={new MockListValue([
-						new MockDateValue('2026-04-01', 'yesterday'),
-						new MockDateValue('2026-04-07', 'tomorrow'),
-					])}
+					propValue={new MockListValue([date1, date2])}
 				/>,
 			)
 			const items = container.querySelectorAll('li')
 			expect(items).toHaveLength(2)
-			expect(items[0]!.textContent).toBe('yesterday')
-			expect(items[1]!.textContent).toBe('tomorrow')
+			expect(items[0]!.textContent).toBe(formatDate(date1))
+			expect(items[1]!.textContent).toBe(formatDate(date2))
 		})
 
 		it('skips null items in a list', () => {

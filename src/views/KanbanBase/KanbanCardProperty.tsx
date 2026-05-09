@@ -17,6 +17,29 @@ function propertyLabel(propId: BasesPropertyId): string {
 	return name.replace(/[-_]/g, ' ')
 }
 
+export function formatDate(dateValue: DateValue): string {
+	const iso = dateValue.toString()
+	const hasTime = iso.includes('T')
+	// Append local midnight to avoid UTC-to-local shift on date-only strings
+	const date = hasTime ? new Date(iso) : new Date(iso + 'T00:00:00')
+
+	if (hasTime) {
+		return date.toLocaleString(undefined, {
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric',
+			hour: 'numeric',
+			minute: '2-digit',
+		})
+	}
+
+	return date.toLocaleDateString(undefined, {
+		month: 'long',
+		day: 'numeric',
+		year: 'numeric',
+	})
+}
+
 function PropertyValue({ propValue }: { propValue: Value }) {
 	if (propValue instanceof LinkValue) {
 		return <li class="kanban-base-card__item">{propValue.toString()}</li>
@@ -31,7 +54,7 @@ function PropertyValue({ propValue }: { propValue: Value }) {
 	}
 
 	if (propValue instanceof DateValue) {
-		return <li class="kanban-base-card__item">{propValue.relative()}</li>
+		return <li class="kanban-base-card__item">{formatDate(propValue)}</li>
 	}
 
 	if (propValue instanceof NumberValue) {
@@ -106,7 +129,7 @@ export function KanbanCardProperty({
 				return (
 					<div class="kanban-base-card__property">
 						<span class="kanban-base-card__property-label">{label}</span>
-						<span class="kanban-base-card__property-value date">{propValue.relative()}</span>
+						<span class="kanban-base-card__property-value date">{formatDate(propValue)}</span>
 					</div>
 				)
 			}
