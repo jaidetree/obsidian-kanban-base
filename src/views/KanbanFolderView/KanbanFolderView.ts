@@ -323,15 +323,17 @@ export class KanbanFolderView extends BasesView {
 			) ?? null
 		if (!folder) return
 
-		const parent = folder.parent
-		const parentPath = parent && !parent.isRoot() ? parent.path + '/' : ''
-		await this.app.vault.rename(folder, `${parentPath}${trimmed}`)
-
+		// Update board state before vault rename so the subsequent MERGE_COLUMNS
+		// (triggered by the vault rename event) sees the new name and preserves icon/order.
 		this.boardActor?.send({
 			type: 'RENAME_COLUMN',
 			oldName,
 			newName: trimmed,
 		})
+
+		const parent = folder.parent
+		const parentPath = parent && !parent.isRoot() ? parent.path + '/' : ''
+		await this.app.vault.rename(folder, `${parentPath}${trimmed}`)
 	}
 
 	async removeColumn(
