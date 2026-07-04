@@ -1,0 +1,6 @@
+views:
+  - type: kanban-base
+    name: Kanban Folders
+    cardSize: 300
+    columnRoot: Kanban Folders/Books
+    boardState: '[{"name":"To Read","icon":{"value":"📕","name":"closed book","prefix":"Emoji"},"isCollapsed":false},{"name":"Started","icon":{"value":"🔖","name":"bookmark","prefix":"Emoji"},"isCollapsed":false},{"name":"Reading","icon":{"value":"📖","name":"open book","prefix":"Emoji"},"isCollapsed":false},{"name":"Read","icon":{"value":"📚","name":"books","prefix":"Emoji"},"isCollapsed":false}]'

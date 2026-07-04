@@ -18,6 +18,15 @@ main.js
 # obsidian
 data.json
 
+# wdio-obsidian-service downloads pinned Obsidian versions here (cached in CI).
+.obsidian-cache
+
+# wdio-obsidian-service rewrites runtime state into the vault fixtures each run;
+# keep the committed fixture minimal (core-plugins.json + community-plugins.json).
+test/vaults/*/.obsidian/app.json
+test/vaults/*/.obsidian/appearance.json
+test/vaults/*/.obsidian/workspace.json
+
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
 prompt.md

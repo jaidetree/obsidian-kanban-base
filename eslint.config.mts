@@ -52,4 +52,10 @@ export default tseslint.config({
     "version-bump.mjs",
     "versions.json",
     "main.js",
+    // E2E files live outside src/**; typed linting (projectService) errors on
+    // files no tsconfig `include` covers. tsconfig.e2e.json type-checks them.
+    "wdio.conf.mts",
+    "tsconfig.e2e.json",
+    "test",
+    ".obsidian-cache",
 ]), storybook.configs["flat/recommended"]);

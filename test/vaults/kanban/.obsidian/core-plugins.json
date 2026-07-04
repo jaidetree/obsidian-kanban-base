@@ -1,0 +1,8 @@
+{
+	"file-explorer": true,
+	"global-search": true,
+	"switcher": true,
+	"command-palette": true,
+	"properties": true,
+	"bases": true
+}
