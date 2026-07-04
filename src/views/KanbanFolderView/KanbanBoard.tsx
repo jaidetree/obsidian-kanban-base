@@ -1,6 +1,5 @@
 import { useActorRef, useActorState } from 'hooks/xstate'
 import type { TFolder } from 'obsidian'
-import type { CSSProperties } from 'preact'
 import { useState } from 'preact/hooks'
 import { type Actor } from 'xstate'
 import { boardMachine } from '../../machines/boardMachine'
@@ -119,12 +118,10 @@ export function KanbanBoard({
 
 	return (
 		<div
-			class="kanban-base-board"
-			style={
-				{
-					'--kanban-column-width': `${cardSize}px`,
-				} as CSSProperties
-			}
+			class={`kanban-base-board${columnRootSet ? '' : ' kanban-base-board--empty'}`}
+			style={{
+				'--kanban-column-width': `${cardSize}px`,
+			}}
 		>
 			{previewColumns.map(({ record, column }, idx) => (
 				<KanbanColumn

@@ -36,7 +36,7 @@ export function useActorState<T extends AnyStateMachine>(
 
 	useEffect(() => {
 		const sub = actorRef.current.subscribe((s) =>
-			setSnapshot(s as SnapshotFrom<T>),
+			setSnapshot(s),
 		);
 		return () => sub.unsubscribe();
 	}, []);

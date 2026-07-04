@@ -1,6 +1,5 @@
 import { useActorRef, useActorState } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
-import type { CSSProperties } from 'preact'
 import { useState } from 'preact/hooks'
 import type { Actor } from 'xstate'
 import { boardMachine } from '../../machines/boardMachine'
@@ -114,11 +113,9 @@ export function KanbanPropertyBoard({
 	return (
 		<div
 			class="kanban-base-board"
-			style={
-				{
-					'--kanban-column-width': `${cardSize}px`,
-				} as CSSProperties
-			}
+			style={{
+				'--kanban-column-width': `${cardSize}px`,
+			}}
 		>
 			{visibleColumns.map(({ record, column }, idx) => (
 				<KanbanColumn

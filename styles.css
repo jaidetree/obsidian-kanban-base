@@ -302,7 +302,7 @@
 	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--radius-l);
 }
-.kanban-base-board:has(.kanban-base-no-root) {
+.kanban-base-board--empty {
 	justify-content: center;
 }
 .kanban-base-column__add-card {
