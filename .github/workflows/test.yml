@@ -1,0 +1,71 @@
+name: Test
+
+on:
+    push:
+        branches: ["**"]
+    pull_request:
+        branches: ["**"]
+
+jobs:
+    unit:
+        name: Unit tests (vitest)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "22.x"
+                  cache: "npm"
+
+            - run: npm ci
+
+            # The Storybook vitest project runs in a real browser via
+            # @vitest/browser-playwright, so `npm test` needs the chromium binary
+            # (and its system deps) installed before it can run.
+            - name: Install Playwright chromium
+              run: npx playwright install --with-deps chromium
+
+            - run: npm test
+
+    e2e:
+        name: E2E tests (wdio-obsidian-service)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "22.x"
+                  cache: "npm"
+
+            - run: npm ci
+
+            # wdio loads the bundled main.js, not TS source — build first or the
+            # E2E run tests a stale bundle.
+            - run: npm run build
+
+            # Obsidian downloads are large; cache them between runs. No
+            # OBSIDIAN_BINARY_PATH is set in CI, so the service downloads the
+            # pinned version (wdio.conf.mts) into .obsidian-cache.
+            - name: Cache Obsidian binaries
+              uses: actions/cache@v4
+              with:
+                  path: .obsidian-cache
+                  key: obsidian-cache-${{ runner.os }}-${{ hashFiles('manifest.json', 'wdio.conf.mts', 'package-lock.json') }}
+                  restore-keys: |
+                      obsidian-cache-${{ runner.os }}-
+
+            # Obsidian is an Electron GUI app; give it a virtual display and a
+            # window manager on the headless Linux runner.
+            - name: Install virtual display
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y xvfb herbstluftwm
+
+            - name: Run E2E tests
+              run: |
+                  export DISPLAY=:0
+                  Xvfb :0 -screen 0 1280x1024x24 &
+                  sleep 2
+                  herbstluftwm &
+                  sleep 2
+                  npm run test:e2e

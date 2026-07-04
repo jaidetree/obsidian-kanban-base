@@ -1,6 +1,6 @@
 # 02 — CI online: test.yml
 
-Status: ready-for-agent
+Status: in-review
 
 ## Parent
 
@@ -24,13 +24,14 @@ Two jobs:
 
 ## Acceptance criteria
 
-- [ ] `test.yml` runs on push/PR with `unit` and `e2e` jobs
+- [x] `test.yml` runs on push/PR with `unit` and `e2e` jobs
 - [ ] `unit` job installs Playwright chromium and `npm test` passes
+      (structure in place; pass requires a CI run)
 - [ ] `e2e` job builds, provisions xvfb+herbstluftwm, and the slice-01 spec
-      passes headless
+      passes headless (structure in place; pass requires a CI run)
 - [ ] `.obsidian-cache` is cached; **save** confirmed on first run and
       **restore** (cache hit) confirmed on a follow-up same-key run
-- [ ] Cache key hashes `manifest.json`, `wdio.conf.mts`, `package-lock.json`
+- [x] Cache key hashes `manifest.json`, `wdio.conf.mts`, `package-lock.json`
 
 ## Blocked by
 

@@ -9,12 +9,24 @@
 - [2026-07-04] Keep Bases view `type:` id constants (e.g. `KANBAN_ID`) in an
   **obsidian-free `constants.ts`** re-exported by the view barrel. Lets E2E specs
   import the id for assertions without dragging in the runtime view graph.
+- [2026-07-04] CI `unit` job must run `npx playwright install --with-deps
+  chromium` before `npm test` — the Storybook vitest project
+  (`@vitest/browser-playwright`, `vitest.config.ts`) runs in real chromium, so
+  `npm test` fails in CI without the browser + system deps. The `unit` job
+  (browser tests) and `e2e` job (wdio) are separate CI jobs by design.
 - [2026-07-04] wdio-obsidian-service copies the vault to a temp dir per run, so
   the committed `test/vaults/*` fixture stays clean. Still gitignore the runtime
   churn files (`.obsidian/app.json`, `appearance.json`, `workspace.json`).
 
 ## Mistakes to Avoid
 
+- [2026-07-04] `npm run build` + `npm run lint` verify **nothing** about a
+  GitHub workflow YAML — eslint `globalIgnores` excludes files outside `src/**`
+  and `tsc` never sees them. Validate a workflow by **parsing the YAML**
+  (`actionlint` if present, else load it in node). Runtime acceptance (jobs
+  green, `actions/cache` **save** then **restore-hit**) needs a live CI run
+  across two pushes — it can't be confirmed locally; leave those boxes unchecked
+  at in-review.
 - [2026-07-04] E2E specs must **not** import from a `src` barrel/module that
   transitively imports `obsidian` — the mocha node loader can't resolve
   `obsidian` (it only exists inside the Obsidian runtime / `browser.executeObsidian`).
