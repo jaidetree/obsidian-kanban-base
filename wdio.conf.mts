@@ -18,9 +18,13 @@ const binaryPath = process.env.OBSIDIAN_BINARY_PATH;
 
 // appVersion selects the Obsidian app JS; installerVersion selects the
 // installer/Electron the service matches ChromeDriver to. The default pins a
-// known-good Bases build (1.10.x) on the earliest supported installer
-// (= manifest minAppVersion 1.10.2) for reproducibility; both are env-overridable.
-const appVersion = process.env.OBSIDIAN_APP_VERSION ?? '1.10.2';
+// known-good Bases build on the earliest supported installer for
+// reproducibility; both are env-overridable.
+//
+// NB: pin a *stable* release — 1.10.2 (our manifest minAppVersion) is an
+// Insiders-only beta and needs OBSIDIAN_EMAIL/PASSWORD to download. 1.10.6 is
+// the nearest stable 1.10.x, downloadable without an Insiders account.
+const appVersion = process.env.OBSIDIAN_APP_VERSION ?? '1.10.6';
 const installerVersion = process.env.OBSIDIAN_INSTALLER_VERSION ?? 'earliest';
 
 const obsidianOptions = {

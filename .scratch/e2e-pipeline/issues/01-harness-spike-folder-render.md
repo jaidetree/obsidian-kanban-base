@@ -44,11 +44,13 @@ Deliver, end-to-end:
 
 ## Verification notes
 
-Verified GREEN against real Obsidian **1.12.7** via the local-binary override
-(`OBSIDIAN_BINARY_PATH` + `OBSIDIAN_INSTALLER_VERSION=1.12.7`), 4 specs passing.
-The GitHub raw/releases host was returning error pages this session, so the
-CI-default **download** of the pinned `1.10.2` app could not be exercised here —
-render mechanism proven, download of the pin to be confirmed in slice 07 (CI).
+Verified GREEN two ways, 4 specs passing:
+- Download path (no env): real Obsidian **v1.10.6** (installer v1.5.8, Chrome 120).
+- Local-binary override: real Obsidian **v1.12.7**.
+
+The default pin is **1.10.6** — 1.10.2 (our `minAppVersion`) is an Insiders-only
+beta whose download demands `OBSIDIAN_EMAIL`/`PASSWORD`; 1.10.6 is the nearest
+stable 1.10.x. Overridable via `OBSIDIAN_APP_VERSION` / `OBSIDIAN_BINARY_PATH`.
 
 ## Blocked by
 

@@ -22,6 +22,11 @@
   obsidian-free modules, or reach the API only via `executeObsidian`.
 - [2026-07-04] Always `npm run build` before any E2E run — wdio loads the bundled
   `main.js`, not TS source. A stale bundle = vacuous pass.
+- [2026-07-04] Don't pin the wdio `appVersion` to an Insiders **beta** build —
+  the download then demands `OBSIDIAN_EMAIL`/`OBSIDIAN_PASSWORD`. Our manifest
+  `minAppVersion` 1.10.2 is itself a beta (`isBeta: true`). Pin a **stable**
+  release instead (1.10.6 is the nearest stable 1.10.x). Check `isBeta` in the
+  service's cached `.obsidian-cache/obsidian-versions.json`.
 
 ## Domain Knowledge
 
@@ -38,10 +43,11 @@
 
 ## Open Questions
 
-- [2026-07-04] Is the CI-default download of the pinned `1.10.2` Obsidian
-  actually fetchable, and does 1.10.2's Bases render our view identically to
-  1.12.7? Couldn't verify here — GitHub raw/releases returned error ("Unicorn")
-  pages, blocking the version-list fetch and any download. Confirm in slice 07
-  (CI) or via a working-network run.
+- [2026-07-04] Is the CI-default download of the pinned Obsidian fetchable, and
+  does its Bases render our view? [RESOLVED 2026-07-04] Yes — repinned to stable
+  **1.10.6** (1.10.2 was an Insiders beta). The no-env download path runs green:
+  4 passing on real Obsidian v1.10.6 (installer v1.5.8, Chrome 120). The version
+  list lives at `.obsidian-cache/obsidian-versions.json`; app asars download from
+  `releases.obsidian.md`.
 
 ## Consolidated Principles
