@@ -9,8 +9,7 @@ description: >-
 
 # Slice
 
-Take one tracked slice of the Random Task Selector plugin end-to-end:
-in-progress → implement → commit → in-review.
+Take one tracked slice end-to-end: in-progress → implement → commit → in-review.
 
 Requires an issue argument. Accept either a path
 (`.scratch/<feature-slug>/issues/<NN>-<slug>.md`) or a number. Given a bare
@@ -19,12 +18,31 @@ digits) within the feature directory; if more than one feature dir exists and
 the target is ambiguous, stop and ask which. If no argument is given, stop and
 ask.
 
+## Context (fresh-session ramp-up)
+
+Project: **Kanban Base** — Preact/TSX views registered on Obsidian's Bases
+feature (folder view + property view). Obsidian desktop plugin; bundles to
+`main.js` via esbuild.
+
+Read as needed — authoritative, don't restate:
+
+- `LEARNINGS.md` — E2E gotchas + domain facts (step 1 loads it). Consult before
+  touching the wdio harness.
+- `AGENTS.md` + `docs/agents/*` — module boundaries; issue-tracker, triage-label,
+  domain conventions.
+- `.scratch/<feature>/PRD.md` — the plan a slice belongs to.
+- `../obsidian-random-task` — sibling plugin; origin of the wdio/E2E patterns.
+
+Test surfaces: vitest + Storybook for the pure Preact core (`obsidian` mocked);
+`wdio-obsidian-service` E2E (`npm run test:e2e` download, `e2e:dev` headed) for
+the real-Obsidian Bases mount.
+
 ## Steps
 
 1. Read `LEARNINGS.md` if it exists; surface the most relevant points.
-2. Read the slice file, plus its parent PRD (the `## Parent` path) and the
-   `CONTEXT.md` glossary + any relevant `docs/adr/` it touches. Stop if the
-   issue isn't found — report what failed.
+2. Read the slice file, plus its parent PRD (the `## Parent` path), any relevant
+   `docs/adr/` it touches, and `CONTEXT.md` if present. Stop if the issue isn't
+   found — report what failed.
 3. Set the issue's `Status:` line to `in-progress` (the `Status:` convention is
    documented in `docs/agents/issue-tracker.md`, named from `AGENTS.md`).
 4. Implement: read existing patterns near the change (keep `src/main.ts` minimal
