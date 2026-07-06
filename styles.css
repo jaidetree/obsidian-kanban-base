@@ -135,6 +135,7 @@
 	flex-shrink: 0;
 	flex-grow: 1;
 	min-height: var(--kanban-column-width, 220px);
+	overflow: visible;
 }
 .kanban-base-column--collapsed .kanban-base-column-container {
 	transform: rotate(90deg) translate(-48px, 0);
