@@ -18,6 +18,21 @@
   the committed `test/vaults/*` fixture stays clean. Still gitignore the runtime
   churn files (`.obsidian/app.json`, `appearance.json`, `workspace.json`).
 
+- [2026-08-12] A click-guard on an ancestor element (e.g. a card's outer
+  `onClick` calling `e.preventDefault()` while in an "editing" state) can
+  silently break a descendant `<button type="submit">` inside a `<form>`:
+  the click event bubbles to the ancestor, and `preventDefault()` there
+  cancels the *same* click event's default action — form submission — even
+  though `stopPropagation()` alone would have been enough to block bubbling
+  further. Symptom: a submit/checkmark button that visibly responds to
+  clicks (cursor, ripple) but the `onSubmit` handler never fires. Fix: drop
+  the `preventDefault()`, keep `stopPropagation()` if still needed.
+- [2026-08-12] A jsdom-based `@testing-library/preact` unit test reproduces
+  this class of "preventDefault on bubbled click cancels sibling's submit"
+  bug just as reliably as a real-browser E2E test, and much faster — jsdom
+  implements the click→submit default-action relationship per spec. Prefer
+  it over Storybook/real-browser tests for this kind of interaction bug.
+
 ## Mistakes to Avoid
 
 - [2026-07-04] `npm run build` + `npm run lint` verify **nothing** about a
@@ -39,6 +54,30 @@
   `minAppVersion` 1.10.2 is itself a beta (`isBeta: true`). Pin a **stable**
   release instead (1.10.6 is the nearest stable 1.10.x). Check `isBeta` in the
   service's cached `.obsidian-cache/obsidian-versions.json`.
+- [2026-08-12] Desktop Obsidian's `Menu` (from `new Menu()` +
+  `showAtMouseEvent`/`showAtPosition`) renders a **native OS context menu**
+  by default (`this.useNativeMenu` gate inside `showAtPosition`'s bundled
+  source, true whenever `Platform.isDesktop`) — it never touches the DOM, so
+  WebDriver/chromedriver can't see or click its items no matter how the
+  triggering click is dispatched (confirmed with `new Menu()` called
+  directly via `executeObsidian`, on both app 1.13.4 and 1.10.6: zero
+  `document.body` mutations). To E2E-test any of our own `Menu`-based UI
+  (card/column "…" menus), monkeypatch
+  `obsidian.Menu.prototype.showAtMouseEvent` in the spec's `before()` hook to
+  call `this.setUseNativeMenu(false)` first — forces the DOM-based
+  `.menu`/`.menu-item-title` fallback for that test session only, no plugin
+  source changes needed. Also, this **must** run against a real local
+  Obsidian; the app JS shipped by an installed binary can be overridden via
+  `OBSIDIAN_APP_VERSION` (separate from `OBSIDIAN_INSTALLER_VERSION`, which
+  must stay matched to that binary's actual Electron/chromedriver).
+- [2026-08-12] `test/vaults/kanban` is git-tracked but **not** actually reset
+  between local E2E runs — `reloadObsidian({vault})` only reloads the app,
+  it doesn't restore files. A prior interrupted run left
+  `Atomic Habits.md` renamed to `Atomic Habits 2.md` uncommitted, which broke
+  unrelated assertions in `folder-render.e2e.ts`. Always `git checkout --
+  test/vaults/kanban` (and `git status` it) before trusting E2E output
+  locally; specs that rename/mutate fixture files need an `after()` hook
+  that reverts the mutation (see `card-rename.e2e.ts`).
 
 ## Domain Knowledge
 
@@ -54,6 +93,17 @@
   `Promise<number>` (await it).
 
 ## Open Questions
+
+- [2026-08-12] `folder-render.e2e.ts` fails locally against Obsidian 1.13.4
+  (both installer & app version) even on a clean, freshly-`git checkout`'d
+  vault: it renders extra empty-string column headers/card titles (5 blanks
+  ahead of the real ones) plus an `Archived` column the test doesn't expect.
+  Reproduced on **unmodified `main`**, so it's pre-existing and unrelated to
+  any rename-bug fix — not investigated further here. Possibly a
+  render-before-entries-resolve duplicate-header issue that only shows on
+  newer Obsidian, or a stale `boardState` mismatch (`Archived` column is in
+  the committed `.base` file's `boardState` but not in the test's
+  `EXPECTED_COLUMNS`). Needs its own investigation.
 
 - [2026-07-04] Is the CI-default download of the pinned Obsidian fetchable, and
   does its Bases render our view? [RESOLVED 2026-07-04] Yes — repinned to stable

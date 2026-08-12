@@ -24,7 +24,11 @@ export function KanbanCard({
 
 	function handleClick(e: MouseEvent) {
 		if (isRenaming) {
-			e.preventDefault()
+			// Don't call e.preventDefault() here: this handler runs on the card's
+			// outer div, so it also sees (via bubbling) clicks on the inline
+			// rename form's submit button. preventDefault() on a bubbled click
+			// cancels the button's default action - i.e. it silently cancels
+			// the form submission, so the checkmark would appear to do nothing.
 			e.stopPropagation()
 			return
 		}
