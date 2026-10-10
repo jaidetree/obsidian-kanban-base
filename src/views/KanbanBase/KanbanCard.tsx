@@ -12,11 +12,13 @@ export function KanbanCard({
 	cardProperties,
 	onDragStart,
 	onDragCancel,
+	dropPosition,
 }: {
 	entry: BasesEntry
 	cardProperties: BasesPropertyId[]
 	onDragStart: (filePath: string) => void
 	onDragCancel: () => void
+	dropPosition?: 'before' | 'after'
 }) {
 	const app = useApp()
 	const [isRenaming, setIsRenaming] = useState(false)
@@ -84,22 +86,21 @@ export function KanbanCard({
 	function handleDragStart(
 		e: TargetedDragEvent<HTMLDivElement | HTMLSpanElement>,
 	) {
+		e.stopPropagation()
 		e.dataTransfer!.effectAllowed = 'move'
 		e.dataTransfer!.setData('text/card', entry.file.path)
 		onDragStart(entry.file.path)
 	}
 
-	function handleDragEvent(
-		e: TargetedDragEvent<HTMLDivElement | HTMLSpanElement>,
-	) {
-		if (e.dataTransfer!.dropEffect === 'none') {
-			onDragCancel()
-		}
+	function handleDragEvent() {
+		// Some hosts retain dropEffect='move' even after an outside drop or Escape.
+		onDragCancel()
 	}
 
 	return (
 		<div
-			class="kanban-base-card"
+			class={`kanban-base-card${dropPosition ? ` kanban-base-card--insert-${dropPosition}` : ''}`}
+			data-file-path={entry.file.path}
 			onClick={handleClick}
 			draggable
 			onDragStart={handleDragStart}

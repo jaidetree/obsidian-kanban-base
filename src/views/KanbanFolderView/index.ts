@@ -1,12 +1,19 @@
-import type { BasesViewFactory, ViewOption } from 'obsidian';
-import { KanbanFolderView } from './KanbanFolderView';
+import type { BasesViewFactory, ViewOption } from 'obsidian'
+import { KanbanFolderView } from './KanbanFolderView'
 
-export { KANBAN_ID } from './constants';
+export { KANBAN_ID } from './constants'
 
 export const KANBAN_FACTORY: BasesViewFactory = (controller, containerEl) =>
-	new KanbanFolderView(controller, containerEl);
+	new KanbanFolderView(controller, containerEl)
 
 export const KANBAN_OPTIONS = (): ViewOption[] => [
+	{
+		type: 'text',
+		displayName: 'Card order',
+		key: 'cardOrder',
+		default: '[]',
+		shouldHide: () => true,
+	},
 	{
 		type: 'folder',
 		key: 'columnRoot',
@@ -55,4 +62,4 @@ export const KANBAN_OPTIONS = (): ViewOption[] => [
 		default: '{}',
 		shouldHide: () => true,
 	},
-];
+]

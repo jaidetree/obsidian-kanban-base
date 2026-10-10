@@ -175,6 +175,15 @@
 	background: var(--background-modifier-hover);
 }
 
+/* Insertion markers do not change card geometry during a drag. */
+.kanban-base-card--insert-before {
+	box-shadow: 0 -3px 0 0 var(--interactive-accent);
+}
+
+.kanban-base-card--insert-after {
+	box-shadow: 0 3px 0 0 var(--interactive-accent);
+}
+
 .kanban-base-card-drag-handle {
 	flex-shrink: 0;
 	display: flex;

@@ -2,17 +2,19 @@ import type { SendFrom } from 'hooks/xstate'
 import { useXState } from 'hooks/xstate'
 import type { BasesPropertyId } from 'obsidian'
 import { Menu } from 'obsidian'
+import { useState } from 'preact/hooks'
 import type { Icon } from 'types/icons'
 import type { SnapshotFrom } from 'xstate'
 import { columnMachine } from '../../machines/columnMachine'
 import { useApp } from './AppContext'
+import { findCardPlacement, type CardPlacement } from './cardOrder'
 import { IconSuggestModal } from './IconSuggestModal'
 import { InlineForm } from './InlineForm'
 import { KanbanCard } from './KanbanCard'
-import type { IKanbanColumn } from './types'
 import { useKanbanView } from './KanbanViewContext'
 import { ObsidianIcon } from './ObsidianIcon'
 import { RemoveColumnModal } from './RemoveColumnModal'
+import type { IKanbanColumn } from './types'
 
 const DEFAULT_ICON = 'lucide-circle'
 
@@ -29,7 +31,9 @@ function IconButton({ icon, onIconChange, disabled }: IconButtonProps) {
 
 	const handleClick = () => {
 		if (disabled) return
-		new IconSuggestModal(app, selectedIcon => onIconChange(selectedIcon)).open()
+		new IconSuggestModal(app, selectedIcon =>
+			onIconChange(selectedIcon),
+		).open()
 	}
 
 	return (
@@ -212,7 +216,9 @@ function KanbanColumnAddCard({
 				<InlineForm
 					placeholder="Card name"
 					value={snapshot.context.newCardName}
-					onSubmit={e => { void handleSubmit(e) }}
+					onSubmit={e => {
+						void handleSubmit(e)
+					}}
 					onInput={e => {
 						send({
 							type: 'SET_NEW_CARD_NAME',
@@ -253,9 +259,10 @@ interface KanbanColumnProps {
 	isDragTarget: boolean
 	onCardDragStart: (filePath: string) => void
 	onCardDragOver: () => void
-	onCardDrop: () => void
+	onCardDrop: (placement?: CardPlacement) => void
 	onCardDragCancel: () => void
 	isCardDragTarget: boolean
+	allowCardReorder?: boolean
 	showAddTop?: boolean
 	showAddBottom?: boolean
 }
@@ -280,11 +287,13 @@ export function KanbanColumn({
 	onCardDrop,
 	onCardDragCancel,
 	isCardDragTarget,
+	allowCardReorder = false,
 	showAddTop = false,
 	showAddBottom = true,
 }: KanbanColumnProps) {
 	const app = useApp()
 	const view = useKanbanView()
+	const [placement, setPlacement] = useState<CardPlacement | undefined>()
 
 	// Primary machine: drives column rename (header) and top add-card (if shown)
 	const [snapshot, send] = useXState(columnMachine, {
@@ -327,6 +336,11 @@ export function KanbanColumn({
 			onDragOver={e => {
 				e.preventDefault()
 				if (e.dataTransfer?.types.includes('text/card')) {
+					e.dataTransfer.dropEffect = 'move'
+					if (allowCardReorder)
+						setPlacement(
+							findCardPlacement(e.currentTarget, e.clientY),
+						)
 					onCardDragOver()
 				} else {
 					onDragOver(dragIndex)
@@ -335,7 +349,12 @@ export function KanbanColumn({
 			onDrop={e => {
 				e.preventDefault()
 				if (e.dataTransfer?.types.includes('text/card')) {
-					onCardDrop()
+					onCardDrop(
+						allowCardReorder
+							? findCardPlacement(e.currentTarget, e.clientY)
+							: undefined,
+					)
+					setPlacement(undefined)
 				} else {
 					onDrop()
 				}
@@ -372,6 +391,12 @@ export function KanbanColumn({
 								cardProperties={cardProperties}
 								onDragStart={onCardDragStart}
 								onDragCancel={onCardDragCancel}
+								dropPosition={
+									isCardDragTarget &&
+									placement?.path === entry.file.path
+										? placement.side
+										: undefined
+								}
 							/>
 						))}
 						{showAddBottom && (

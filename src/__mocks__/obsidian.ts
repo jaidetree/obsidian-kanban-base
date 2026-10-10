@@ -39,6 +39,10 @@ export class Platform {
   static isMobile = false;
 }
 
+export class Notice {
+  constructor(_message: string | DocumentFragment) {}
+}
+
 interface MockController {
   app?: ReturnType<typeof createMockApp>;
   config?: { get: (key: string) => unknown };
